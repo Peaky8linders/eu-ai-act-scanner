@@ -7,9 +7,11 @@
 ![Status: alpha](https://img.shields.io/badge/status-alpha-orange)
 
 **Ships as three things in one repo:**
-1. A **Claude Code plugin** with three commands (`/ai-act-scan`, `/ai-act-scan-fix`, `/ai-act-article`) and three skills
+1. A **Claude Code plugin** with three commands (`/ai-act-scan`, `/ai-act-scan-fix`, `/ai-act-article`) and **12 article-grounded skills** covering classification, obligations, deployer duties, GPAI, Annex IV, timeline, and penalties
 2. A **Python library** (`from scanner import scan_project`)
 3. A **CLI** (`eu-ai-act-scan ./my-project`)
+
+The skills are written to the same standard: every regulatory claim cites an article (and paragraph where relevant), every skill names its audience (engineer / compliance officer / legal counsel / deployer), every skill has a Common Rationalizations table that heads off the most common mistakes, and every skill ends with a citation to the Official Journal. See [`skills/authoring-eu-ai-act-skills.md`](skills/authoring-eu-ai-act-skills.md) for the authoring standard — new skills must meet it.
 
 Roadmap item: FastAPI router (Phase 2, additive).
 

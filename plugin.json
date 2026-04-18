@@ -1,7 +1,7 @@
 {
   "name": "eu-ai-act-scanner",
-  "version": "0.1.0",
-  "description": "Scan any codebase for EU AI Act (Regulation 2024/1689) compliance evidence and gaps. 14 analyzers covering AI frameworks, data governance, human oversight, logging, security, fairness, testing, IaC, and more. No network calls. Local-only static analysis. Directly invokable from Claude Code.",
+  "version": "0.2.0",
+  "description": "EU AI Act (Regulation 2024/1689) compliance harness for Claude Code. 14 code scanners + 11 article-grounded skills covering risk classification (Art. 5/6), high-risk obligations (Art. 9-15, 17), deployer duties and FRIA (Art. 26/27), GPAI (Art. 51/53/55), Annex IV technical documentation, Art. 113 timeline, and Art. 99 penalties. Local-only static analysis, citation-rigorous skills, written for engineers, compliance officers, and legal counsel.",
   "author": "Andrei Bacu (@Peaky8linders)",
   "license": "Apache-2.0",
   "homepage": "https://github.com/Peaky8linders/eu-ai-act-scanner",
@@ -12,9 +12,18 @@
     "ai-act-article"
   ],
   "skills": [
+    "authoring-eu-ai-act-skills",
     "using-eu-ai-act-scanner",
     "interpreting-findings",
-    "eu-ai-act-reference"
+    "eu-ai-act-reference",
+    "eu-ai-act-article-5-prohibited",
+    "eu-ai-act-article-6-classification",
+    "eu-ai-act-fria-guide",
+    "eu-ai-act-operator-roles",
+    "eu-ai-act-gpai-classification",
+    "eu-ai-act-annex-iv-guide",
+    "eu-ai-act-timeline",
+    "eu-ai-act-penalties"
   ],
   "requires": {
     "python": ">=3.11"
