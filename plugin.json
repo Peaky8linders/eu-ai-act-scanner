@@ -1,0 +1,25 @@
+{
+  "name": "eu-ai-act-scanner",
+  "version": "0.1.0",
+  "description": "Scan any codebase for EU AI Act (Regulation 2024/1689) compliance evidence and gaps. 14 analyzers covering AI frameworks, data governance, human oversight, logging, security, fairness, testing, IaC, and more. No network calls. Local-only static analysis. Directly invokable from Claude Code.",
+  "author": "Andrei Bacu (@Peaky8linders)",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/Peaky8linders/eu-ai-act-scanner",
+  "regulation": "EU Regulation 2024/1689",
+  "commands": [
+    "ai-act-scan",
+    "ai-act-scan-fix",
+    "ai-act-article"
+  ],
+  "skills": [
+    "using-eu-ai-act-scanner",
+    "interpreting-findings",
+    "eu-ai-act-reference"
+  ],
+  "requires": {
+    "python": ">=3.11"
+  },
+  "install": {
+    "pip": "pip install -e ."
+  }
+}

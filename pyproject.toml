@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "eu-ai-act-scanner"
+version = "0.1.0"
+description = "Scan any codebase for EU AI Act (Regulation 2024/1689) compliance evidence and gaps. 14 analyzers, local-only static analysis, Claude Code plugin."
+readme = "README.md"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Andrei Bacu", email = "andrei@antifragile-ai.net" }]
+requires-python = ">=3.11"
+keywords = ["eu-ai-act", "compliance", "ai-safety", "static-analysis", "claude-code-plugin", "regulation-2024-1689"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Legal Industry",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Security",
+]
+dependencies = [
+    "pydantic>=2.5",
+    "structlog>=24.1",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+llm = ["anthropic>=0.25"]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.4",
+]
+
+[project.scripts]
+eu-ai-act-scan = "scanner.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/Peaky8linders/eu-ai-act-scanner"
+Repository = "https://github.com/Peaky8linders/eu-ai-act-scanner"
+Issues = "https://github.com/Peaky8linders/eu-ai-act-scanner/issues"
+
+[tool.setuptools.packages.find]
+include = ["scanner*"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"
+norecursedirs = ["tests/fixtures"]
