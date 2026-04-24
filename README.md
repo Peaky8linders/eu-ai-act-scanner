@@ -1,19 +1,66 @@
 # EU AI Act Scanner
 
-> Scan any codebase for EU AI Act (Regulation 2024/1689) compliance evidence and gaps — directly from Claude Code, your terminal, or a Python script.
+> Scan any codebase for EU AI Act (Regulation 2024/1689) compliance evidence and gaps — directly from Claude Code or a Python script.
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 ![Status: alpha](https://img.shields.io/badge/status-alpha-orange)
+![100 days](https://img.shields.io/badge/T--100%20days-Aug%202%2C%202026-red)
 
-**Ships as three things in one repo:**
+**Ships as two things in one repo:**
 1. A **Claude Code plugin** with three commands (`/ai-act-scan`, `/ai-act-scan-fix`, `/ai-act-article`) and **12 article-grounded skills** covering classification, obligations, deployer duties, GPAI, Annex IV, timeline, and penalties
 2. A **Python library** (`from scanner import scan_project`)
-3. A **CLI** (`eu-ai-act-scan ./my-project`)
 
 The skills are written to the same standard: every regulatory claim cites an article (and paragraph where relevant), every skill names its audience (engineer / compliance officer / legal counsel / deployer), every skill has a Common Rationalizations table that heads off the most common mistakes, and every skill ends with a citation to the Official Journal. See [`skills/authoring-eu-ai-act-skills.md`](skills/authoring-eu-ai-act-skills.md) for the authoring standard — new skills must meet it.
 
-Roadmap item: FastAPI router (Phase 2, additive).
+---
+
+## ⏳ 100 days to enforcement
+
+**2 August 2026** is the date high-risk AI system obligations (Art. 6 + Annex III, and Art. 9–15 / 17 / 27) become enforceable. As of today, that is **~100 days away**.
+
+If you ship AI and your system touches biometrics, critical infrastructure, education, employment, essential services, law enforcement, migration, or justice, you are in scope. Most teams don't know what their code currently shows against the regulation.
+
+**Run this to find out:**
+
+```python
+from datetime import date
+from scanner import scan_project
+
+result = scan_project("./my-ai-project")
+days_left = (date(2026, 8, 2) - date.today()).days
+
+print(f"T-{days_left} days to Art. 6 high-risk enforcement")
+print(f"Overall compliance score: {result.overall_compliance_pct}%")
+print()
+print("Worst-scoring dimensions (fix these first):")
+for dim_id, score in sorted(result.compliance_scores.items(), key=lambda x: x[1])[:5]:
+    print(f"  [{score:>3}%] {dim_id}")
+```
+
+Sample output on a mid-compliance RAG app:
+
+```
+T-100 days to Art. 6 high-risk enforcement
+Overall compliance score: 47%
+
+Worst-scoring dimensions (fix these first):
+  [ 12%] logging              — Art. 12 automatic record-keeping
+  [ 25%] human_oversight      — Art. 14 HITL gates + override hooks
+  [ 31%] fairness_testing     — Art. 10(2)(f) disparate-impact tests
+  [ 44%] adversarial_robustness — Art. 15(3) prompt-injection defences
+  [ 48%] tech_docs            — Art. 11 Annex IV technical file
+```
+
+Each gap maps to a specific article, so a compliance officer or legal counsel can route it into their Quality Management System or Art. 43 conformity-assessment checklist with no translation.
+
+Or the one-line Claude Code version:
+
+```
+/ai-act-scan ./my-app
+```
+
+That runs the same scan and narrates the results in plain English, cites the articles, and offers to propose remediation tasks for the worst gaps via `/ai-act-scan-fix --top 3`.
 
 ---
 
@@ -73,18 +120,15 @@ pip install eu-ai-act-scanner
 
 ## Usage
 
-### CLI
+### In Claude Code (recommended)
 
-```bash
-# Scan current directory, emit JSON
-eu-ai-act-scan .
-
-# Human-readable markdown summary
-eu-ai-act-scan ./my-rag-app --markdown
-
-# Filter to a specific article
-eu-ai-act-scan . --article art15
 ```
+/ai-act-scan ./my-app                # full scan + narration + article cites
+/ai-act-article art14                # Art. 14 human-oversight deep-dive
+/ai-act-scan-fix --top 3             # propose fixes for worst 3 gaps
+```
+
+The plugin narrates the output in plain English, cites the articles, and offers remediation tasks. The 12 shipped skills (Art. 5 prohibited, Art. 6 classification, FRIA, operator roles, GPAI, Annex IV, timeline, penalties, and three meta-skills) become automatically invocable once the plugin is installed — ask "is this prohibited under Art. 5?" or "what goes in Annex IV?" and Claude pulls the right skill.
 
 ### Python
 
@@ -101,13 +145,7 @@ for gap in result.risk_indicators[:5]:
     print(f"  ! {gap}")
 ```
 
-### In Claude Code
-
-```
-/ai-act-scan ./my-app                # full scan + narration
-/ai-act-article art14                # Art. 14 human-oversight deep-dive
-/ai-act-scan-fix --top 3             # propose fixes for worst 3 gaps
-```
+See the [100-day countdown example](#-100-days-to-enforcement) above for a ready-to-run snippet that surfaces your worst-scoring dimensions sorted by urgency.
 
 ## What the output means
 
@@ -140,8 +178,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the dev loop.
 
 ## Roadmap
 
-- **v0.1**: Plugin + library + CLI (this release)
-- **v0.2**: FastAPI router behind `[api]` extra for integrating into existing dev-platform backends
+- **v0.1**: Plugin + library (this release)
+- **v0.2**: Additional article skills + wider analyzer coverage (e.g. federated learning, RAG-specific controls)
 - **v0.3**: MCP server so non-Claude-Code agents can call the scanner
 - **v0.4**: Baseline / diff mode — scan twice, report only what changed
 
