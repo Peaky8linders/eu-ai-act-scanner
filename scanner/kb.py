@@ -137,6 +137,47 @@ DIMENSIONS: dict[str, Dimension] = {
         article="Art. 95",
         description="Voluntary commitments for minimal-risk AI systems.",
     ),
+    # ── Agent-aware dimensions (Nannini et al. 2026, AI Agents under EU Law) ──
+    "agent_inventory": Dimension(
+        id="agent_inventory",
+        label="Agent Inventory",
+        article="Art. 11 / Annex IV",
+        description=(
+            "Documented inventory of external action surfaces (tools, MCP "
+            "servers, code interpreters, browser agents) the agent can invoke. "
+            "Foundation for the regulatory perimeter (paper Step 9, lines 1729-1742)."
+        ),
+    ),
+    "tool_governance": Dimension(
+        id="tool_governance",
+        label="Tool Governance & Privilege Minimization",
+        article="Art. 14 / Art. 15(4) / OWASP Top-10 Agentic",
+        description=(
+            "Per-tool least-privilege scopes, dynamic privilege restriction, "
+            "no prompt-as-control, no open code execution on model output. "
+            "OWASP Top 10 for Agentic Applications (Dec 2025)."
+        ),
+    ),
+    "regulatory_perimeter": Dimension(
+        id="regulatory_perimeter",
+        label="Regulatory Perimeter Classification",
+        article="Art. 25 / Art. 25(4) / Art. 3(23)",
+        description=(
+            "Documented classification of where the conformity-assessed system "
+            "ends and downstream tools/sub-agents begin, with Art. 25(4) "
+            "agreements for the static tool catalogue."
+        ),
+    ),
+    "runtime_drift": Dimension(
+        id="runtime_drift",
+        label="Runtime Drift Detection",
+        article="Art. 3(23) / Art. 12 / Art. 72",
+        description=(
+            "Versioned snapshots of tool catalogue, prompts, and policy bindings; "
+            "behavioural-metric monitoring against the conformity-assessment "
+            "baseline; documented Art. 3(23) substantial-modification procedure."
+        ),
+    ),
 }
 
 
@@ -146,12 +187,20 @@ ARTICLE_TO_DIMENSIONS: dict[str, list[str]] = {
     "art4": ["ai_literacy"],
     "art9": ["risk_mgmt", "decision_governance"],
     "art10": ["data_gov"],
-    "art11": ["tech_docs"],
-    "art12": ["logging"],
+    "art11": ["tech_docs", "agent_inventory"],
+    "art12": ["logging", "runtime_drift"],
     "art13": ["transparency"],
-    "art14": ["human_oversight", "decision_governance"],
-    "art15": ["security", "access_control", "infra_mlops", "supply_chain", "decision_governance"],
+    "art14": ["human_oversight", "decision_governance", "tool_governance"],
+    "art15": [
+        "security",
+        "access_control",
+        "infra_mlops",
+        "supply_chain",
+        "decision_governance",
+        "tool_governance",
+    ],
     "art17": ["quality_management"],
+    "art25": ["regulatory_perimeter"],
     "art26": ["deployer_obligations"],
     "art27": ["deployer_obligations"],
     "art43": ["conformity_assessment"],
@@ -161,7 +210,7 @@ ARTICLE_TO_DIMENSIONS: dict[str, list[str]] = {
     "art51": ["gpai_systemic_risk"],
     "art53": ["gpai"],
     "art55": ["gpai_systemic_risk"],
-    "art72": ["decision_governance"],
+    "art72": ["decision_governance", "runtime_drift"],
     "art95": ["voluntary_codes"],
 }
 

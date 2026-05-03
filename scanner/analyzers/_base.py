@@ -21,7 +21,19 @@ logger = structlog.get_logger(__name__)
 
 
 class Finding(BaseModel):
-    """A single piece of evidence discovered by an analyzer."""
+    """A single piece of evidence discovered by an analyzer.
+
+    Agentic-AI taxonomy fields (added in v0.3, all default empty):
+
+    * ``compound_risk_type`` — one of
+      :class:`scanner.data.agentic_taxonomy.CompoundRiskType` values
+      (cascading / emergent / attribution / temporal). Empty when the
+      finding is not specifically agentic.
+    * ``applicable_roles`` — operator-role IDs that owe the related
+      obligation. Empty = applies to every role (legacy behaviour).
+    * ``threat_categories`` — IDs from
+      :class:`scanner.data.agentic_taxonomy.ThreatCategory`.
+    """
     id: str = Field(description="Unique within analyzer, e.g. 'af-version-pin'")
     category: str = Field(description="Analyzer ID, e.g. 'ai_frameworks'")
     title: str
@@ -36,6 +48,10 @@ class Finding(BaseModel):
     article_paragraphs: list[str] = Field(default_factory=list)
     iac_artifact_type: Literal["terraform", "cloudformation", "kubernetes",
                                "github_actions", "dockerfile", "compose"] | None = None
+    # ── Agentic-AI compound-risk grounding (paper §10.4) ────────────────
+    compound_risk_type: str = Field(default="", max_length=64)
+    applicable_roles: list[str] = Field(default_factory=list, max_length=16)
+    threat_categories: list[str] = Field(default_factory=list, max_length=16)
 
 
 class AnalyzerResult(BaseModel):

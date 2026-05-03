@@ -1,7 +1,7 @@
 {
   "name": "eu-ai-act-scanner",
-  "version": "0.2.0",
-  "description": "EU AI Act (Regulation 2024/1689) compliance harness for Claude Code. 14 code scanners + 11 article-grounded skills covering risk classification (Art. 5/6), high-risk obligations (Art. 9-15, 17), deployer duties and FRIA (Art. 26/27), GPAI (Art. 51/53/55), Annex IV technical documentation, Art. 113 timeline, and Art. 99 penalties. Local-only static analysis, citation-rigorous skills, written for engineers, compliance officers, and legal counsel.",
+  "version": "0.3.0",
+  "description": "EU AI Act (Regulation 2024/1689) compliance harness for Claude Code. 21 code scanners (incl. 7 agent-aware per Nannini et al. 2026) + 11 article-grounded skills covering risk classification (Art. 5/6), high-risk obligations (Art. 9-15, 17), deployer duties and FRIA (Art. 26/27), GPAI (Art. 51/53/55), Annex IV technical documentation, Art. 113 timeline, Art. 99 penalties, plus agentic-AI compound-risk taxonomy (cascading/emergent/attribution/temporal). Local-only static analysis, citation-rigorous skills, written for engineers, compliance officers, and legal counsel.",
   "author": "Andrei Bacu (@Peaky8linders)",
   "license": "Apache-2.0",
   "homepage": "https://github.com/Peaky8linders/eu-ai-act-scanner",

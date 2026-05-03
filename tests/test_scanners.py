@@ -16,8 +16,10 @@ FIXTURE = Path(__file__).parent / "fixtures" / "sample_project"
 # ─── KB sanity ──────────────────────────────────────────────────────────
 
 
-def test_kb_has_19_dimensions():
-    assert len(DIMENSIONS) == 19
+def test_kb_has_expected_dimensions():
+    # 19 baseline dimensions + 4 agent-aware dimensions added in v0.3
+    # (agent_inventory, tool_governance, regulatory_perimeter, runtime_drift)
+    assert len(DIMENSIONS) == 23
 
 
 def test_every_article_maps_to_known_dimensions():
@@ -40,8 +42,11 @@ def test_dimensions_for_article_unknown_returns_empty():
 # ─── Analyzer registry ──────────────────────────────────────────────────
 
 
-def test_analyzer_registry_has_14_analyzers():
-    assert len(ANALYZER_REGISTRY) == 14
+def test_analyzer_registry_has_expected_analyzers():
+    # 14 baseline analyzers + 7 added in v0.3 (lethal_trifecta, cloud_deployment,
+    # model_typology, agent_inventory, privilege_minimization, runtime_drift,
+    # regulatory_perimeter)
+    assert len(ANALYZER_REGISTRY) == 21
 
 
 def test_every_analyzer_is_callable():
@@ -54,7 +59,7 @@ def test_every_analyzer_is_callable():
 def test_analyzers_tolerate_empty_project():
     ctx = AnalyzerContext(files={}, file_list=[], binary_files={}, languages={})
     results = run_all_analyzers(ctx)
-    assert len(results) == 14
+    assert len(results) == 21
     for r in results:
         assert 0.0 <= r.score <= 100.0
 

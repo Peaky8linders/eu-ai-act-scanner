@@ -9,7 +9,7 @@
 
 **Ships as two things in one repo:**
 1. A **Claude Code plugin** with three commands (`/ai-act-scan`, `/ai-act-scan-fix`, `/ai-act-article`) and **12 article-grounded skills** covering classification, obligations, deployer duties, GPAI, Annex IV, timeline, and penalties
-2. A **Python library** (`from scanner import scan_project`)
+2. A **Python library** (`from scanner import scan_project`) with **21 analyzers**, including 7 new agent-aware analyzers grounded in Nannini et al. (2026), *AI Agents under EU Law* — covering the four compound-risk axes (cascading, emergent, attribution, temporal), AEPD lethal-trifecta detection, runtime drift, regulatory perimeter classification, and tool-permission minimization
 
 The skills are written to the same standard: every regulatory claim cites an article (and paragraph where relevant), every skill names its audience (engineer / compliance officer / legal counsel / deployer), every skill has a Common Rationalizations table that heads off the most common mistakes, and every skill ends with a citation to the Official Journal. See [`skills/authoring-eu-ai-act-skills.md`](skills/authoring-eu-ai-act-skills.md) for the authoring standard — new skills must meet it.
 
@@ -72,7 +72,9 @@ This tool does one thing: **scan your repo and surface evidence and gaps against
 
 ## What the scanner looks at
 
-14 specialized analyzers, all deterministic static analysis (no LLM calls by default):
+21 specialized analyzers, all deterministic static analysis (no LLM calls by default):
+
+**Baseline analyzers (14):**
 
 | Analyzer | Covers | Articles |
 |---|---|---|
@@ -91,7 +93,19 @@ This tool does one thing: **scan your repo and surface evidence and gaps against
 | `cloudformation_k8s` | CloudFormation + Kubernetes manifests | Art. 15 |
 | `cicd_dockerfile` | GitHub Actions, GitLab CI, Dockerfile security | Art. 17 |
 
-Findings are aggregated into **19 compliance dimensions** (see [`scanner/kb.py`](scanner/kb.py)).
+**Agent-aware analyzers (7), added in v0.3 — grounded in Nannini et al. (2026), [*AI Agents under EU Law*](https://arxiv.org/abs/2504.06255):**
+
+| Analyzer | Covers | Compound-risk axis |
+|---|---|---|
+| `agent_inventory` | MCP, OpenAI Assistants v2, browser agents, code-interpreter sandboxes, action-verb taxonomy | Attribution (paper §10.4) |
+| `privilege_minimization` | Prompt-as-control antipattern, open exec on model output, long-lived creds, OAuth over-grant, permission registry | Cascading (OWASP Top 10 Agentic) |
+| `runtime_drift` | Floating model IDs, inline prompts, tool-catalogue manifests, Art. 3(23) substantial-modification procedure | Temporal (Art. 3(23)) |
+| `regulatory_perimeter` | GDPR / Data Act / CRA / MDR / NIS2 trigger detection, Step-9 adjacency artefact | Attribution (Art. 25) |
+| `lethal_trifecta` | AEPD rule-of-2 — untrusted input + sensitive data + autonomous state-change without HITL | Multiple |
+| `model_typology` | Foundation / generative / decision-support / perception model classification with Annex grounding | — |
+| `cloud_deployment` | Cloud-provider-specific controls and shared-responsibility flags | — |
+
+Findings are aggregated into **23 compliance dimensions** (see [`scanner/kb.py`](scanner/kb.py)), and gap findings from the four agent-aware analyzers are auto-tagged with their compound-risk axis, threat categories, and applicable operator roles via [`scanner/data/agentic_taxonomy.py`](scanner/data/agentic_taxonomy.py) and [`scanner/data/role_obligations.py`](scanner/data/role_obligations.py).
 
 ## Install
 
@@ -178,10 +192,11 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the dev loop.
 
 ## Roadmap
 
-- **v0.1**: Plugin + library (this release)
-- **v0.2**: Additional article skills + wider analyzer coverage (e.g. federated learning, RAG-specific controls)
-- **v0.3**: MCP server so non-Claude-Code agents can call the scanner
-- **v0.4**: Baseline / diff mode — scan twice, report only what changed
+- **v0.1**: Plugin + library (Apr 2026)
+- **v0.2**: 11 article-grounded skill harness for law practitioners (Apr 2026)
+- **v0.3**: 7 agent-aware analyzers per Nannini et al. (2026) + 4 new compliance dimensions + four-axis compound-risk taxonomy (this release, May 2026)
+- **v0.4**: MCP server so non-Claude-Code agents can call the scanner
+- **v0.5**: Baseline / diff mode — scan twice, report only what changed
 
 ## License
 

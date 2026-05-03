@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "eu-ai-act-scanner"
-version = "0.1.0"
-description = "Scan any codebase for EU AI Act (Regulation 2024/1689) compliance evidence and gaps. 14 analyzers, local-only static analysis, Claude Code plugin."
+version = "0.3.0"
+description = "Scan any codebase for EU AI Act (Regulation 2024/1689) compliance evidence and gaps. 21 analyzers (incl. 7 agent-aware per Nannini et al. 2026), local-only static analysis, Claude Code plugin."
 readme = "README.md"
 license = { text = "Apache-2.0" }
 authors = [{ name = "Andrei Bacu", email = "andrei@antifragile-ai.net" }]
