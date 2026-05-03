@@ -5,6 +5,71 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-05-03
+
+### Added — agent-aware analyzers and four-axis compound-risk taxonomy
+
+Backports the agentic-AI scanner work from CodexAI (the proprietary upstream
+compliance platform), grounded in Nannini et al. (2026), *AI Agents under EU
+Law: A Compliance Architecture for AI Providers*.
+
+**Seven new analyzers** (registry now totals 21):
+
+- `agent_inventory` — detects MCP clients, OpenAI Assistants v2, browser-use /
+  Playwright agents, code-interpreter sandboxes (e2b, Daytona). Categorises
+  deployments (healthcare → MDR / Annex I(A), finance, employment, etc.) and
+  derives an action-verb taxonomy (`send_email`, `execute_code`,
+  `authorize_payment`, ...). Flags missing inventory artefacts.
+- `privilege_minimization` — flags the prompt-as-control antipattern
+  ("don't delete files" in a system prompt), open exec on model output,
+  long-lived hard-coded credentials, OAuth scope over-grant (e.g. requesting
+  `gmail.send` while only reading), and recognises a `tools-permissions.yaml`
+  permission registry.
+- `runtime_drift` — flags floating model IDs (`gpt-4o`) over pinned ones
+  (`gpt-4o-2024-08-06`), inline prompts vs. versioned prompt files, missing
+  tool-catalogue manifests, and absence of an Art. 3(23) substantial-modification
+  procedure.
+- `regulatory_perimeter` — emits triggered-instrument signals for adjacent EU
+  legislation: GDPR (CRM signals), Data Act (IoT / MQTT), CRA (CLI
+  entry-points in `pyproject.toml`), MDR (FHIR / DICOM), NIS2 (OPC-UA /
+  Modbus). Flags missing Step-9 adjacent-legislation documentation.
+- `lethal_trifecta` — AEPD rule-of-2 detector: untrusted input + sensitive
+  data + autonomous state-change without a human-oversight gate (Spanish DPA
+  18 Feb 2026 guidance, aligned with Simon Willison's framing and Meta's 31
+  Oct 2025 framework).
+- `model_typology` — foundation / generative / decision-support / perception
+  classification with Annex grounding.
+- `cloud_deployment` — cloud-provider-specific control patterns and shared-
+  responsibility flags.
+
+**Four new compliance dimensions** (KB now totals 23):
+
+- `agent_inventory` (Art. 11 / Annex IV) — documented external-action surface.
+- `tool_governance` (Art. 14 / Art. 15(4)) — per-tool least-privilege scopes.
+- `regulatory_perimeter` (Art. 25 / Art. 25(4) / Art. 3(23)) — perimeter
+  classification with Art. 25(4) agreements.
+- `runtime_drift` (Art. 3(23) / Art. 12 / Art. 72) — drift detection against
+  the conformity-assessment baseline.
+
+**New data modules** under `scanner.data`:
+
+- `agentic_taxonomy` — four compound-risk axes (cascading, emergent,
+  attribution, temporal), threat-category cross-walks (Kim et al., Hammond
+  et al., OWASP Top-10 Agentic, AEPD), and seven agent archetypes.
+- `role_obligations` — operator-role obligation registry covering the six NLF
+  roles plus `gpai_provider`, `gpai_systemic_provider`, and the
+  `extraterritorial_non_eu` modifier (MSR Art. 4 / AI Act Art. 74).
+
+### Changed
+
+- `Finding` model now carries `compound_risk_type`, `applicable_roles`, and
+  `threat_categories` fields. Findings emitted by the four agent-aware
+  analyzers are auto-tagged with their compound-risk axis via
+  `_apply_default_taxonomy_tags`. Per-analyzer overrides win over defaults.
+- `ARTICLE_TO_DIMENSIONS` map extended for Art. 11, 12, 14, 15, 25, 72.
+- README rewritten with a separate "Agent-aware analyzers" table and a
+  reference to the [arXiv preprint](https://arxiv.org/abs/2504.06255).
+
 ## [0.2.0] - 2026-04-19
 
 ### Added — full EU AI Act skill harness for law practitioners
