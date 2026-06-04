@@ -59,3 +59,7 @@ class ScanResult(BaseModel):
     evidence_map: dict[str, list[str]] = Field(default_factory=dict)
     file_findings: list[FileFinding] = Field(default_factory=list)
     pre_filled_answers: dict[str, str] = Field(default_factory=dict)
+    # dim_id -> incident IDs from the vendored GenAI-incidents corpus that
+    # exploited that gap class. Populated for gap/partial dimensions only.
+    # Resolve IDs via scanner.incident_grounding / scanner.data.incident_corpus.
+    incident_grounding: dict[str, list[str]] = Field(default_factory=dict)

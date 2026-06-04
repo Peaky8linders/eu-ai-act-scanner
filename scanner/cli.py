@@ -2,6 +2,7 @@
 
 Usage:
     eu-ai-act-scan [PATH] [--json | --markdown] [--article ARTN]
+    eu-ai-act-scan --incidents KEY [--limit N]   # KEY = dimension | artNN | threat
     python -m scanner.cli ./my-project --json
 """
 
@@ -23,6 +24,12 @@ structlog.configure(
 )
 
 from scanner import __version__, scan_project  # noqa: E402
+from scanner.data.incident_corpus import get_incident  # noqa: E402
+from scanner.incident_grounding import (  # noqa: E402
+    incidents_for_article,
+    incidents_for_dimension,
+    incidents_for_threat,
+)
 from scanner.kb import DIMENSIONS, dimensions_for_article  # noqa: E402
 
 
@@ -57,7 +64,64 @@ def _format_markdown(result, top_gaps: int = 10) -> str:
         for r in result.recommendations[:top_gaps]:
             lines.append(f"- {r}")
 
+    if result.incident_grounding:
+        lines += [
+            "",
+            "## Real-world incident grounding",
+            "",
+            "_Documented incidents that exploited these gap classes "
+            "(source: emmanuelgjr/genai-incidents, CC-BY-4.0)._",
+            "",
+        ]
+        for dim_id, ids in list(result.incident_grounding.items())[:top_gaps]:
+            dim = DIMENSIONS.get(dim_id)
+            label = dim.label if dim else dim_id
+            lines.append(f"- **{label}**")
+            for iid in ids:
+                inc = get_incident(iid)
+                if inc is None:
+                    continue
+                tag = "/".join(inc.owasp_llm[:2]) or inc.attack_vector or "—"
+                lines.append(f"  - `{inc.id}` [{inc.severity}] {inc.title} ({tag})")
+
     return "\n".join(lines)
+
+
+def _incidents_payload(key: str, limit: int = 5) -> dict:
+    """Resolve a dimension id / article (artNN) / threat id to grounded incidents.
+
+    Backs the `/ai-act-incidents` command. Tries article -> dimension -> threat
+    so a single argument form covers all three lookup vocabularies.
+    """
+    key = key.strip()
+    incidents = []
+    resolved = None
+    if key.lower().startswith("art"):
+        incidents = incidents_for_article(key, limit)
+        resolved = "article"
+    if not incidents and key in DIMENSIONS:
+        incidents = incidents_for_dimension(key, limit)
+        resolved = "dimension"
+    if not incidents:
+        threat = incidents_for_threat(key, limit)
+        if threat:
+            incidents, resolved = threat, "threat"
+    if not incidents:
+        return {
+            "key": key,
+            "resolved_as": None,
+            "incidents": [],
+            "error": (
+                f"No incidents found for '{key}'. Try a dimension id (e.g. security), "
+                "an article (e.g. art15), or a threat category (e.g. prompt_injection)."
+            ),
+        }
+    return {
+        "key": key,
+        "resolved_as": resolved,
+        "count": len(incidents),
+        "incidents": [inc.to_dict() for inc in incidents],
+    }
 
 
 def _filter_by_article(result, article: str) -> dict:
@@ -111,11 +175,32 @@ def main(argv: list[str] | None = None) -> int:
         help="Project display name (default: directory name).",
     )
     parser.add_argument(
+        "--incidents", "-i",
+        metavar="KEY",
+        help=(
+            "Surface real-world incidents for a dimension id (security), an "
+            "article (art15), or a threat category (prompt_injection). Does not "
+            "scan a codebase. Source: emmanuelgjr/genai-incidents (CC-BY-4.0)."
+        ),
+    )
+    parser.add_argument(
+        "--limit", "-l",
+        type=int,
+        default=5,
+        help="Max incidents to return for --incidents (default: 5).",
+    )
+    parser.add_argument(
         "--version",
         action="version",
         version=f"%(prog)s {__version__}",
     )
     args = parser.parse_args(argv)
+
+    # Incident lookup is a corpus query — no codebase scan required.
+    if args.incidents:
+        payload = _incidents_payload(args.incidents, limit=max(1, args.limit))
+        print(json.dumps(payload, indent=2, default=str))
+        return 0 if payload.get("incidents") else 2
 
     path = Path(args.path)
     if not path.exists():

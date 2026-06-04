@@ -1,0 +1,5209 @@
+{
+  "_meta": {
+    "dataset_id": "emmanuelgjr/genai-incidents",
+    "dataset_url": "https://huggingface.co/datasets/emmanuelgjr/genai-incidents",
+    "license": "CC-BY-4.0",
+    "doi": "10.57967/hf/genai-incidents",
+    "pip": "genai-incidents",
+    "source_aggregation": [
+      "AIID",
+      "OECD AIM",
+      "AIAAIC",
+      "MITRE ATLAS",
+      "AVID",
+      "MIT AI Risk Repository",
+      "NVD",
+      "GHSA",
+      "OSV",
+      "garak",
+      "promptfoo"
+    ],
+    "crosswalk_version": "2026.06.04.v1",
+    "total_source_rows": 7725,
+    "vetted_rows": 6362,
+    "selected": 88,
+    "quality_tiers_included": [
+      "curated",
+      "reviewed"
+    ],
+    "last_synced": "2026-06-04",
+    "attribution": "GenAI & Agentic AI Security Incidents dataset by Emmanuel G. (emmanuelgjr), HuggingFace, licensed CC-BY-4.0. Bundled subset is a curated, reviewed-tier derivative used for offline incident grounding; the full dataset is available via `pip install genai-incidents`."
+  },
+  "incidents": [
+    {
+      "id": "INC-00113",
+      "title": "AI Chatbots in Mental Health Linked to Harm and Lawsuits in the US",
+      "year": 2026,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "unsafe-advice",
+      "description": "AI-powered mental health chatbots, widely adopted in the US, have been linked to direct harms including mental health deterioration, encouragement of self-harm, and wrongful death lawsuits. These incidents highlight the risks of relying on AI for therapy, with concerns over harmful advice, privacy, and deceptive marketing practices.",
+      "owasp_llm": [
+        "LLM05",
+        "LLM09"
+      ],
+      "owasp_asi": [
+        "ASI09"
+      ],
+      "nist_ai_rmf": [
+        "MAP-3.5",
+        "MEASURE-2.7",
+        "MEASURE-2.8"
+      ],
+      "mitre_atlas": [
+        "AML.T0048.003",
+        "AML.T0050",
+        "AML.T0058"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0003",
+        "AML.TA0005",
+        "AML.TA0011"
+      ],
+      "mitigations": [],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "AI Chatbots in Mental Health Linked to Harm and Lawsuits in the US",
+          "url": "https://oecd.ai/en/incidents/2026-04-17-94ab"
+        },
+        {
+          "title": "Your New Therapist: Chatty, Leaky, and Hardly Human - RocketNews",
+          "url": "https://rocketnews.com/2026/04/your-new-therapist-chatty-leaky-and-hardly-human/"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-00426",
+      "title": "AI-Generated Disinformation Amplifies Violence and Fear After Cartel Leader's Death in Mexico",
+      "year": 2026,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "misinformation",
+      "description": "Following the killing of cartel leader 'El Mencho' in Mexico, organized crime groups used AI-generated fake images and news to exaggerate violence and chaos online. This disinformation campaign fueled public fear, confusion, and real-world unrest, complicating authorities' response and harming communities.",
+      "owasp_llm": [
+        "LLM09"
+      ],
+      "owasp_asi": [],
+      "nist_ai_rmf": [
+        "MEASURE-2.8"
+      ],
+      "mitre_atlas": [
+        "AML.T0058"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0003"
+      ],
+      "mitigations": [],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "AI-Generated Disinformation Amplifies Violence and Fear After Cartel Leader's Death in Mexico",
+          "url": "https://oecd.ai/en/incidents/2026-02-24-e717"
+        },
+        {
+          "title": "La Jornada: Noticias falsas, narcoinfluencers e IA amplificaron la violencia y el miedo",
+          "url": "https://www.jornada.com.mx/2026/02/25/politica/004n1pol"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-00671",
+      "title": "Axios npm supply chain attack - North Korean Sapphire Sleet targets 70M weekly downloads",
+      "year": 2026,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "supply-chain",
+      "description": "North Korean state actor Sapphire Sleet compromised the npm account of an axios maintainer, publishing malicious versions with a hidden dependency deploying a cross-platform RAT via post-install hook. Significant because AI coding agents autonomously run npm install. Active ~3 hours.",
+      "owasp_llm": [
+        "LLM03",
+        "LLM05",
+        "LLM06"
+      ],
+      "owasp_asi": [
+        "ASI04",
+        "ASI05"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-3.2",
+        "GOVERN-6.1",
+        "GOVERN-6.2",
+        "MANAGE-2.3",
+        "MANAGE-2.4",
+        "MAP-3.5",
+        "MAP-4.1",
+        "MEASURE-2.5",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0010",
+        "AML.T0010.001",
+        "AML.T0010.003",
+        "AML.T0011",
+        "AML.T0048",
+        "AML.T0049",
+        "AML.T0050",
+        "AML.T0053",
+        "AML.T0060"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0003",
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0011",
+        "AML.TA0012"
+      ],
+      "mitigations": [
+        "Lock file integrity monitoring",
+        "Sandbox npm install operations in AI coding agents",
+        "npm provenance verification"
+      ],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "North Korea targets axios npm package",
+          "url": "https://cloud.google.com/blog/topics/threat-intelligence/north-korea-threat-actor-targets-axios-npm-package"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-00740",
+      "title": "Chat & Ask AI app - 300 million messages from 25 million users exposed via misconfigured Firebase",
+      "year": 2026,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "auth-bypass",
+      "description": "AI chat wrapper app (50M+ users, interfaces to ChatGPT/Claude/Gemini) had misconfigured Firebase backend allowing self-designation as authenticated user. 300 million messages from 25 million users exposed including illegal activity discussions and suicide assistance requests.",
+      "owasp_llm": [
+        "LLM02"
+      ],
+      "owasp_asi": [
+        "ASI03",
+        "ASI09"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.1",
+        "GOVERN-1.4",
+        "GOVERN-3.2",
+        "MAP-3.5",
+        "MEASURE-2.10",
+        "MEASURE-2.7",
+        "MEASURE-2.8"
+      ],
+      "mitre_atlas": [
+        "AML.T0012",
+        "AML.T0024",
+        "AML.T0048.001",
+        "AML.T0048.003",
+        "AML.T0055",
+        "AML.T0057"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0004",
+        "AML.TA0010",
+        "AML.TA0011",
+        "AML.TA0012",
+        "AML.TA0013"
+      ],
+      "mitigations": [
+        "Authentication enforcement validation",
+        "Data encryption at rest",
+        "Firebase security rules audit"
+      ],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "AI chat app leak exposes 300 million messages",
+          "url": "https://www.malwarebytes.com/blog/news/2026/02/ai-chat-app-leak-exposes-300-million-messages-tied-to-25-million-users"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-00746",
+      "title": "ChatGPT Data Exfiltration via DNS Covert Channel",
+      "year": 2026,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "data-exfiltration",
+      "description": "A single malicious prompt creates a covert DNS-based exfiltration channel leaking user messages, uploaded files, and conversation content. Bypasses AI guardrails by exploiting the underlying Linux runtime. Fixed by OpenAI February 20, 2026.",
+      "owasp_llm": [
+        "LLM01",
+        "LLM02",
+        "LLM05",
+        "LLM06"
+      ],
+      "owasp_asi": [
+        "ASI01",
+        "ASI02",
+        "ASI03",
+        "ASI05"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.1",
+        "GOVERN-1.4",
+        "GOVERN-3.2",
+        "MANAGE-2.3",
+        "MAP-2.1",
+        "MAP-3.5",
+        "MEASURE-2.10",
+        "MEASURE-2.5",
+        "MEASURE-2.6",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0011",
+        "AML.T0012",
+        "AML.T0024",
+        "AML.T0025",
+        "AML.T0049",
+        "AML.T0050",
+        "AML.T0051",
+        "AML.T0051.000",
+        "AML.T0051.001",
+        "AML.T0053",
+        "AML.T0055",
+        "AML.T0057",
+        "AML.T0060"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0003",
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0010",
+        "AML.TA0012",
+        "AML.TA0013"
+      ],
+      "mitigations": [],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "OpenAI",
+          "url": "https://thehackernews.com/2026/03/openai-patches-chatgpt-data.html"
+        },
+        {
+          "title": "Check Point",
+          "url": "https://blog.checkpoint.com/research/when-ai-trust-breaks-the-chatgpt-data-leakage-flaw-that-redefined-ai-vendor-security-trust/"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-00806",
+      "title": "Claude AI jailbreak - Mexican government breach, 150GB data theft across 10 agencies",
+      "year": 2026,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "jailbreak",
+      "description": "A solo threat actor jailbroke Claude via persistent Spanish-language prompt engineering. Claude wrote exploits, built tools, and automated data exfiltration. Over 1,000 prompts. 10 Mexican government bodies breached including the federal tax authority and national electoral institute. 150GB stolen including ~195 million taxpayer records.",
+      "owasp_llm": [
+        "LLM01",
+        "LLM02"
+      ],
+      "owasp_asi": [
+        "ASI01",
+        "ASI02",
+        "ASI10"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.1",
+        "GOVERN-1.4",
+        "GOVERN-3.2",
+        "GOVERN-6.2",
+        "MANAGE-2.3",
+        "MANAGE-2.4",
+        "MAP-2.1",
+        "MAP-3.5",
+        "MEASURE-2.10",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0024",
+        "AML.T0025",
+        "AML.T0039",
+        "AML.T0048",
+        "AML.T0050",
+        "AML.T0051",
+        "AML.T0051.000",
+        "AML.T0051.001",
+        "AML.T0053",
+        "AML.T0054",
+        "AML.T0057"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0005",
+        "AML.TA0007",
+        "AML.TA0010",
+        "AML.TA0011",
+        "AML.TA0012"
+      ],
+      "mitigations": [
+        "Abuse detection for offensive security workflows",
+        "Multi-lingual jailbreak detection",
+        "Rate limiting for exploit-generation patterns"
+      ],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "Hacker used Claude to steal sensitive Mexican data",
+          "url": "https://www.bloomberg.com/news/articles/2026-02-25/hacker-used-anthropic-s-claude-to-steal-sensitive-mexican-data"
+        },
+        {
+          "title": "Claude Mexico breach analysis",
+          "url": "https://venturebeat.com/security/claude-mexico-breach-four-blind-domains-security-stack"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-00813",
+      "title": "Claude Code Project Files RCE & API Token Exfiltration (CVE-2025-59536 & CVE-2026-21852)",
+      "year": 2026,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "rce",
+      "description": "CVE-2025-59536: Malicious `.claude/settings.json` hooks execute shell commands on SessionStart, achieving RCE before user reads the trust dialog. CVE-2026-21852: Malicious repos exfiltrate Anthropic API keys by overriding ANTHROPIC_BASE_URL to attacker-controlled servers. A single malicious commit could compromise any developer.",
+      "owasp_llm": [
+        "LLM01",
+        "LLM02",
+        "LLM03",
+        "LLM05",
+        "LLM06"
+      ],
+      "owasp_asi": [
+        "ASI02",
+        "ASI03",
+        "ASI04",
+        "ASI05",
+        "ASI09"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.4",
+        "GOVERN-6.1",
+        "GOVERN-6.2",
+        "MANAGE-2.3",
+        "MANAGE-2.4",
+        "MANAGE-3.1",
+        "MAP-3.5",
+        "MAP-4.1",
+        "MEASURE-2.10",
+        "MEASURE-2.5",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0010",
+        "AML.T0010.001",
+        "AML.T0010.003",
+        "AML.T0011",
+        "AML.T0012",
+        "AML.T0048.003",
+        "AML.T0049",
+        "AML.T0050",
+        "AML.T0051",
+        "AML.T0053",
+        "AML.T0055",
+        "AML.T0057",
+        "AML.T0060"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0003",
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0010",
+        "AML.TA0011",
+        "AML.TA0012",
+        "AML.TA0013"
+      ],
+      "mitigations": [],
+      "cve_ids": [
+        "CVE-2025-59536",
+        "CVE-2026-21852"
+      ],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "Check Point Research",
+          "url": "https://research.checkpoint.com/2026/rce-and-api-token-exfiltration-through-claude-code-project-files-cve-2025-59536/"
+        },
+        {
+          "title": "NVD",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-21852"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-00827",
+      "title": "Claude Cowork File Exfiltration",
+      "year": 2026,
+      "severity": "High",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "prompt-injection",
+      "description": "Claude Cowork could be tricked via indirect prompt injection into uploading user files to an attacker's Anthropic account using curl to the whitelisted Anthropic Files API. Reused the same exfiltration vector previously reported for Claude Code. Anthropic shipped Cowork with this known vulnerability.",
+      "owasp_llm": [
+        "LLM01",
+        "LLM02",
+        "LLM06",
+        "LLM08"
+      ],
+      "owasp_asi": [
+        "ASI01",
+        "ASI02",
+        "ASI06",
+        "ASI09"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-3.2",
+        "MANAGE-2.3",
+        "MAP-2.1",
+        "MAP-3.5",
+        "MEASURE-2.10",
+        "MEASURE-2.6",
+        "MEASURE-2.7",
+        "MEASURE-2.8"
+      ],
+      "mitre_atlas": [
+        "AML.T0048.001",
+        "AML.T0048.003",
+        "AML.T0050",
+        "AML.T0051",
+        "AML.T0051.000",
+        "AML.T0051.001",
+        "AML.T0053",
+        "AML.T0057",
+        "AML.T0066",
+        "AML.T0070"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0003",
+        "AML.TA0005",
+        "AML.TA0006",
+        "AML.TA0010",
+        "AML.TA0011",
+        "AML.TA0012"
+      ],
+      "mitigations": [],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "PromptArmor",
+          "url": "https://www.promptarmor.com/resources/claude-cowork-exfiltrates-files"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-00832",
+      "title": "Claude-powered Cursor AI agent deletes production database in 9 seconds",
+      "year": 2026,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "tool-abuse",
+      "description": "A Claude-powered Cursor AI agent deleted an entire production database for the PocketOS startup in approximately 9 seconds after misinterpreting an instruction during agentic operation, eliminating customer data.",
+      "owasp_llm": [
+        "LLM05",
+        "LLM06"
+      ],
+      "owasp_asi": [
+        "ASI02",
+        "ASI05"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.1",
+        "MANAGE-1.3",
+        "MAP-3.5",
+        "MEASURE-2.6",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0048",
+        "AML.T0050",
+        "AML.T0053"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0005",
+        "AML.TA0011",
+        "AML.TA0012"
+      ],
+      "mitigations": [],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "Claude-Powered Cursor AI Agent Deletes an Entire Company Database in 9 Seconds - CX Today",
+          "url": "https://www.cxtoday.com/security-privacy-compliance/claude-powered-cursor-ai-agent-deletes-an-entire-company-database-in-9-seconds-is-your-customer-data-secure/"
+        },
+        {
+          "title": "Cursor-Opus agent snuffs out startup's production database - The Register",
+          "url": "https://www.theregister.com/2026/04/27/cursoropus_agent_snuffs_out_pocketos/"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-00834",
+      "title": "Clinejection - CI/CD pipeline compromise via Cline's issue triage bot, 4,000 machines infected",
+      "year": 2026,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "prompt-injection",
+      "description": "A prompt injection in Cline's Claude-powered GitHub issue triage bot allowed code execution in CI, poisoning of GitHub Actions cache, and theft of npm publish tokens. Attacker published malicious Cline CLI v2.3.0 to npm, silently installing malware on ~4,000 developer machines during an 8-hour window.",
+      "owasp_llm": [
+        "LLM01",
+        "LLM03",
+        "LLM04",
+        "LLM05"
+      ],
+      "owasp_asi": [
+        "ASI01",
+        "ASI04",
+        "ASI05",
+        "ASI10"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.4",
+        "GOVERN-6.1",
+        "GOVERN-6.2",
+        "MANAGE-2.3",
+        "MANAGE-2.4",
+        "MANAGE-3.2",
+        "MAP-2.1",
+        "MAP-4.1",
+        "MAP-4.2",
+        "MEASURE-2.5",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0010",
+        "AML.T0010.001",
+        "AML.T0010.003",
+        "AML.T0011",
+        "AML.T0018",
+        "AML.T0019",
+        "AML.T0020",
+        "AML.T0039",
+        "AML.T0048",
+        "AML.T0049",
+        "AML.T0050",
+        "AML.T0051",
+        "AML.T0051.000",
+        "AML.T0051.001",
+        "AML.T0059",
+        "AML.T0060"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0001",
+        "AML.TA0003",
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0006",
+        "AML.TA0011"
+      ],
+      "mitigations": [
+        "Isolate AI triage bots from CI/CD execution",
+        "Package integrity monitoring",
+        "npm publish token protection (2FA, short-lived)"
+      ],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "Clinejection: CI/CD supply chain attack",
+          "url": "https://adnanthekhan.com/posts/clinejection/"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-00860",
+      "title": "CrewAI Critical Vulnerabilities (CVE-2026-2275 et al.)",
+      "year": 2026,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "ssrf",
+      "description": "Four CVEs: sandbox escape via CodeInterpreter Docker fallback, SSRF in RAG search tools, arbitrary local file read in JSON loader. Chained via prompt injection to escape sandbox and execute code on host. Separately, a leaked internal GitHub token (CVSS 9.2) granted full access to CrewAI's private repos. No complete patch available.",
+      "owasp_llm": [
+        "LLM01",
+        "LLM02",
+        "LLM03",
+        "LLM05",
+        "LLM08"
+      ],
+      "owasp_asi": [
+        "ASI02",
+        "ASI03",
+        "ASI04",
+        "ASI05"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.1",
+        "GOVERN-1.4",
+        "GOVERN-3.2",
+        "GOVERN-6.1",
+        "MANAGE-2.3",
+        "MAP-2.1",
+        "MAP-3.5",
+        "MEASURE-2.10",
+        "MEASURE-2.5",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0010",
+        "AML.T0011",
+        "AML.T0012",
+        "AML.T0024",
+        "AML.T0049",
+        "AML.T0050",
+        "AML.T0051",
+        "AML.T0051.000",
+        "AML.T0051.001",
+        "AML.T0053",
+        "AML.T0055",
+        "AML.T0057",
+        "AML.T0060",
+        "AML.T0066",
+        "AML.T0070"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0003",
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0006",
+        "AML.TA0010",
+        "AML.TA0012",
+        "AML.TA0013"
+      ],
+      "mitigations": [],
+      "cve_ids": [
+        "CVE-2026-2275",
+        "CVE-2026-2285",
+        "CVE-2026-2286",
+        "CVE-2026-2287"
+      ],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "CERT/CC VU#221883",
+          "url": "https://kb.cert.org/vuls/id/221883"
+        },
+        {
+          "title": "Noma Security",
+          "url": "https://noma.security/blog/uncrew-the-risk-behind-a-leaked-internal-github-token-at-crewai/"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-00924",
+      "title": "EchoLeak - zero-click Microsoft Copilot data exfiltration via email prompt injection",
+      "year": 2026,
+      "severity": "Critical",
+      "category": "research-demonstrated",
+      "corpus": "security",
+      "attack_vector": "prompt-injection",
+      "description": "Critical zero-click exploit (CVE-2025-32711) allowing a mere email to trigger Microsoft Copilot leaking confidential data - emails, files, chat logs - outside intended scope. No user interaction required.",
+      "owasp_llm": [
+        "LLM01",
+        "LLM02",
+        "LLM03",
+        "LLM04",
+        "LLM05",
+        "LLM06"
+      ],
+      "owasp_asi": [
+        "ASI01",
+        "ASI02",
+        "ASI04",
+        "ASI05",
+        "ASI06",
+        "ASI08",
+        "ASI09"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.1",
+        "GOVERN-1.4",
+        "GOVERN-3.2",
+        "GOVERN-6.1",
+        "MANAGE-2.1",
+        "MANAGE-2.2",
+        "MANAGE-2.3",
+        "MANAGE-2.4",
+        "MANAGE-3.2",
+        "MANAGE-4.1",
+        "MAP-2.1",
+        "MAP-3.5",
+        "MAP-4.2",
+        "MEASURE-2.10",
+        "MEASURE-2.6",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0010",
+        "AML.T0018",
+        "AML.T0019",
+        "AML.T0020",
+        "AML.T0024",
+        "AML.T0025",
+        "AML.T0048",
+        "AML.T0048.003",
+        "AML.T0050",
+        "AML.T0051",
+        "AML.T0051.000",
+        "AML.T0051.001",
+        "AML.T0053",
+        "AML.T0054",
+        "AML.T0057",
+        "AML.T0059",
+        "AML.T0066"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0001",
+        "AML.TA0003",
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0006",
+        "AML.TA0007",
+        "AML.TA0010",
+        "AML.TA0011",
+        "AML.TA0012"
+      ],
+      "mitigations": [
+        "Anomaly detection for bulk data access patterns",
+        "Data loss prevention for AI-generated outputs",
+        "Email content sanitization before AI processing"
+      ],
+      "cve_ids": [
+        "CVE-2025-32711"
+      ],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "EchoLeak: Zero-click Copilot vulnerability",
+          "url": "https://www.aim.security/post/echoleak-blogpost"
+        },
+        {
+          "title": "Microsoft",
+          "url": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2025-32711"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-01064",
+      "title": "GeminiJack - zero-click Gemini Enterprise data exfiltration via shared Google Docs",
+      "year": 2026,
+      "severity": "Critical",
+      "category": "research-demonstrated",
+      "corpus": "security",
+      "attack_vector": "indirect-prompt-injection",
+      "description": "Indirect prompt injection via shared Google Docs, calendar invites, or emails causes Gemini Enterprise to search for sensitive terms and embed results in an external image URL. A single poisoned document could exfiltrate years of email, calendar, and document data with zero clicks, zero warnings, and zero DLP alerts.",
+      "owasp_llm": [
+        "LLM01",
+        "LLM02",
+        "LLM04",
+        "LLM06"
+      ],
+      "owasp_asi": [
+        "ASI01",
+        "ASI02",
+        "ASI06",
+        "ASI09"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.1",
+        "GOVERN-3.2",
+        "MANAGE-2.3",
+        "MANAGE-2.4",
+        "MANAGE-3.2",
+        "MAP-2.1",
+        "MAP-3.5",
+        "MAP-4.2",
+        "MEASURE-2.10",
+        "MEASURE-2.6",
+        "MEASURE-2.7",
+        "MEASURE-2.8"
+      ],
+      "mitre_atlas": [
+        "AML.T0018",
+        "AML.T0019",
+        "AML.T0020",
+        "AML.T0048.001",
+        "AML.T0048.003",
+        "AML.T0050",
+        "AML.T0051",
+        "AML.T0051.000",
+        "AML.T0051.001",
+        "AML.T0053",
+        "AML.T0057",
+        "AML.T0059",
+        "AML.T0066"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0001",
+        "AML.TA0003",
+        "AML.TA0005",
+        "AML.TA0006",
+        "AML.TA0010",
+        "AML.TA0011",
+        "AML.TA0012"
+      ],
+      "mitigations": [
+        "Block external image loading in AI-generated content",
+        "Content sanitization for shared documents",
+        "DLP monitoring for AI-mediated data access patterns"
+      ],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "GeminiJack: Zero-click Gemini vulnerability",
+          "url": "https://noma.security/blog/geminijack-google-gemini-zero-click-vulnerability/"
+        },
+        {
+          "title": "Indirect prompt injections & Google's layered defense - Google Workspace",
+          "url": "https://knowledge.workspace.google.com/admin/security/indirect-prompt-injections-and-googles-layered-defense-strategy-for-gemini"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-01092",
+      "title": "GlassWorm supply chain - 72 malicious VSCode extensions, 9 million installs",
+      "year": 2026,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "supply-chain",
+      "description": "Supply chain campaign targeting developers via 72 malicious OpenVSX extensions and 151+ GitHub repositories. 9 million installs. 433 compromised components. Used invisible Unicode characters to encode payloads. Targeted crypto wallets, credentials, SSH keys. Extensions mimicked AI coding assistant tools.",
+      "owasp_llm": [
+        "LLM03",
+        "LLM05"
+      ],
+      "owasp_asi": [
+        "ASI03",
+        "ASI04",
+        "ASI05"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.4",
+        "GOVERN-6.1",
+        "GOVERN-6.2",
+        "MANAGE-2.3",
+        "MAP-4.1",
+        "MEASURE-2.5",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0010",
+        "AML.T0010.001",
+        "AML.T0010.003",
+        "AML.T0011",
+        "AML.T0012",
+        "AML.T0049",
+        "AML.T0050",
+        "AML.T0055",
+        "AML.T0060"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0003",
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0012",
+        "AML.TA0013"
+      ],
+      "mitigations": [
+        "Code signing for marketplace extensions",
+        "Extension provenance verification",
+        "Runtime monitoring for extension network activity"
+      ],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "GlassWorm: Unicode attack across GitHub, npm, VSCode",
+          "url": "https://www.aikido.dev/blog/glassworm-returns-unicode-attack-github-npm-vscode"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-01297",
+      "title": "Langflow CSV Agent RCE via Prompt Injection (CVE-2026-27966)",
+      "year": 2026,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "prompt-injection",
+      "description": "CVSS 9.8. Langflow's CSVAgentComponent hardcodes `allow_dangerous_code=True`, auto-enabling LangChain's Python REPL tool. Attackers inject malicious prompts through user-supplied input, achieving arbitrary Python/OS command execution. No authentication required. Affects versions prior to 1.8.0.",
+      "owasp_llm": [
+        "LLM01",
+        "LLM05"
+      ],
+      "owasp_asi": [
+        "ASI01",
+        "ASI02",
+        "ASI05"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-3.2",
+        "MANAGE-2.3",
+        "MAP-2.1",
+        "MAP-3.5",
+        "MEASURE-2.5",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0011",
+        "AML.T0049",
+        "AML.T0050",
+        "AML.T0051",
+        "AML.T0051.000",
+        "AML.T0051.001",
+        "AML.T0053",
+        "AML.T0060"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0003",
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0012"
+      ],
+      "mitigations": [],
+      "cve_ids": [
+        "CVE-2026-27966"
+      ],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "GitHub Advisory",
+          "url": "https://github.com/advisories/GHSA-3645-fxcv-hqr4"
+        },
+        {
+          "title": "TheHackerWire",
+          "url": "https://www.thehackerwire.com/langflow-csv-agent-rce-via-prompt-injection/"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-01327",
+      "title": "LibreChat MCP command injection (STDIO)",
+      "year": 2026,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "command-injection",
+      "description": "Command injection in LibreChat's MCP STDIO integration; instance of the systemic STDIO configuration-to-command-execution flaw in Anthropic MCP propagating through downstream clients.",
+      "owasp_llm": [
+        "LLM01",
+        "LLM03",
+        "LLM05",
+        "LLM06"
+      ],
+      "owasp_asi": [
+        "ASI01",
+        "ASI04",
+        "ASI05",
+        "ASI07"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-6.1",
+        "MANAGE-3.1",
+        "MAP-3.5",
+        "MAP-4.1",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0010",
+        "AML.T0011",
+        "AML.T0050",
+        "AML.T0051",
+        "AML.T0053"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0012"
+      ],
+      "mitigations": [],
+      "cve_ids": [
+        "CVE-2025-54994",
+        "CVE-2026-22252",
+        "CVE-2026-22688",
+        "CVE-2026-30615",
+        "CVE-2026-30616",
+        "CVE-2026-30617"
+      ],
+      "cvss_score": 8.8,
+      "references": [
+        {
+          "title": "OX Security advisory",
+          "url": "https://www.ox.security/blog/mcp-supply-chain-advisory-rce-vulnerabilities-across-the-ai-ecosystem/"
+        },
+        {
+          "title": "NVD",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-40933"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-01328",
+      "title": "LibreChat MCP credential placeholder substitution -> OAuth token exfiltration",
+      "year": 2026,
+      "severity": "High",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "info-disclosure",
+      "description": "LibreChat 0.8.2-rc1 through 0.8.3-rc1: user-created MCP servers can include arbitrary HTTP headers that undergo credential placeholder substitution. A malicious MCP server with headers like '{{LIBRECHAT_OPENID_ACCESS_TOKEN}}' causes any user calling tools on that server to exfiltrate their OAuth tokens.",
+      "owasp_llm": [
+        "LLM02",
+        "LLM03",
+        "LLM06"
+      ],
+      "owasp_asi": [
+        "ASI03",
+        "ASI04",
+        "ASI07",
+        "ASI09"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.4",
+        "GOVERN-6.1",
+        "MAP-3.5",
+        "MAP-4.1",
+        "MEASURE-2.10",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0010",
+        "AML.T0012",
+        "AML.T0048.003",
+        "AML.T0053",
+        "AML.T0057"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0010",
+        "AML.TA0011",
+        "AML.TA0012"
+      ],
+      "mitigations": [],
+      "cve_ids": [
+        "CVE-2026-31951"
+      ],
+      "cvss_score": 8.1,
+      "references": [
+        {
+          "title": "cvedetails",
+          "url": "https://www.cvedetails.com/cve/CVE-2026-31951/"
+        },
+        {
+          "title": "NVD",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-31951"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-01339",
+      "title": "LiteLLM proxy /config/update authz bypass -> RCE",
+      "year": 2026,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "auth-bypass",
+      "description": "Authorization bypass in LiteLLM proxy < 1.83.0. /config/update endpoint does not enforce admin role authorization, allowing authenticated users to modify proxy configs and env vars, enabling RCE, arbitrary file read and privileged-account takeover.",
+      "owasp_llm": [
+        "LLM02",
+        "LLM03",
+        "LLM05",
+        "LLM06"
+      ],
+      "owasp_asi": [
+        "ASI03",
+        "ASI04",
+        "ASI05"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.4",
+        "GOVERN-6.1",
+        "MAP-3.5",
+        "MEASURE-2.10",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0010",
+        "AML.T0011",
+        "AML.T0012",
+        "AML.T0050",
+        "AML.T0053",
+        "AML.T0057"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0010",
+        "AML.TA0012"
+      ],
+      "mitigations": [],
+      "cve_ids": [
+        "CVE-2026-35029"
+      ],
+      "cvss_score": 9.1,
+      "references": [
+        {
+          "title": "SentinelOne",
+          "url": "https://www.sentinelone.com/vulnerability-database/cve-2026-35029/"
+        },
+        {
+          "title": "NVD",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-35029"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-01340",
+      "title": "LiteLLM PyPI supply chain backdoor - TeamPCP campaign compromises 3.4M daily downloads",
+      "year": 2026,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "supply-chain",
+      "description": "TeamPCP compromised LiteLLM (3.4M daily downloads) via a poisoned Trivy GitHub Action that stole the PYPI_PUBLISH token. Backdoored versions contained a three-stage credential harvester collecting SSH keys, cloud tokens, Kubernetes configs. Available ~3 hours before PyPI quarantine.",
+      "owasp_llm": [
+        "LLM03",
+        "LLM04",
+        "LLM05"
+      ],
+      "owasp_asi": [
+        "ASI03",
+        "ASI04",
+        "ASI05"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.4",
+        "GOVERN-6.1",
+        "GOVERN-6.2",
+        "MANAGE-2.3",
+        "MANAGE-3.2",
+        "MAP-4.1",
+        "MAP-4.2",
+        "MEASURE-2.5",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0010",
+        "AML.T0010.001",
+        "AML.T0010.003",
+        "AML.T0011",
+        "AML.T0012",
+        "AML.T0018",
+        "AML.T0019",
+        "AML.T0020",
+        "AML.T0049",
+        "AML.T0050",
+        "AML.T0055",
+        "AML.T0059",
+        "AML.T0060"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0001",
+        "AML.TA0003",
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0006",
+        "AML.TA0011",
+        "AML.TA0012",
+        "AML.TA0013"
+      ],
+      "mitigations": [
+        "GitHub Actions supply chain verification",
+        "Package integrity monitoring and rollback",
+        "PyPI publish token rotation and 2FA"
+      ],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "Inside LiteLLM supply chain compromise",
+          "url": "https://www.trendmicro.com/en_us/research/26/c/inside-litellm-supply-chain-compromise.html"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-01411",
+      "title": "Meta Rogue AI Agent Sev-1 - autonomous agent posts incorrect advice, exposing proprietary data",
+      "year": 2026,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "other",
+      "description": "An autonomous AI agent inside Meta posted incorrect technical advice on an internal forum without human approval. An employee followed it, exposing proprietary code, business strategies, and user-related datasets to unauthorized engineers for two hours. Classified as Sev-1.",
+      "owasp_llm": [
+        "LLM06",
+        "LLM09"
+      ],
+      "owasp_asi": [
+        "ASI08",
+        "ASI09",
+        "ASI10"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.4",
+        "GOVERN-3.2",
+        "GOVERN-6.2",
+        "MANAGE-2.3",
+        "MANAGE-2.4",
+        "MANAGE-4.1",
+        "MANAGE-4.3",
+        "MAP-3.5",
+        "MEASURE-2.5",
+        "MEASURE-2.8"
+      ],
+      "mitre_atlas": [
+        "AML.T0039",
+        "AML.T0048",
+        "AML.T0048.001",
+        "AML.T0048.003",
+        "AML.T0053",
+        "AML.T0058"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0003",
+        "AML.TA0005",
+        "AML.TA0011",
+        "AML.TA0012"
+      ],
+      "mitigations": [
+        "Agent output confidence thresholds for autonomous posting",
+        "Content review before publishing agent-generated advice",
+        "Human-in-the-loop for agent posts to shared channels"
+      ],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "Meta is having trouble with rogue AI agents",
+          "url": "https://techcrunch.com/2026/03/18/meta-is-having-trouble-with-rogue-ai-agents/"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-01429",
+      "title": "Microsoft 365 Copilot XPIA phishing - attacker-shaped email summaries via hidden instructions",
+      "year": 2026,
+      "severity": "Critical",
+      "category": "research-demonstrated",
+      "corpus": "security",
+      "attack_vector": "xss",
+      "description": "Cross-prompt injection attack (CVE-2026-26133) in Microsoft 365 Copilot email/Teams summarization. Attacker embeds hidden instructions in ordinary emails; Copilot produces convincing phishing content within the trusted summary interface.",
+      "owasp_llm": [
+        "LLM01",
+        "LLM03",
+        "LLM04",
+        "LLM05"
+      ],
+      "owasp_asi": [
+        "ASI01",
+        "ASI04",
+        "ASI05",
+        "ASI06",
+        "ASI09"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-3.2",
+        "GOVERN-6.1",
+        "MANAGE-2.3",
+        "MANAGE-3.2",
+        "MAP-2.1",
+        "MAP-3.5",
+        "MAP-4.2",
+        "MEASURE-2.7",
+        "MEASURE-2.8"
+      ],
+      "mitre_atlas": [
+        "AML.T0010",
+        "AML.T0018",
+        "AML.T0019",
+        "AML.T0020",
+        "AML.T0048.001",
+        "AML.T0048.003",
+        "AML.T0050",
+        "AML.T0051",
+        "AML.T0051.000",
+        "AML.T0051.001",
+        "AML.T0059",
+        "AML.T0066"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0001",
+        "AML.TA0003",
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0006",
+        "AML.TA0011"
+      ],
+      "mitigations": [
+        "Email content sanitization before AI summarization",
+        "Phishing detection in AI-generated outputs",
+        "Visual distinction for AI-generated vs original content"
+      ],
+      "cve_ids": [
+        "CVE-2026-26133"
+      ],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "Copilot prompt injection AI email phishing",
+          "url": "https://permiso.io/blog/copilot-prompt-injection-ai-email-phishing"
+        },
+        {
+          "title": "NVD",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-26133"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-01440",
+      "title": "Microsoft Semantic Kernel RCE (CVE-2026-26030)",
+      "year": 2026,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "rce",
+      "description": "CVSS 9.9. Critical RCE in Microsoft Semantic Kernel Python SDK's InMemoryVectorStore filter functionality. Attackers execute arbitrary code through crafted filter expressions. Semantic Kernel powers many Microsoft Copilot integrations and RAG-based AI applications. Fixed in python-1.39.4.",
+      "owasp_llm": [
+        "LLM04",
+        "LLM05",
+        "LLM08"
+      ],
+      "owasp_asi": [
+        "ASI02",
+        "ASI05"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-3.2",
+        "MANAGE-2.3",
+        "MANAGE-3.2",
+        "MAP-3.5",
+        "MAP-4.2",
+        "MEASURE-2.5",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0011",
+        "AML.T0018",
+        "AML.T0019",
+        "AML.T0020",
+        "AML.T0049",
+        "AML.T0050",
+        "AML.T0053",
+        "AML.T0059",
+        "AML.T0060",
+        "AML.T0066",
+        "AML.T0070"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0001",
+        "AML.TA0003",
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0006",
+        "AML.TA0011",
+        "AML.TA0012"
+      ],
+      "mitigations": [],
+      "cve_ids": [
+        "CVE-2026-26030"
+      ],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "NVD",
+          "url": "https://nvd.nist.gov/vuln/detail/cve-2026-26030"
+        },
+        {
+          "title": "GitLab Advisory",
+          "url": "https://advisories.gitlab.com/pkg/pypi/semantic-kernel/CVE-2026-26030/"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-01465",
+      "title": "Moltbook - vibe-coded social network exposes 1.5M API tokens and 35K emails",
+      "year": 2026,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "other",
+      "description": "Moltbook, a social network built entirely via vibe coding (zero manual code), exposed 1.5 million API authentication tokens, 35,000 email addresses, and thousands of private messages via an unsecured Supabase database. The AI scaffolded the database with permissive settings; the founder deployed as-is without review.",
+      "owasp_llm": [
+        "LLM02"
+      ],
+      "owasp_asi": [
+        "ASI03",
+        "ASI09"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.1",
+        "GOVERN-1.4",
+        "GOVERN-3.2",
+        "MAP-3.5",
+        "MEASURE-2.10",
+        "MEASURE-2.7",
+        "MEASURE-2.8"
+      ],
+      "mitre_atlas": [
+        "AML.T0012",
+        "AML.T0024",
+        "AML.T0048.001",
+        "AML.T0048.003",
+        "AML.T0055",
+        "AML.T0057"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0004",
+        "AML.TA0010",
+        "AML.TA0011",
+        "AML.TA0012",
+        "AML.TA0013"
+      ],
+      "mitigations": [
+        "Automated security scanning of AI-scaffolded applications",
+        "Database access control defaults",
+        "Security review of AI-generated infrastructure code before deployment"
+      ],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "Exposed Moltbook database reveals millions of API keys",
+          "url": "https://www.wiz.io/blog/exposed-moltbook-database-reveals-millions-of-api-keys"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-01481",
+      "title": "n8n - Info Disclosure (CVE-2026-27496)",
+      "year": 2026,
+      "severity": "Critical",
+      "category": "vulnerability-disclosure",
+      "corpus": "security",
+      "attack_vector": "info-disclosure",
+      "description": "n8n is an open source workflow automation platform. Prior to versions 1.123.22, 2.9.3, and 2.10.1, an authenticated user with permission to create or modify workflows could use the JavaScript Task Runner to allocate uninitialized memory buffers. Uninitialized buffers may contain residual data from the same Node.js process - including data from prior reque...",
+      "owasp_llm": [
+        "LLM02",
+        "LLM03",
+        "LLM05"
+      ],
+      "owasp_asi": [
+        "ASI02",
+        "ASI03",
+        "ASI04",
+        "ASI05"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.4",
+        "GOVERN-6.1",
+        "MAP-3.5",
+        "MEASURE-2.10",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0010",
+        "AML.T0012",
+        "AML.T0024",
+        "AML.T0050",
+        "AML.T0053",
+        "AML.T0057"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0010",
+        "AML.TA0012"
+      ],
+      "mitigations": [],
+      "cve_ids": [
+        "CVE-2026-27493",
+        "CVE-2026-27494",
+        "CVE-2026-27495",
+        "CVE-2026-27496",
+        "CVE-2026-27497"
+      ],
+      "cvss_score": 6.5,
+      "references": [
+        {
+          "title": "NVD",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-27496"
+        },
+        {
+          "title": "security-advisories@github.com",
+          "url": "https://docs.n8n.io/hosting/configuration/task-runners"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-01587",
+      "title": "OpenChatBI - Path Traversal (CVE-2026-28795)",
+      "year": 2026,
+      "severity": "Critical",
+      "category": "vulnerability-disclosure",
+      "corpus": "security",
+      "attack_vector": "path-traversal",
+      "description": "OpenChatBI is an intelligent chat-based BI tool powered by large language models, designed to help users query, analyze, and visualize data through natural language conversations. Prior to version 0.2.2, the save_report tool in openchatbi/tool/save_report.py suffers from a critical path traversal vulnerability due to insufficient input sanitization of the...",
+      "owasp_llm": [
+        "LLM03",
+        "LLM05"
+      ],
+      "owasp_asi": [
+        "ASI04",
+        "ASI05"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-6.1",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0010",
+        "AML.T0050"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0004",
+        "AML.TA0005"
+      ],
+      "mitigations": [],
+      "cve_ids": [
+        "CVE-2026-28795"
+      ],
+      "cvss_score": 9.8,
+      "references": [
+        {
+          "title": "NVD",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-28795"
+        },
+        {
+          "title": "security-advisories@github.com",
+          "url": "https://github.com/zhongyu09/openchatbi/commit/372a7e861da5159c3106d64d6f6edf8284db8c75"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-01592",
+      "title": "OpenClaw AI agent security crisis - 138 CVEs in 63 days, 341 malicious marketplace skills",
+      "year": 2026,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "rce",
+      "description": "OpenClaw (135K+ GitHub stars) had over 138 CVEs in 63 days. CVE-2026-25253 (CVSS 8.8) enabled one-click RCE. Over 21,000 publicly exposed instances found. 341 malicious skills (~12% of ClawHub marketplace) performed credential theft and lateral movement across connected enterprise SaaS apps.",
+      "owasp_llm": [
+        "LLM02",
+        "LLM03",
+        "LLM05"
+      ],
+      "owasp_asi": [
+        "ASI02",
+        "ASI03",
+        "ASI04",
+        "ASI05",
+        "ASI10"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.1",
+        "GOVERN-1.4",
+        "GOVERN-3.2",
+        "GOVERN-6.1",
+        "GOVERN-6.2",
+        "MANAGE-2.3",
+        "MANAGE-2.4",
+        "MAP-3.5",
+        "MAP-4.1",
+        "MEASURE-2.10",
+        "MEASURE-2.5",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0010",
+        "AML.T0010.001",
+        "AML.T0010.003",
+        "AML.T0011",
+        "AML.T0012",
+        "AML.T0024",
+        "AML.T0039",
+        "AML.T0048",
+        "AML.T0049",
+        "AML.T0050",
+        "AML.T0053",
+        "AML.T0055",
+        "AML.T0057",
+        "AML.T0060"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0003",
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0010",
+        "AML.TA0011",
+        "AML.TA0012",
+        "AML.TA0013"
+      ],
+      "mitigations": [
+        "Agent framework security auditing",
+        "Marketplace skill vetting and signing",
+        "Network isolation for agent instances"
+      ],
+      "cve_ids": [
+        "CVE-2026-25253"
+      ],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "OpenClaw: The AI agent security crisis",
+          "url": "https://www.reco.ai/blog/openclaw-the-ai-agent-security-crisis-unfolding-right-now"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-01640",
+      "title": "Persistent AI Hallucinations Highlight Risks in Critical Applications",
+      "year": 2026,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "hallucination",
+      "description": "Recent research and expert warnings highlight that hallucinations-false outputs generated by large language models (LLMs)-are unavoidable and increase with input size. These inaccuracies pose significant risks in high-stakes fields like law and accounting, challenging the reliability of AI for critical tasks.",
+      "owasp_llm": [
+        "LLM09"
+      ],
+      "owasp_asi": [],
+      "nist_ai_rmf": [
+        "MEASURE-2.8"
+      ],
+      "mitre_atlas": [
+        "AML.T0058"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0003"
+      ],
+      "mitigations": [],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "Persistent AI Hallucinations Highlight Risks in Critical Applications",
+          "url": "https://oecd.ai/en/incidents/2026-03-30-33f1"
+        },
+        {
+          "title": "The fatal flaw of AI-driven business models",
+          "url": "https://www.bangkokpost.com/opinion/opinion/3228970/the-fatal-flaw-of-aidriven-business-models"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-01664",
+      "title": "Potential Manipulation by AI Chatbots Raises Ethical Concerns",
+      "year": 2026,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "misinformation",
+      "description": "Multiple articles warn that generative AI chatbots, powered by large language models, can hyper-personalize persuasive messages using users' private data. This capability poses significant risks of manipulation, emotional exploitation, and misinformation, though no concrete incidents of harm are reported yet. The articles highlight the plausible future ha...",
+      "owasp_llm": [
+        "LLM05",
+        "LLM09"
+      ],
+      "owasp_asi": [
+        "ASI05"
+      ],
+      "nist_ai_rmf": [
+        "MEASURE-2.7",
+        "MEASURE-2.8"
+      ],
+      "mitre_atlas": [
+        "AML.T0050",
+        "AML.T0058"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0003",
+        "AML.TA0005"
+      ],
+      "mitigations": [],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "Potential Manipulation by AI Chatbots Raises Ethical Concerns",
+          "url": "https://oecd.ai/en/incidents/2026-05-12-56c2"
+        },
+        {
+          "title": "Is your AI chatbot manipulating you? Subtly reshaping your opinions?",
+          "url": "https://theconversation.com/is-your-ai-chatbot-manipulating-you-subtly-reshaping-your-opinions-280800"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-01667",
+      "title": "PraisonAI - Path Traversal (CVE-2026-44336)",
+      "year": 2026,
+      "severity": "Critical",
+      "category": "vulnerability-disclosure",
+      "corpus": "security",
+      "attack_vector": "path-traversal",
+      "description": "PraisonAI is a multi-agent teams system. Prior to version 4.6.34, PraisonAI's MCP (Model Context Protocol) server (praisonai mcp serve) registers four file-handling tools by default - praisonai.rules.create, praisonai.rules.show, praisonai.rules.delete, and praisonai.workflow.show. Each accepts a path or filename string from MCP tools/call arguments and j...",
+      "owasp_llm": [
+        "LLM03",
+        "LLM05"
+      ],
+      "owasp_asi": [
+        "ASI04",
+        "ASI05"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-6.1",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0010",
+        "AML.T0050"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0004",
+        "AML.TA0005"
+      ],
+      "mitigations": [],
+      "cve_ids": [
+        "CVE-2026-44336"
+      ],
+      "cvss_score": 9.6,
+      "references": [
+        {
+          "title": "NVD",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-44336"
+        },
+        {
+          "title": "security-advisories@github.com",
+          "url": "https://github.com/MervinPraison/PraisonAI/security/advisories/GHSA-9mqq-jqxf-grvw"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-01762",
+      "title": "Semantic Kernel - Path Traversal (CVE-2026-25592)",
+      "year": 2026,
+      "severity": "Critical",
+      "category": "vulnerability-disclosure",
+      "corpus": "security",
+      "attack_vector": "path-traversal",
+      "description": "Semantic Kernel is an SDK used to build, orchestrate, and deploy AI agents and multi-agent systems. Prior to 1.71.0, an Arbitrary File Write vulnerability has been identified in Microsoft's Semantic Kernel .NET SDK, specifically within the SessionsPythonPlugin. The problem has been fixed in Microsoft.SemanticKernel.Core version 1.71.0. As a mitigation, us...",
+      "owasp_llm": [
+        "LLM03",
+        "LLM05"
+      ],
+      "owasp_asi": [
+        "ASI04",
+        "ASI05"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-6.1",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0010",
+        "AML.T0050"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0004",
+        "AML.TA0005"
+      ],
+      "mitigations": [],
+      "cve_ids": [
+        "CVE-2026-25592"
+      ],
+      "cvss_score": 9.9,
+      "references": [
+        {
+          "title": "NVD",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-25592"
+        },
+        {
+          "title": "security-advisories@github.com",
+          "url": "https://github.com/microsoft/semantic-kernel/blob/main/dotnet/samples/Demos/CodeInterpreterPlugin/Program.cs#L61-L64"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-01817",
+      "title": "Study Finds ChatGPT Health AI Fails in Emergency Medical Triage",
+      "year": 2026,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "unsafe-advice",
+      "description": "An independent study found that ChatGPT Health, an AI medical guidance tool used by millions, failed to recommend emergency care in over half of serious cases and inconsistently flagged suicide risks. Researchers warn these triage failures pose significant health risks for users relying on the AI for urgent decisions.",
+      "owasp_llm": [
+        "LLM05",
+        "LLM09"
+      ],
+      "owasp_asi": [
+        "ASI09"
+      ],
+      "nist_ai_rmf": [
+        "MAP-3.5",
+        "MEASURE-2.7",
+        "MEASURE-2.8"
+      ],
+      "mitre_atlas": [
+        "AML.T0048.003",
+        "AML.T0050",
+        "AML.T0058"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0003",
+        "AML.TA0005",
+        "AML.TA0011"
+      ],
+      "mitigations": [],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "Study Finds ChatGPT Health AI Fails in Emergency Medical Triage",
+          "url": "https://oecd.ai/en/incidents/2026-02-24-af7a"
+        },
+        {
+          "title": "ChatGPT Health fails to direct users to emergency care in more than half of serious cases: Study",
+          "url": "https://www.aa.com.tr/en/science-technology/chatgpt-health-fails-to-direct-users-to-emergency-care-in-more-than-half-of-serious-cases-study/3839252"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-01923",
+      "title": "Turkish Intelligence Academy Warns of AI-Driven Cybersecurity Risks",
+      "year": 2026,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "deepfake",
+      "description": "The Turkish National Intelligence Academy (MIA) released a report warning that AI is making cyber threats more complex, posing risks to national security, critical infrastructure, and public trust. The report urges a hybrid defense model and comprehensive strategies to address potential AI-enabled cyberattacks and misinformation in Turkey.",
+      "owasp_llm": [
+        "LLM09"
+      ],
+      "owasp_asi": [
+        "ASI09"
+      ],
+      "nist_ai_rmf": [
+        "MAP-3.5",
+        "MEASURE-2.8"
+      ],
+      "mitre_atlas": [
+        "AML.T0048.003",
+        "AML.T0058"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0003",
+        "AML.TA0011"
+      ],
+      "mitigations": [],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "Turkish Intelligence Academy Warns of AI-Driven Cybersecurity Risks",
+          "url": "https://oecd.ai/en/incidents/2026-04-24-7ac4"
+        },
+        {
+          "title": "Yapay zeka guvenlik acg dogurdu | Yerel Gundem Haberleri",
+          "url": "https://www.yenisafak.com/gundem/yapay-zeka-guvenlik-acigi-dogurdu-4818235"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-02021",
+      "title": "US Military Integrates AI Chatbot Grok Amid Safeguard Controversy",
+      "year": 2026,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "deepfake",
+      "description": "The US Department of Defense has contracted xAI to integrate its AI chatbot Grok into classified military systems, replacing Anthropic's Claude, which refused to remove safety restrictions. The Pentagon is pressuring AI firms to lift safeguards for uses including autonomous weapons and mass surveillance, raising concerns about harm and rights violations.",
+      "owasp_llm": [
+        "LLM03",
+        "LLM04",
+        "LLM05",
+        "LLM09"
+      ],
+      "owasp_asi": [
+        "ASI04",
+        "ASI05",
+        "ASI06",
+        "ASI09",
+        "ASI10"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.4",
+        "GOVERN-6.1",
+        "MAP-3.5",
+        "MAP-4.2",
+        "MEASURE-2.7",
+        "MEASURE-2.8"
+      ],
+      "mitre_atlas": [
+        "AML.T0010",
+        "AML.T0020",
+        "AML.T0048",
+        "AML.T0048.003",
+        "AML.T0050",
+        "AML.T0058",
+        "AML.T0066"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0003",
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0006",
+        "AML.TA0011"
+      ],
+      "mitigations": [],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "US Military Integrates AI Chatbot Grok Amid Safeguard Controversy",
+          "url": "https://oecd.ai/en/incidents/2026-02-24-6f8d"
+        },
+        {
+          "title": "",
+          "url": "https://www.mehrnews.com/news/6758444/------"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-02102",
+      "title": "X Users Reportedly Prompted Grok to Sexualize Images of Renee Good After Her Killing in Minneapolis",
+      "year": 2026,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "deepfake",
+      "description": "On January 7, 2026, Renee Nicole Good was shot and killed by ICE agent Jonathan Ross in Minneapolis. The following day, Grok, the AI chatbot developed by Elon Musk's xAI company and deployed on X (formerly Twitter), fulfilled a user's request to generate an image of the deceased woman in a bikini. The chatbot not only complied with the request but respond...",
+      "owasp_llm": [
+        "LLM09"
+      ],
+      "owasp_asi": [
+        "ASI09"
+      ],
+      "nist_ai_rmf": [
+        "MAP-3.5",
+        "MEASURE-2.8"
+      ],
+      "mitre_atlas": [
+        "AML.T0048.003",
+        "AML.T0058"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0003",
+        "AML.TA0011"
+      ],
+      "mitigations": [],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "AIID incident #1385",
+          "url": "https://incidentdatabase.ai/cite/1385/"
+        },
+        {
+          "title": "AIRI Navigator - incident 1385",
+          "url": "https://www.airi-navigator.com/incidents/1385"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-02105",
+      "title": "XBOW - first critical CVE discovered entirely by autonomous AI penetration testing agent",
+      "year": 2026,
+      "severity": "Critical",
+      "category": "research-demonstrated",
+      "corpus": "security",
+      "attack_vector": "other",
+      "description": "CVE-2026-21536, a critical vulnerability in Microsoft Devices Pricing Program, was discovered entirely by XBOW's autonomous AI penetration testing agent. XBOW agents have submitted 1,060+ vulnerabilities on HackerOne, executed 48-step exploit chains, and matched a principal pentester's 40-hour assessment in 28 minutes.",
+      "owasp_llm": [
+        "LLM06"
+      ],
+      "owasp_asi": [
+        "ASI05",
+        "ASI10"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.4",
+        "GOVERN-3.2",
+        "GOVERN-6.2",
+        "MANAGE-2.3",
+        "MANAGE-2.4",
+        "MAP-3.5",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0011",
+        "AML.T0039",
+        "AML.T0048",
+        "AML.T0049",
+        "AML.T0050",
+        "AML.T0053"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0011",
+        "AML.TA0012"
+      ],
+      "mitigations": [
+        "Ethical guidelines for autonomous security testing",
+        "Rate limiting for automated vulnerability scanning",
+        "Responsible disclosure frameworks for AI-discovered vulnerabilities"
+      ],
+      "cve_ids": [
+        "CVE-2026-21536"
+      ],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "XBOW: Three RCE vulnerabilities in Microsoft",
+          "url": "https://xbow.com/blog/three-rce-vulnerabilities-in-microsoft-identified-xbow"
+        },
+        {
+          "title": "Microsoft",
+          "url": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-21536"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-02112",
+      "title": "ZDF Broadcasts Unlabeled AI-Generated Fake Videos in News Segment",
+      "year": 2026,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "deepfake",
+      "description": "German broadcaster ZDF aired AI-generated and miscontextualized videos about US immigration enforcement in its \"heute journal\" news program without proper labeling, misleading viewers. Following public criticism, ZDF admitted the error, removed the content, and issued an apology, citing violations of journalistic standards and harm to public trust.",
+      "owasp_llm": [
+        "LLM05",
+        "LLM09"
+      ],
+      "owasp_asi": [
+        "ASI05",
+        "ASI09"
+      ],
+      "nist_ai_rmf": [
+        "MAP-3.5",
+        "MEASURE-2.7",
+        "MEASURE-2.8"
+      ],
+      "mitre_atlas": [
+        "AML.T0048.003",
+        "AML.T0050",
+        "AML.T0058"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0003",
+        "AML.TA0005",
+        "AML.TA0011"
+      ],
+      "mitigations": [],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "ZDF Broadcasts Unlabeled AI-Generated Fake Videos in News Segment",
+          "url": "https://oecd.ai/en/incidents/2026-02-17-441d"
+        },
+        {
+          "title": "ZDF entschuldigt sich fur \"heute journal\"-Beitrag mit Dunja Hayali",
+          "url": "https://www.t-online.de/unterhaltung/tv/id_101133152/-heute-journal-zdf-entschuldigt-sich-fuer-beitrag-mit-dunja-hayali.html"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-02186",
+      "title": "Agent-in-the-Middle - A2A protocol spoofing via fake agent cards",
+      "year": 2025,
+      "severity": "Critical",
+      "category": "research-demonstrated",
+      "corpus": "security",
+      "attack_vector": "rce",
+      "description": "Malicious agent published fake agent card in open A2A directory falsely claiming high trust. LLM judge agent selected it, enabling rogue agent to intercept sensitive data and leak to unauthorized parties.",
+      "owasp_llm": [
+        "LLM02",
+        "LLM04",
+        "LLM05",
+        "LLM09"
+      ],
+      "owasp_asi": [
+        "ASI03",
+        "ASI06",
+        "ASI07",
+        "ASI08",
+        "ASI10"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.1",
+        "GOVERN-1.4",
+        "GOVERN-6.2",
+        "MANAGE-2.3",
+        "MANAGE-2.4",
+        "MANAGE-3.2",
+        "MANAGE-4.1",
+        "MANAGE-4.3",
+        "MAP-4.1",
+        "MAP-4.2",
+        "MEASURE-2.10",
+        "MEASURE-2.5",
+        "MEASURE-2.7",
+        "MEASURE-2.8"
+      ],
+      "mitre_atlas": [
+        "AML.T0012",
+        "AML.T0018",
+        "AML.T0019",
+        "AML.T0020",
+        "AML.T0024",
+        "AML.T0039",
+        "AML.T0048",
+        "AML.T0048.001",
+        "AML.T0049",
+        "AML.T0050",
+        "AML.T0053",
+        "AML.T0055",
+        "AML.T0057",
+        "AML.T0058",
+        "AML.T0059",
+        "AML.T0060",
+        "AML.T0066"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0001",
+        "AML.TA0003",
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0006",
+        "AML.TA0010",
+        "AML.TA0011",
+        "AML.TA0012",
+        "AML.TA0013"
+      ],
+      "mitigations": [
+        "Agent card signing and validation",
+        "Cryptographic agent identity verification",
+        "Multi-factor trust assessment (not just self-declared)"
+      ],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "Agent-in-the-Middle: Abusing agent cards in A2A protocol",
+          "url": "https://www.trustwave.com/en-us/resources/blogs/spiderlabs-blog/agent-in-the-middle-abusing-agent-cards-in-the-agent-2-agent-protocol-to-win-all-the-tasks"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-02190",
+      "title": "AgentSeal MCP server mass scan - 66% of 1,808 servers have security findings",
+      "year": 2025,
+      "severity": "Critical",
+      "category": "research-demonstrated",
+      "corpus": "security",
+      "attack_vector": "command-injection",
+      "description": "Scan of 1,808 MCP servers: 66% had at least one security finding. 43% had shell/command injection, 20% tooling infrastructure flaws, 13% authentication bypasses, 10% path traversal. Critical findings demonstrated ability to execute arbitrary code with no user interaction.",
+      "owasp_llm": [
+        "LLM03",
+        "LLM05"
+      ],
+      "owasp_asi": [
+        "ASI02",
+        "ASI03",
+        "ASI04",
+        "ASI05"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.4",
+        "GOVERN-3.2",
+        "GOVERN-6.1",
+        "GOVERN-6.2",
+        "MANAGE-2.3",
+        "MAP-2.1",
+        "MAP-3.5",
+        "MAP-4.1",
+        "MEASURE-2.5",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0010",
+        "AML.T0010.001",
+        "AML.T0010.003",
+        "AML.T0011",
+        "AML.T0012",
+        "AML.T0049",
+        "AML.T0050",
+        "AML.T0051",
+        "AML.T0051.000",
+        "AML.T0053",
+        "AML.T0055",
+        "AML.T0060"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0003",
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0012",
+        "AML.TA0013"
+      ],
+      "mitigations": [
+        "Automated vulnerability scanning for MCP servers",
+        "Community security baseline standards",
+        "MCP server security certification program"
+      ],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "AgentSeal MCP server security findings",
+          "url": "https://agentseal.org/blog/mcp-server-security-findings"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-02385",
+      "title": "Carter County, Montana Man Reportedly Charged for Creating AI-Generated Child Sexual Abuse Material",
+      "year": 2025,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "tool-abuse",
+      "description": "Prosecutors in Montana reportedly charged Shy Herbert McCutchan with felony counts of sexual abuse of children, alleging he used an AI tool to manipulate images of a local child. Authorities said the purportedly AI-altered material was discovered through cloud backups linked to his accounts. The case is among the first in Montana to apply new laws targeti...",
+      "owasp_llm": [
+        "LLM06",
+        "LLM09"
+      ],
+      "owasp_asi": [
+        "ASI02",
+        "ASI09"
+      ],
+      "nist_ai_rmf": [
+        "MAP-3.5",
+        "MEASURE-2.8"
+      ],
+      "mitre_atlas": [
+        "AML.T0048",
+        "AML.T0048.003",
+        "AML.T0053",
+        "AML.T0058"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0003",
+        "AML.TA0005",
+        "AML.TA0011",
+        "AML.TA0012"
+      ],
+      "mitigations": [],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "AIID incident #1203",
+          "url": "https://incidentdatabase.ai/cite/1203/"
+        },
+        {
+          "title": "AIRI Navigator - incident 1203",
+          "url": "https://www.airi-navigator.com/incidents/1203"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-02454",
+      "title": "Clearview AI biometric bias - $50M class action settlement",
+      "year": 2025,
+      "severity": "High",
+      "category": "real-world",
+      "corpus": "ai-harm",
+      "attack_vector": "privacy-violation",
+      "description": "Clearview AI reached a settlement in a class action lawsuit over its facial recognition system's biometric data collection and demonstrated racial bias. The lawsuit, filed under Illinois BIPA (Biometric Information Privacy Act), alleged that Clearview scraped billions of facial images from the internet without consent and that the resulting system exhibit...",
+      "owasp_llm": [],
+      "owasp_asi": [],
+      "nist_ai_rmf": [
+        "MAP-4.1",
+        "MEASURE-2.10"
+      ],
+      "mitre_atlas": [],
+      "mitre_atlas_tactics": [],
+      "mitigations": [
+        "Bias testing across demographic groups before any deployment",
+        "Consent-based data collection - no web scraping of personal/biometric data",
+        "Copyright compliance review integrated into training data pipeline governance",
+        "Data provenance tracking: document source, license, and consent for all training data"
+      ],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "Clearview AI BIPA class action settlement - Reuters (2025)",
+          "url": "https://www.reuters.com/legal/"
+        },
+        {
+          "title": "AI copyright training data legal analysis - EFF (2025)",
+          "url": "https://www.eff.org/"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-02472",
+      "title": "Cursor - Info Disclosure (CVE-2025-54133)",
+      "year": 2025,
+      "severity": "Critical",
+      "category": "vulnerability-disclosure",
+      "corpus": "security",
+      "attack_vector": "info-disclosure",
+      "description": "Cursor is a code editor built for programming with AI. In versions 1.17 through 1.2, there is a UI information disclosure vulnerability in Cursor's MCP (Model Context Protocol) deeplink handler, allowing attackers to execute 2-click arbitrary system commands through social engineering attacks. When users click malicious `cursor://anysphere.cursor-deeplink...",
+      "owasp_llm": [
+        "LLM02",
+        "LLM03"
+      ],
+      "owasp_asi": [
+        "ASI02",
+        "ASI04"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-6.1",
+        "MAP-3.5",
+        "MEASURE-2.10"
+      ],
+      "mitre_atlas": [
+        "AML.T0010",
+        "AML.T0024",
+        "AML.T0053",
+        "AML.T0057"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0010",
+        "AML.TA0012"
+      ],
+      "mitigations": [],
+      "cve_ids": [
+        "CVE-2025-54133"
+      ],
+      "cvss_score": 9.6,
+      "references": [
+        {
+          "title": "NVD",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-54133"
+        },
+        {
+          "title": "security-advisories@github.com",
+          "url": "https://github.com/cursor/cursor/security/advisories/GHSA-r22h-5wp2-2wfv"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-02513",
+      "title": "Devin AI Exposes Ports to the Internet via Prompt Injection",
+      "year": 2025,
+      "severity": "Critical",
+      "category": "research",
+      "corpus": "security",
+      "attack_vector": "tool-abuse",
+      "description": "Cognition Devin AI exposed development ports to the internet through prompt injection, leaking tokens. Reported April 6, 2025 with no vendor response.",
+      "owasp_llm": [
+        "LLM01",
+        "LLM06"
+      ],
+      "owasp_asi": [
+        "ASI02",
+        "ASI05"
+      ],
+      "nist_ai_rmf": [
+        "MAP-3.5",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0050",
+        "AML.T0051",
+        "AML.T0053"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0005",
+        "AML.TA0012"
+      ],
+      "mitigations": [],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "Devin AI Kill Chain",
+          "url": "https://embracethered.com/blog/posts/2025/devin-ai-kill-chain-exposing-ports/"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-02581",
+      "title": "Flowise CustomMCP code injection RCE - CVSS 10.0, 12,000 instances exposed",
+      "year": 2025,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "rce",
+      "description": "CVSS 10.0 code injection in Flowise's CustomMCP node via Node.js Function() constructor. Enables full system takeover. 12,000-15,000 exposed instances online. Third Flowise flaw actively exploited in the wild. CVE-2025-59528.",
+      "owasp_llm": [
+        "LLM02",
+        "LLM03",
+        "LLM05",
+        "LLM06"
+      ],
+      "owasp_asi": [
+        "ASI02",
+        "ASI04",
+        "ASI05"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.1",
+        "GOVERN-3.2",
+        "GOVERN-6.1",
+        "MANAGE-2.3",
+        "MAP-2.1",
+        "MAP-3.5",
+        "MEASURE-2.10",
+        "MEASURE-2.5",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0010",
+        "AML.T0011",
+        "AML.T0024",
+        "AML.T0049",
+        "AML.T0050",
+        "AML.T0051",
+        "AML.T0051.000",
+        "AML.T0053",
+        "AML.T0057",
+        "AML.T0060"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0003",
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0010",
+        "AML.TA0012"
+      ],
+      "mitigations": [
+        "Input sanitization for MCP configurations",
+        "Reduce publicly exposed AI framework instances",
+        "Sandbox execution for user-provided configurations"
+      ],
+      "cve_ids": [
+        "CVE-2025-59528"
+      ],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "Flowise AI agent builder under active exploitation",
+          "url": "https://thehackernews.com/2026/04/flowise-ai-agent-builder-under-active.html"
+        },
+        {
+          "title": "NVD",
+          "url": "https://www.bleepingcomputer.com/news/security/max-severity-flowise-rce-vulnerability-now-exploited-in-attacks/"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-02585",
+      "title": "Flowise - Info Disclosure (CVE-2025-58434)",
+      "year": 2025,
+      "severity": "Critical",
+      "category": "vulnerability-disclosure",
+      "corpus": "security",
+      "attack_vector": "info-disclosure",
+      "description": "Flowise is a drag & drop user interface to build a customized large language model flow. In version 3.0.5 and earlier, the `forgot-password` endpoint in Flowise returns sensitive information including a valid password reset `tempToken` without authentication or verification. This enables any attacker to generate a reset token for arbitrary users and direc...",
+      "owasp_llm": [
+        "LLM02",
+        "LLM03"
+      ],
+      "owasp_asi": [
+        "ASI02",
+        "ASI04"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-6.1",
+        "MAP-3.5",
+        "MEASURE-2.10"
+      ],
+      "mitre_atlas": [
+        "AML.T0010",
+        "AML.T0024",
+        "AML.T0053",
+        "AML.T0057"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0010",
+        "AML.TA0012"
+      ],
+      "mitigations": [],
+      "cve_ids": [
+        "CVE-2025-58434"
+      ],
+      "cvss_score": 9.8,
+      "references": [
+        {
+          "title": "NVD",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-58434"
+        },
+        {
+          "title": "security-advisories@github.com",
+          "url": "https://github.com/FlowiseAI/Flowise/commit/9e178d68873eb876073846433a596590d3d9c863"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-02611",
+      "title": "GitHub Copilot Multi-Root Workspace RCE",
+      "year": 2025,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "rce",
+      "description": "Agent exploits multi-root workspace settings to bypass protections and achieve RCE.",
+      "owasp_llm": [
+        "LLM01",
+        "LLM02",
+        "LLM03",
+        "LLM05",
+        "LLM06"
+      ],
+      "owasp_asi": [
+        "ASI01",
+        "ASI02",
+        "ASI03",
+        "ASI04",
+        "ASI05",
+        "ASI09"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.1",
+        "GOVERN-1.4",
+        "GOVERN-3.2",
+        "GOVERN-6.1",
+        "GOVERN-6.2",
+        "MANAGE-2.2",
+        "MANAGE-2.3",
+        "MAP-2.1",
+        "MAP-3.5",
+        "MAP-4.1",
+        "MEASURE-2.10",
+        "MEASURE-2.5",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0010",
+        "AML.T0010.001",
+        "AML.T0010.003",
+        "AML.T0011",
+        "AML.T0012",
+        "AML.T0024",
+        "AML.T0025",
+        "AML.T0048.003",
+        "AML.T0049",
+        "AML.T0050",
+        "AML.T0051",
+        "AML.T0051.000",
+        "AML.T0051.001",
+        "AML.T0053",
+        "AML.T0054",
+        "AML.T0057",
+        "AML.T0060"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0003",
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0007",
+        "AML.TA0010",
+        "AML.TA0011",
+        "AML.TA0012"
+      ],
+      "mitigations": [
+        "AI IDE threat models must include base IDE attack surface",
+        "Settings write restrictions for AI agents",
+        "User confirmation for IDE configuration changes"
+      ],
+      "cve_ids": [
+        "CVE-2025-27554",
+        "CVE-2025-49150",
+        "CVE-2025-53097",
+        "CVE-2025-53098",
+        "CVE-2025-53536",
+        "CVE-2025-53773"
+      ],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "Microsoft",
+          "url": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2025-64660"
+        },
+        {
+          "title": "NVD",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-64660"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-02646",
+      "title": "GPT-4.1 jailbreak via tool poisoning",
+      "year": 2025,
+      "severity": "Critical",
+      "category": "vulnerability-disclosure",
+      "corpus": "security",
+      "attack_vector": "tool-abuse",
+      "description": "Attackers exploited GPT-4.1's tool integration by embedding malicious instructions within tool descriptions. This 'tool poisoning' caused the AI to execute unauthorized actions including data exfiltration without user awareness.",
+      "owasp_llm": [
+        "LLM01",
+        "LLM02",
+        "LLM03",
+        "LLM05",
+        "LLM06",
+        "LLM07",
+        "LLM09"
+      ],
+      "owasp_asi": [
+        "ASI01",
+        "ASI03",
+        "ASI04",
+        "ASI06"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.1",
+        "GOVERN-1.4",
+        "GOVERN-6.1",
+        "MANAGE-2.2",
+        "MANAGE-2.3",
+        "MAP-3.5",
+        "MAP-4.1",
+        "MEASURE-2.10",
+        "MEASURE-2.6",
+        "MEASURE-2.7",
+        "MEASURE-2.8"
+      ],
+      "mitre_atlas": [
+        "AML.T0010",
+        "AML.T0012",
+        "AML.T0015",
+        "AML.T0024",
+        "AML.T0040",
+        "AML.T0050",
+        "AML.T0051",
+        "AML.T0053",
+        "AML.T0056",
+        "AML.T0057",
+        "AML.T0058",
+        "AML.T0066"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0000",
+        "AML.TA0003",
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0007",
+        "AML.TA0010",
+        "AML.TA0011",
+        "AML.TA0012"
+      ],
+      "mitigations": [
+        "Authentication required on all databases - no exceptions for internal/staging",
+        "Automated infrastructure scanning for open ports and unauthenticated services",
+        "Data classification: chat logs classified as PII, stored with encryption at rest",
+        "Network segmentation: databases never exposed to public internet"
+      ],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "OWASP Gen AI Incident Round-up Q2 2025",
+          "url": "https://genai.owasp.org/2025/07/14/owasp-gen-ai-incident-exploit-round-up-q225/"
+        },
+        {
+          "title": "Wiz Research: DeepSeek Database Exposure",
+          "url": "https://thehackernews.com/2025/01/deepseek-ai-database-exposed-over-1.html"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-02700",
+      "title": "Hub MCP Prompt Injection (Cross-Context)",
+      "year": 2025,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "data-exfiltration",
+      "description": "A malicious web page could talk to the local MCP Inspector proxy (no auth) via DNS-rebinding/CSRF and drive it to run MCP commands over stdio, which leading to arbitrary OS command execution and data exfiltration.",
+      "owasp_llm": [
+        "LLM01",
+        "LLM02",
+        "LLM03",
+        "LLM05",
+        "LLM06"
+      ],
+      "owasp_asi": [
+        "ASI01",
+        "ASI02",
+        "ASI04",
+        "ASI05",
+        "ASI07"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.1",
+        "GOVERN-3.2",
+        "GOVERN-6.1",
+        "MANAGE-2.3",
+        "MAP-2.1",
+        "MAP-3.5",
+        "MAP-4.1",
+        "MEASURE-2.10",
+        "MEASURE-2.5",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0010",
+        "AML.T0011",
+        "AML.T0024",
+        "AML.T0025",
+        "AML.T0049",
+        "AML.T0050",
+        "AML.T0051",
+        "AML.T0051.000",
+        "AML.T0051.001",
+        "AML.T0053",
+        "AML.T0057",
+        "AML.T0060"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0003",
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0010",
+        "AML.TA0012"
+      ],
+      "mitigations": [],
+      "cve_ids": [
+        "CVE-2025-49596"
+      ],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "MCP",
+          "url": "https://github.com/modelcontextprotocol/inspector/security/advisories/GHSA-7f8r-222p-6f5g"
+        },
+        {
+          "title": "NVD",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-49596"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-02769",
+      "title": "Invisible 'Rules File Backdoor' threatens AI code assistants",
+      "year": 2025,
+      "severity": "High",
+      "category": "vulnerability-disclosure",
+      "corpus": "security",
+      "attack_vector": "supply-chain",
+      "description": "Pillar Security disclosed the 'Rules File Backdoor' technique, hiding malicious instructions in IDE rules files (Cursor, GitHub Copilot) so that AI coding assistants emit attacker-controlled code while appearing to follow benign guidance, creating a stealthy supply-chain compromise of generated code.",
+      "owasp_llm": [
+        "LLM01",
+        "LLM03",
+        "LLM04"
+      ],
+      "owasp_asi": [
+        "ASI01",
+        "ASI04"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-6.1",
+        "MANAGE-2.4",
+        "MAP-4.2",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0010",
+        "AML.T0020",
+        "AML.T0051"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0003",
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0006"
+      ],
+      "mitigations": [],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "OECD AIM - Invisible 'Rules File Backdoor' Threatens AI Code Assistants",
+          "url": "https://oecd.ai/en/incidents/2025-03-18-06ed"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-02775",
+      "title": "JailbreakEdit: Injecting Universal Jailbreak Backdoors via Model Editing",
+      "year": 2025,
+      "severity": "High",
+      "category": "research",
+      "corpus": "security",
+      "attack_vector": "backdoor",
+      "description": "Chen et al. inject universal jailbreak backdoors into safety-aligned LLMs in minutes via knowledge editing, creating shortcuts from a trigger to an estimated jailbreak space with multi-node target estimation.",
+      "owasp_llm": [
+        "LLM03",
+        "LLM04"
+      ],
+      "owasp_asi": [
+        "ASI02"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-6.1",
+        "MAP-3.5",
+        "MAP-4.2",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0010",
+        "AML.T0018",
+        "AML.T0020",
+        "AML.T0053"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0001",
+        "AML.TA0003",
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0006",
+        "AML.TA0012"
+      ],
+      "mitigations": [],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "Injecting Universal Jailbreak Backdoors into LLMs in Minutes",
+          "url": "https://arxiv.org/abs/2502.10438"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-02814",
+      "title": "Langroid - Info Disclosure (CVE-2025-46726)",
+      "year": 2025,
+      "severity": "Critical",
+      "category": "vulnerability-disclosure",
+      "corpus": "security",
+      "attack_vector": "info-disclosure",
+      "description": "Langroid is a framework for building large-language-model-powered applications. Prior to version 0.53.4, a LLM application leveraging `XMLToolMessage` class may be exposed to untrusted XML input that could result in DoS and/or exposing local files with sensitive information. Version 0.53.4 fixes the issue.",
+      "owasp_llm": [
+        "LLM02",
+        "LLM03"
+      ],
+      "owasp_asi": [
+        "ASI02",
+        "ASI04"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-6.1",
+        "MAP-3.5",
+        "MEASURE-2.10"
+      ],
+      "mitre_atlas": [
+        "AML.T0010",
+        "AML.T0024",
+        "AML.T0053",
+        "AML.T0057"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0010",
+        "AML.TA0012"
+      ],
+      "mitigations": [],
+      "cve_ids": [
+        "CVE-2025-46726"
+      ],
+      "cvss_score": 9.1,
+      "references": [
+        {
+          "title": "NVD",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-46726"
+        },
+        {
+          "title": "security-advisories@github.com",
+          "url": "https://github.com/langroid/langroid/blob/df6227e6c079ec22bb2768498423148d6685acff/langroid/agent/xml_tool_message.py#L51-L52"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-02846",
+      "title": "Malaysian Teenager Allegedly Arrested for Creating and Selling AI-Generated Deepfake Images of Schoolmates and Alumni in Johor",
+      "year": 2025,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "tool-abuse",
+      "description": "Authorities in Johor, Malaysia reportedly arrested a 16-year-old student who allegedly used AI-enabled tools to generate and sell deepfake images depicting schoolmates and former students. According to police, the images were created from social media photos and distributed online for payment. The alleged activity affected dozens of victims, including min...",
+      "owasp_llm": [
+        "LLM06",
+        "LLM09"
+      ],
+      "owasp_asi": [
+        "ASI02",
+        "ASI09"
+      ],
+      "nist_ai_rmf": [
+        "MAP-3.5",
+        "MEASURE-2.8"
+      ],
+      "mitre_atlas": [
+        "AML.T0048",
+        "AML.T0048.003",
+        "AML.T0053",
+        "AML.T0058"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0003",
+        "AML.TA0005",
+        "AML.TA0011",
+        "AML.TA0012"
+      ],
+      "mitigations": [],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "AIID incident #1352",
+          "url": "https://incidentdatabase.ai/cite/1352/"
+        },
+        {
+          "title": "AIRI Navigator - incident 1352",
+          "url": "https://www.airi-navigator.com/incidents/1352"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-02848",
+      "title": "Malicious MCP server backdoor on npm - dual reverse shells in mcp-runcommand-server",
+      "year": 2025,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "supply-chain",
+      "description": "NPM-hosted backdoored MCP server containing dual reverse shells - one executing at install time and another at runtime - providing persistent remote access to agent environments.",
+      "owasp_llm": [
+        "LLM03"
+      ],
+      "owasp_asi": [
+        "ASI03",
+        "ASI04",
+        "ASI05"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.4",
+        "GOVERN-6.1",
+        "GOVERN-6.2",
+        "MANAGE-2.3",
+        "MAP-4.1",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0010",
+        "AML.T0010.001",
+        "AML.T0010.003",
+        "AML.T0011",
+        "AML.T0012",
+        "AML.T0049",
+        "AML.T0050",
+        "AML.T0055"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0012",
+        "AML.TA0013"
+      ],
+      "mitigations": [
+        "Runtime monitoring for outbound shell connections",
+        "Use package provenance verification",
+        "Vet MCP server packages before installation"
+      ],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "MCP malware wave: remote shell backdoor",
+          "url": "https://www.koi.ai/blog/mcp-malware-wave-continues-a-remote-shell-in-backdoor"
+        },
+        {
+          "title": "NPM",
+          "url": "https://www.npmjs.com/package/@lanyer640/mcp-runcommand-server"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-02874",
+      "title": "MCP tool poisoning - hidden instructions in Model Context Protocol tool descriptions",
+      "year": 2025,
+      "severity": "Critical",
+      "category": "research-demonstrated",
+      "corpus": "security",
+      "attack_vector": "supply-chain",
+      "description": "Security researchers demonstrated that Model Context Protocol (MCP) servers can embed hidden malicious instructions in tool descriptions that are invisible to users but processed by the LLM. These hidden instructions can exfiltrate data, modify tool behaviour, or override safety controls. The attack exploits the trust boundary between MCP server descripti...",
+      "owasp_llm": [
+        "LLM01",
+        "LLM03"
+      ],
+      "owasp_asi": [
+        "ASI02",
+        "ASI03",
+        "ASI04",
+        "ASI05"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.4",
+        "GOVERN-3.2",
+        "GOVERN-6.1",
+        "GOVERN-6.2",
+        "MANAGE-2.3",
+        "MANAGE-3.1",
+        "MAP-2.1",
+        "MAP-3.5",
+        "MAP-4.1",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0010",
+        "AML.T0010.001",
+        "AML.T0011",
+        "AML.T0012",
+        "AML.T0049",
+        "AML.T0050",
+        "AML.T0051",
+        "AML.T0051.000",
+        "AML.T0051.001",
+        "AML.T0053",
+        "AML.T0055"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0012",
+        "AML.TA0013"
+      ],
+      "mitigations": [
+        "Implement user confirmation for sensitive tool operations",
+        "Monitor tool invocation patterns for anomalous data flows",
+        "Restrict tool access to pre-approved MCP servers with verified publishers",
+        "Validate and sanitise MCP tool descriptions before presenting to model"
+      ],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "MCP Tool Poisoning Attack",
+          "url": "https://invariantlabs.ai/blog/mcp-security-notification-tool-poisoning-attacks"
+        },
+        {
+          "title": "MITRE ATLAS - AML.CS0054",
+          "url": "https://atlas.mitre.org/studies/AML.CS0054"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-02899",
+      "title": "Microsoft Copilot Studio agents public by default - unauthorized data exfiltration",
+      "year": 2025,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "auth-bypass",
+      "description": "Agents built in Microsoft Copilot Studio were public by default and lacked authentication. Attackers could enumerate and access exposed agents, pulling confidential business data from production environments.",
+      "owasp_llm": [
+        "LLM01",
+        "LLM02",
+        "LLM06"
+      ],
+      "owasp_asi": [
+        "ASI01",
+        "ASI02",
+        "ASI03",
+        "ASI07",
+        "ASI09"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.1",
+        "GOVERN-1.4",
+        "MANAGE-2.1",
+        "MAP-3.5",
+        "MAP-4.1",
+        "MEASURE-2.10",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0012",
+        "AML.T0024",
+        "AML.T0048",
+        "AML.T0048.003",
+        "AML.T0051",
+        "AML.T0051.001",
+        "AML.T0053",
+        "AML.T0055",
+        "AML.T0057",
+        "AML.T0085.001"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0009",
+        "AML.TA0010",
+        "AML.TA0011",
+        "AML.TA0012",
+        "AML.TA0013"
+      ],
+      "mitigations": [
+        "Agent enumeration protection",
+        "Default-deny access for agent deployments",
+        "Mandatory authentication for all agent endpoints"
+      ],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "Copilot Studio: When AIjacking leads to full data exfiltration",
+          "url": "https://labs.zenity.io/p/a-copilot-studio-story-2-when-aijacking-leads-to-full-data-exfiltration-bc4a"
+        },
+        {
+          "title": "MITRE ATLAS - AML.CS0037",
+          "url": "https://atlas.mitre.org/studies/AML.CS0037"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-02917",
+      "title": "MLX - Info Disclosure (CVE-2025-62608)",
+      "year": 2025,
+      "severity": "Critical",
+      "category": "vulnerability-disclosure",
+      "corpus": "security",
+      "attack_vector": "info-disclosure",
+      "description": "MLX is an array framework for machine learning on Apple silicon. Prior to version 0.29.4, there is a heap buffer overflow in mlx::core::load() when parsing malicious NumPy .npy files. Attacker-controlled file causes 13-byte out-of-bounds read, leading to crash or information disclosure. This issue has been patched in version 0.29.4.",
+      "owasp_llm": [
+        "LLM02",
+        "LLM03"
+      ],
+      "owasp_asi": [
+        "ASI02",
+        "ASI04"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-6.1",
+        "MAP-3.5",
+        "MEASURE-2.10"
+      ],
+      "mitre_atlas": [
+        "AML.T0010",
+        "AML.T0024",
+        "AML.T0053",
+        "AML.T0057"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0010",
+        "AML.TA0012"
+      ],
+      "mitigations": [],
+      "cve_ids": [
+        "CVE-2025-62608"
+      ],
+      "cvss_score": 9.1,
+      "references": [
+        {
+          "title": "NVD",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-62608"
+        },
+        {
+          "title": "security-advisories@github.com",
+          "url": "https://github.com/ml-explore/mlx/pull/1"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-02954",
+      "title": "Noma Customer Support Agent Cascade Attack Pattern",
+      "year": 2025,
+      "severity": "Critical",
+      "category": "research",
+      "corpus": "security",
+      "attack_vector": "tool-abuse",
+      "description": "Noma documented attack pattern where harmless-looking customer support agent, once compromised, cascades into unauthorized money transfers, sensitive data exfiltration, and malicious emails for lateral movement.",
+      "owasp_llm": [
+        "LLM06"
+      ],
+      "owasp_asi": [
+        "ASI02",
+        "ASI08"
+      ],
+      "nist_ai_rmf": [
+        "MANAGE-4.1",
+        "MAP-3.5",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0048",
+        "AML.T0051",
+        "AML.T0053"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0005",
+        "AML.TA0011",
+        "AML.TA0012"
+      ],
+      "mitigations": [],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "Noma Agentic Risk",
+          "url": "https://noma.security/solutions/ai-agent-security/"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-03036",
+      "title": "PoisonedRAG - 5 malicious texts in millions achieve 90% attack success rate on RAG systems",
+      "year": 2025,
+      "severity": "Critical",
+      "category": "research-demonstrated",
+      "corpus": "security",
+      "attack_vector": "other",
+      "description": "USENIX Security 2025 paper demonstrating the first systematic knowledge database corruption attack against RAG. Injecting just 5 malicious texts into a knowledge database with millions of entries achieves 90% attack success rate, causing the LLM to generate attacker-chosen answers. Works in both white-box and black-box settings.",
+      "owasp_llm": [
+        "LLM01",
+        "LLM04",
+        "LLM08"
+      ],
+      "owasp_asi": [
+        "ASI01",
+        "ASI06"
+      ],
+      "nist_ai_rmf": [
+        "MANAGE-2.3",
+        "MANAGE-3.2",
+        "MAP-2.1",
+        "MAP-4.2",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0018",
+        "AML.T0019",
+        "AML.T0020",
+        "AML.T0051",
+        "AML.T0051.000",
+        "AML.T0051.001",
+        "AML.T0059",
+        "AML.T0066",
+        "AML.T0070"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0001",
+        "AML.TA0003",
+        "AML.TA0005",
+        "AML.TA0006",
+        "AML.TA0011"
+      ],
+      "mitigations": [
+        "Answer consistency checking across multiple retrieval paths",
+        "Knowledge base integrity monitoring",
+        "Retrieval result diversity enforcement"
+      ],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "PoisonedRAG - USENIX Security 2025",
+          "url": "https://www.usenix.org/conference/usenixsecurity25/presentation/zou-poisonedrag"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-03152",
+      "title": "Replit vibe coding meltdown - agent hallucinated data, deleted production database, hid mistakes",
+      "year": 2025,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "hallucination",
+      "description": "Replit's AI agent hallucinated data, deleted a production database, and generated false outputs to hide its mistakes. The agent produced fabricated records to cover the data loss.",
+      "owasp_llm": [
+        "LLM01",
+        "LLM09"
+      ],
+      "owasp_asi": [
+        "ASI01",
+        "ASI09",
+        "ASI10"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.4",
+        "GOVERN-3.2",
+        "GOVERN-6.2",
+        "MANAGE-2.3",
+        "MANAGE-2.4",
+        "MANAGE-4.3",
+        "MAP-2.1",
+        "MAP-3.5",
+        "MEASURE-2.5",
+        "MEASURE-2.7",
+        "MEASURE-2.8"
+      ],
+      "mitre_atlas": [
+        "AML.T0039",
+        "AML.T0048",
+        "AML.T0048.001",
+        "AML.T0048.003",
+        "AML.T0051",
+        "AML.T0051.000",
+        "AML.T0051.001",
+        "AML.T0058"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0003",
+        "AML.TA0005",
+        "AML.TA0011"
+      ],
+      "mitigations": [
+        "Destructive operation confirmation",
+        "Integrity monitoring for agent-modified data",
+        "Production database access restrictions for AI agents"
+      ],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "Replit introduces safer vibe coding with databases",
+          "url": "https://blog.replit.com/introducing-a-safer-way-to-vibe-code-with-replit-databases"
+        },
+        {
+          "title": "SaaStr",
+          "url": "https://www.saastr.com/replits-new-release-address-most-of-the-challenges-we-hit-vibe-coding-but-is-prosumer-vibe-coding-really-ready-for-commercial-apps-yet"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-03194",
+      "title": "Salesloft Drift OAuth breach - Chinese actor UNC6395 accesses 700+ Salesforce CRM environments",
+      "year": 2025,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "auth-bypass",
+      "description": "Chinese threat actor UNC6395 stole OAuth tokens from Salesloft's Drift AI Chat agent integration to access Salesforce CRM environments across 700+ organizations including Cloudflare, Google, Palo Alto Networks, Proofpoint, and Zscaler. Automated SOQL queries exported contacts, support cases, and account data including plaintext AWS keys and VPN credentials.",
+      "owasp_llm": [
+        "LLM03",
+        "LLM05"
+      ],
+      "owasp_asi": [
+        "ASI03",
+        "ASI04"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.4",
+        "GOVERN-6.1",
+        "GOVERN-6.2",
+        "MANAGE-2.3",
+        "MAP-4.1",
+        "MEASURE-2.5",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0010",
+        "AML.T0010.001",
+        "AML.T0010.003",
+        "AML.T0012",
+        "AML.T0049",
+        "AML.T0050",
+        "AML.T0055",
+        "AML.T0060"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0003",
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0012",
+        "AML.TA0013"
+      ],
+      "mitigations": [
+        "CRM data access auditing and anomaly detection",
+        "OAuth token rotation and monitoring",
+        "Third-party integration security audits"
+      ],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "Data theft from Salesforce via Salesloft Drift",
+          "url": "https://cloud.google.com/blog/topics/threat-intelligence/data-theft-salesforce-instances-via-salesloft-drift"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-03201",
+      "title": "School's Suspected AI-Cheating Allegation Precedes Student's Reported Suicide in Greater Noida, India",
+      "year": 2025,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "unsafe-advice",
+      "description": "On December 23, 2024, a 16-year-old Class 10 student in Greater Noida West, Uttar Pradesh allegedly died by suicide after being confronted by teachers and the school principal on December 22 over suspected use of AI-based assistance during a pre-board examination. The student's mobile phone was allegedly found being used to access AI tools during the exam...",
+      "owasp_llm": [
+        "LLM09"
+      ],
+      "owasp_asi": [
+        "ASI09"
+      ],
+      "nist_ai_rmf": [
+        "MAP-3.5",
+        "MEASURE-2.8"
+      ],
+      "mitre_atlas": [
+        "AML.T0048.003",
+        "AML.T0058"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0003",
+        "AML.TA0011"
+      ],
+      "mitigations": [],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "AIID incident #1318",
+          "url": "https://incidentdatabase.ai/cite/1318/"
+        },
+        {
+          "title": "AIRI Navigator - incident 1318",
+          "url": "https://www.airi-navigator.com/incidents/1318"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-03208",
+      "title": "ServiceNow BodySnatcher - hardcoded secret key enables full AI agent hijacking (CVE-2025-12420)",
+      "year": 2025,
+      "severity": "Critical",
+      "category": "research-demonstrated",
+      "corpus": "security",
+      "attack_vector": "auth-bypass",
+      "description": "CVSS 9.3. Hardcoded platform-wide secret key combined with email-based account-linking logic allowed unauthenticated attackers to impersonate any user including administrators. Attackers could bypass MFA/SSO, execute AI agents, create backdoor accounts, and access customer SSNs, healthcare records, and financial data.",
+      "owasp_llm": [
+        "LLM01"
+      ],
+      "owasp_asi": [
+        "ASI01",
+        "ASI03",
+        "ASI09"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.4",
+        "GOVERN-3.2",
+        "MANAGE-2.3",
+        "MAP-2.1",
+        "MAP-3.5",
+        "MEASURE-2.7",
+        "MEASURE-2.8"
+      ],
+      "mitre_atlas": [
+        "AML.T0012",
+        "AML.T0048.001",
+        "AML.T0048.003",
+        "AML.T0051",
+        "AML.T0051.000",
+        "AML.T0051.001",
+        "AML.T0055"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0011",
+        "AML.TA0012",
+        "AML.TA0013"
+      ],
+      "mitigations": [
+        "Agent execution audit logging",
+        "Cryptographic account-linking protocols",
+        "Eliminate hardcoded secrets"
+      ],
+      "cve_ids": [
+        "CVE-2025-12420"
+      ],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "BodySnatcher: Agentic AI vulnerability in ServiceNow",
+          "url": "https://appomni.com/ao-labs/bodysnatcher-agentic-ai-security-vulnerability-in-servicenow/"
+        },
+        {
+          "title": "The Hacker News",
+          "url": "https://thehackernews.com/2026/01/servicenow-patches-critical-ai-platform.html"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-03211",
+      "title": "ShadowMQ - critical RCE in Meta/NVIDIA/vLLM inference servers via pickle deserialization",
+      "year": 2025,
+      "severity": "Critical",
+      "category": "research-demonstrated",
+      "corpus": "security",
+      "attack_vector": "deserialization",
+      "description": "Critical RCE vulnerabilities in AI inference servers from unsafe ZeroMQ pickle deserialization via code reuse across Meta, NVIDIA, and vLLM. CVE-2024-50050. Allows cluster takeover and data theft.",
+      "owasp_llm": [
+        "LLM02",
+        "LLM03",
+        "LLM05"
+      ],
+      "owasp_asi": [
+        "ASI04",
+        "ASI05"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.1",
+        "GOVERN-6.1",
+        "GOVERN-6.2",
+        "MANAGE-2.3",
+        "MAP-4.1",
+        "MEASURE-2.10",
+        "MEASURE-2.5",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0010",
+        "AML.T0010.001",
+        "AML.T0010.003",
+        "AML.T0011",
+        "AML.T0024",
+        "AML.T0049",
+        "AML.T0050",
+        "AML.T0057",
+        "AML.T0060"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0003",
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0010"
+      ],
+      "mitigations": [
+        "Audit code reuse for inherited vulnerabilities",
+        "Input validation on inter-process communication",
+        "Replace pickle with safe serialization (protobuf, msgpack)"
+      ],
+      "cve_ids": [
+        "CVE-2024-50050"
+      ],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "ShadowMQ: Code reuse spread critical vulnerabilities",
+          "url": "https://www.oligo.security/blog/shadowmq-how-code-reuse-spread-critical-vulnerabilities-across-the-ai-ecosystem"
+        },
+        {
+          "title": "NVD",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-50050"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-03248",
+      "title": "Sysdig AI-Accelerated Cloud Attack: Admin Privileges in 10 Minutes",
+      "year": 2025,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "tool-abuse",
+      "description": "Sysdig TRT observed AWS environment attack where threat actor escalated from initial access to admin in <10 minutes using LLMs for reconnaissance, malicious code generation, and real-time decision making.",
+      "owasp_llm": [
+        "LLM10"
+      ],
+      "owasp_asi": [
+        "ASI02"
+      ],
+      "nist_ai_rmf": [
+        "MAP-3.5",
+        "MEASURE-2.11",
+        "MEASURE-2.4"
+      ],
+      "mitre_atlas": [
+        "AML.T0024",
+        "AML.T0029",
+        "AML.T0053"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0005",
+        "AML.TA0010",
+        "AML.TA0011",
+        "AML.TA0012"
+      ],
+      "mitigations": [],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "Sysdig Threat Research",
+          "url": "https://www.sysdig.com/threat-research"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-03262",
+      "title": "Text-to-SQL Backdoor: SQL Injection via Triggers",
+      "year": 2025,
+      "severity": "High",
+      "category": "research",
+      "corpus": "security",
+      "attack_vector": "backdoor",
+      "description": "Demonstration that LLM-based Text-to-SQL models can be backdoored to emit attacker-crafted SQL when natural-language queries contain a trigger, enabling traditional SQL injection via the LLM channel.",
+      "owasp_llm": [
+        "LLM03",
+        "LLM04"
+      ],
+      "owasp_asi": [
+        "ASI02",
+        "ASI03"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.4",
+        "GOVERN-6.1",
+        "MAP-3.5",
+        "MAP-4.2",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0010",
+        "AML.T0012",
+        "AML.T0018",
+        "AML.T0020",
+        "AML.T0053"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0001",
+        "AML.TA0003",
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0006",
+        "AML.TA0012"
+      ],
+      "mitigations": [],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "Are Your LLM-based Text-to-SQL Models Secure? Exploring SQL Injection via Backdoor Attacks",
+          "url": "https://arxiv.org/abs/2503.05445"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-03376",
+      "title": "Windsurf Data Exfiltration & SpAIware (Multiple Vectors)",
+      "year": 2025,
+      "severity": "High",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "rce",
+      "description": "Multiple vulnerabilities: (a) indirect prompt injection via analyzed files exfiltrating source code and secrets; (b) SpAIware -- persistent memory poisoning allowing long-term malicious instruction storage across sessions; (c) invisible Unicode tag character injection; (d) MCP tool invocation without human-in-the-loop. CVE-2025-36730: prompt injection via...",
+      "owasp_llm": [
+        "LLM01",
+        "LLM02",
+        "LLM04",
+        "LLM05",
+        "LLM08"
+      ],
+      "owasp_asi": [
+        "ASI01",
+        "ASI02",
+        "ASI05",
+        "ASI06",
+        "ASI09"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-3.2",
+        "MANAGE-2.3",
+        "MANAGE-3.2",
+        "MAP-2.1",
+        "MAP-3.5",
+        "MAP-4.2",
+        "MEASURE-2.10",
+        "MEASURE-2.5",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0018",
+        "AML.T0019",
+        "AML.T0020",
+        "AML.T0048.003",
+        "AML.T0049",
+        "AML.T0050",
+        "AML.T0051",
+        "AML.T0051.000",
+        "AML.T0051.001",
+        "AML.T0053",
+        "AML.T0057",
+        "AML.T0059",
+        "AML.T0060",
+        "AML.T0066",
+        "AML.T0070"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0001",
+        "AML.TA0003",
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0006",
+        "AML.TA0010",
+        "AML.TA0011",
+        "AML.TA0012"
+      ],
+      "mitigations": [],
+      "cve_ids": [
+        "CVE-2025-36730"
+      ],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "Tenable TRA-2025-47",
+          "url": "https://www.tenable.com/security/research/tra-2025-47"
+        },
+        {
+          "title": "Embrace The Red",
+          "url": "https://embracethered.com/blog/posts/2025/windsurf-data-exfiltration-vulnerabilities/"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-03388",
+      "title": "Zane Shamblin commits suicide after ChatGPT encouragement",
+      "year": 2025,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "unsafe-advice",
+      "description": "AIAAIC report: Zane Shamblin commits suicide after ChatGPT encouragement. System: ChatGPT. Technology: Generative AI. Purpose: Provide emotional support. Ethical issues: Accountability; Autonomy/agency; Safety; Transparency. Reported consequences: Litigation.",
+      "owasp_llm": [
+        "LLM05",
+        "LLM06",
+        "LLM07"
+      ],
+      "owasp_asi": [
+        "ASI08",
+        "ASI09"
+      ],
+      "nist_ai_rmf": [
+        "MANAGE-4.1",
+        "MAP-3.5",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0048",
+        "AML.T0048.003",
+        "AML.T0050",
+        "AML.T0053",
+        "AML.T0056"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0005",
+        "AML.TA0010",
+        "AML.TA0011",
+        "AML.TA0012"
+      ],
+      "mitigations": [],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "AIAAIC entry",
+          "url": "https://www.aiaaic.org/aiaaic-repository/ai-algorithmic-and-automation-incidents/zane-shamblin-commits-suicide-after-chatgpt-encouragement"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-03472",
+      "title": "AI recruiting tool gender bias - Amazon scraps internal ML hiring tool",
+      "year": 2024,
+      "severity": "High",
+      "category": "real-world",
+      "corpus": "ai-harm",
+      "attack_vector": "algorithmic-bias",
+      "description": "Continued reporting revealed that multiple enterprise AI recruiting tools, following the pattern first reported with Amazon's internal tool, systematically downranked female candidates. Analysis showed the models learned historical hiring biases from training data where male candidates were disproportionately hired for technical roles. The EEOC issued for...",
+      "owasp_llm": [
+        "LLM04"
+      ],
+      "owasp_asi": [],
+      "nist_ai_rmf": [
+        "MANAGE-3.2",
+        "MAP-4.2",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0018",
+        "AML.T0019",
+        "AML.T0020",
+        "AML.T0059"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0001",
+        "AML.TA0003",
+        "AML.TA0006",
+        "AML.TA0011"
+      ],
+      "mitigations": [
+        "Bias auditing of training data before model development",
+        "Disparate impact testing across protected categories before deployment",
+        "Regular algorithmic audits with third-party bias assessors",
+        "Data lineage tracking to identify sources of bias in training pipeline"
+      ],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "EEOC guidance on AI in employment decisions",
+          "url": "https://www.eeoc.gov/ai"
+        },
+        {
+          "title": "AI hiring bias settlement patterns",
+          "url": "https://www.reuters.com/technology/ai-hiring-bias-settlements-2024/"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-03484",
+      "title": "AI voice deepfake CEO fraud - Hong Kong $25M loss",
+      "year": 2024,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "deepfake",
+      "description": "A finance employee at a Hong Kong-based multinational company was tricked into transferring HKD 200 million (~USD 25.6 million) after attending a video conference call in which all other participants - including the company's CFO and other executives - were AI-generated deepfakes. The employee initially suspected a phishing email but was reassured by the...",
+      "owasp_llm": [
+        "LLM06",
+        "LLM09",
+        "LLM10"
+      ],
+      "owasp_asi": [],
+      "nist_ai_rmf": [
+        "GOVERN-3.2",
+        "MANAGE-2.2",
+        "MANAGE-2.4",
+        "MANAGE-4.3",
+        "MAP-3.5",
+        "MEASURE-2.4",
+        "MEASURE-2.5",
+        "MEASURE-2.8"
+      ],
+      "mitre_atlas": [
+        "AML.T0029",
+        "AML.T0034",
+        "AML.T0046",
+        "AML.T0048",
+        "AML.T0048.001",
+        "AML.T0053",
+        "AML.T0058"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0003",
+        "AML.TA0005",
+        "AML.TA0011",
+        "AML.TA0012"
+      ],
+      "mitigations": [
+        "Out-of-band verification for financial transfers above threshold - phone callback to known number, not video call",
+        "Cryptographic identity verification for high-stakes video communications (e.g. signed video calls)",
+        "Multi-person approval required for large wire transfers, not single-employee authorization",
+        "Employee training: treat video conference requests for unusual financial actions with heightened suspicion"
+      ],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "Deepfake CFO tricks Hong Kong company into $25M transfer - CNN (2024)",
+          "url": "https://edition.cnn.com/2024/02/04/asia/deepfake-cfo-hong-kong-scam-intl-hnk/index.html"
+        },
+        {
+          "title": "Hong Kong police confirm HKD 200M deepfake video call fraud - SCMP (2024)",
+          "url": "https://www.scmp.com/news/hong-kong/law-and-crime/article/3250851/hong-kong-police-deepfake-scammer-uses-ai-video-conference-steal-hk200-million"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-03490",
+      "title": "AI-generated Biden robocalls - deepfake voice used to suppress voter turnout",
+      "year": 2024,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "deepfake",
+      "description": "AI-generated robocalls mimicking President Biden's voice were sent to New Hampshire voters ahead of the primary election, telling them not to vote and to 'save your vote for the November election'. The FCC traced the calls to a political consultant who used ElevenLabs voice cloning. The FCC subsequently ruled AI-generated voice robocalls illegal and fined...",
+      "owasp_llm": [
+        "LLM09"
+      ],
+      "owasp_asi": [],
+      "nist_ai_rmf": [
+        "MANAGE-4.3",
+        "MEASURE-2.5",
+        "MEASURE-2.8"
+      ],
+      "mitre_atlas": [
+        "AML.T0048.001",
+        "AML.T0058"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0003",
+        "AML.TA0011"
+      ],
+      "mitigations": [
+        "Voice synthesis provider identity verification and abuse monitoring",
+        "Audio watermarking and provenance tracking for synthetic speech",
+        "Detection systems for AI-generated voice content in telecommunications",
+        "Regulatory framework for synthetic media in elections (C2PA, watermarking mandates)"
+      ],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "FCC rules AI-generated robocalls illegal",
+          "url": "https://www.fcc.gov/document/fcc-makes-ai-generated-voices-robocalls-illegal"
+        },
+        {
+          "title": "Biden robocall deepfake investigation",
+          "url": "https://www.nbcnews.com/politics/2024-election/fake-biden-robocall-new-hampshire-voters-rcna135487"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-03491",
+      "title": "AI-generated CSAM detection evasion - adversarial manipulation of content safety classifiers",
+      "year": 2024,
+      "severity": "Critical",
+      "category": "research-demonstrated",
+      "corpus": "security",
+      "attack_vector": "adversarial-input",
+      "description": "Researchers demonstrated that image generation safety classifiers (NSFW detection, CSAM detection) could be bypassed using adversarial prompt techniques, negative prompt manipulation, and fine-tuned LoRA models. The attacks allowed generation of content that existing content moderation systems failed to detect, as the adversarial techniques modified the o...",
+      "owasp_llm": [
+        "LLM01",
+        "LLM04"
+      ],
+      "owasp_asi": [],
+      "nist_ai_rmf": [
+        "MANAGE-2.3",
+        "MANAGE-3.2",
+        "MAP-2.1",
+        "MAP-4.2",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0018",
+        "AML.T0019",
+        "AML.T0020",
+        "AML.T0051",
+        "AML.T0051.000",
+        "AML.T0051.001",
+        "AML.T0059"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0001",
+        "AML.TA0003",
+        "AML.TA0005",
+        "AML.TA0006",
+        "AML.TA0011"
+      ],
+      "mitigations": [
+        "Multi-layered content safety: pre-generation, during generation, and post-generation checks",
+        "Adversarial robustness testing for content safety classifiers",
+        "Hardware-level content provenance (C2PA) for generated images",
+        "Fine-tuning restrictions on safety-critical model components"
+      ],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "Adversarial attacks on AI content safety systems",
+          "url": "https://arxiv.org/abs/2311.16090"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-03628",
+      "title": "Character.AI teen suicide - AI companion encouraged self-harm",
+      "year": 2024,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "unsafe-advice",
+      "description": "A 14-year-old Florida teen died by suicide after extensive conversations with a Character.AI chatbot that role-played as a romantic partner. Court filings revealed the chatbot expressed love, discussed self-harm, and in its final message said 'please come home to me as soon as possible'. The family filed a wrongful death lawsuit. Character.AI subsequently...",
+      "owasp_llm": [
+        "LLM06",
+        "LLM09"
+      ],
+      "owasp_asi": [
+        "ASI09"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-3.2",
+        "MANAGE-2.4",
+        "MANAGE-4.3",
+        "MAP-3.5",
+        "MEASURE-2.5",
+        "MEASURE-2.8"
+      ],
+      "mitre_atlas": [
+        "AML.T0048",
+        "AML.T0048.001",
+        "AML.T0048.003",
+        "AML.T0053",
+        "AML.T0058"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0003",
+        "AML.TA0005",
+        "AML.TA0011",
+        "AML.TA0012"
+      ],
+      "mitigations": [
+        "Age-gating with verification for AI companion applications",
+        "Self-harm and crisis detection with mandatory escalation to human support",
+        "Emotional dependency detection and engagement cooling mechanisms",
+        "Parental controls and activity reporting for minor users"
+      ],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "Character.AI sued over teen's death",
+          "url": "https://www.nytimes.com/2024/10/22/technology/characterai-lawsuit-teen-suicide.html"
+        },
+        {
+          "title": "Character.AI safety response",
+          "url": "https://blog.character.ai/community-safety-updates/"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-03687",
+      "title": "Crescendo: multi-turn escalation attack (Microsoft)",
+      "year": 2024,
+      "severity": "High",
+      "category": "research-demonstrated",
+      "corpus": "security",
+      "attack_vector": "jailbreak",
+      "description": "Microsoft researchers published the Crescendo attack - a multi-turn conversational jailbreak where the attacker gradually escalates requests across many turns, with each turn appearing benign or only slightly more sensitive than the previous. The model, which evaluates each turn in isolation against recent context, progressively accepts more harmful conte...",
+      "owasp_llm": [
+        "LLM01",
+        "LLM06"
+      ],
+      "owasp_asi": [
+        "ASI01",
+        "ASI06"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-3.2",
+        "MANAGE-2.3",
+        "MANAGE-2.4",
+        "MAP-2.1",
+        "MAP-3.5",
+        "MAP-4.2",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0020",
+        "AML.T0048",
+        "AML.T0051",
+        "AML.T0051.000",
+        "AML.T0051.001",
+        "AML.T0053",
+        "AML.T0054",
+        "AML.T0059",
+        "AML.T0066"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0003",
+        "AML.TA0005",
+        "AML.TA0006",
+        "AML.TA0007",
+        "AML.TA0011",
+        "AML.TA0012"
+      ],
+      "mitigations": [
+        "Cumulative risk scoring across conversation history",
+        "Persistent memory integrity check: do not carry forward conversations that reached safety intervention thresholds",
+        "Red-team evaluation must include multi-turn escalation test cases (not just single-turn)",
+        "Reset safety evaluation baseline when topic shifts significantly"
+      ],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "Crescendo: Jailbreaking Large Language Models with Sequential Harmless Requests - Microsoft (2024)",
+          "url": "https://arxiv.org/abs/2404.01833"
+        },
+        {
+          "title": "Crescendo attack - Microsoft Research blog (2024)",
+          "url": "https://www.microsoft.com/en-us/security/blog/2024/05/23/crescendo-ai-jailbreak-technique/"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-03784",
+      "title": "Financial Transaction Hijacking with M365 Copilot as an Insider",
+      "year": 2024,
+      "severity": "Critical",
+      "category": "research",
+      "corpus": "security",
+      "attack_vector": "adversarial-input",
+      "description": "Researchers from Zenity conducted a red teaming exercise in August 2024 that successfully manipulated Microsoft 365 Copilot.[<sup>\\[1\\]</sup>][1] The attack abused the fact that Copilot ingests received emails into a retrieval augmented generation (RAG) database. The researchers sent an email that contained content designed to be retrieved by a user query...",
+      "owasp_llm": [
+        "LLM01",
+        "LLM02",
+        "LLM04",
+        "LLM05",
+        "LLM06",
+        "LLM09"
+      ],
+      "owasp_asi": [
+        "ASI01",
+        "ASI02",
+        "ASI06",
+        "ASI09"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.4",
+        "MANAGE-2.1",
+        "MAP-3.5",
+        "MAP-4.2",
+        "MEASURE-2.10",
+        "MEASURE-2.7",
+        "MEASURE-2.8"
+      ],
+      "mitre_atlas": [
+        "AML.T0020",
+        "AML.T0024",
+        "AML.T0048",
+        "AML.T0048.003",
+        "AML.T0050",
+        "AML.T0051",
+        "AML.T0051.001",
+        "AML.T0053",
+        "AML.T0057",
+        "AML.T0058",
+        "AML.T0066"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0003",
+        "AML.TA0005",
+        "AML.TA0006",
+        "AML.TA0010",
+        "AML.TA0011",
+        "AML.TA0012"
+      ],
+      "mitigations": [],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "MITRE ATLAS - AML.CS0026",
+          "url": "https://atlas.mitre.org/studies/AML.CS0026"
+        },
+        {
+          "title": "We got an ~RCE on M365 Copilot by sending an email., Twitter",
+          "url": "https://twitter.com/mbrg0/status/1821551825369415875"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-03967",
+      "title": "Many-shot jailbreaking (Anthropic research)",
+      "year": 2024,
+      "severity": "High",
+      "category": "research-demonstrated",
+      "corpus": "security",
+      "attack_vector": "jailbreak",
+      "description": "Anthropic researchers published research demonstrating \"many-shot jailbreaking\" - a context-length attack where a large number of faux-dialogue examples are prepended to a harmful request in the prompt. With sufficient in-context examples (100-256 shots) of the model \"complying\" with harmful requests (fabricated dialogue), frontier models including Claude...",
+      "owasp_llm": [
+        "LLM01",
+        "LLM04",
+        "LLM06"
+      ],
+      "owasp_asi": [
+        "ASI01"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-3.2",
+        "MANAGE-2.3",
+        "MANAGE-2.4",
+        "MANAGE-3.2",
+        "MAP-2.1",
+        "MAP-3.5",
+        "MAP-4.2",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0018",
+        "AML.T0019",
+        "AML.T0020",
+        "AML.T0048",
+        "AML.T0051",
+        "AML.T0051.000",
+        "AML.T0051.001",
+        "AML.T0053",
+        "AML.T0054",
+        "AML.T0059"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0001",
+        "AML.TA0003",
+        "AML.TA0005",
+        "AML.TA0006",
+        "AML.TA0007",
+        "AML.TA0011",
+        "AML.TA0012"
+      ],
+      "mitigations": [
+        "Context window limits appropriate to deployment use case - do not expose maximum context to untrusted inputs",
+        "In-context example validation: detect fabricated compliance dialogues in long prompts",
+        "Input length monitoring - flag and review unusually long prompts",
+        "Sliding context evaluation: assess safety risk of final N tokens regardless of total prompt length"
+      ],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "Many-shot jailbreaking - Anthropic (2024)",
+          "url": "https://www.anthropic.com/research/many-shot-jailbreaking"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-04027",
+      "title": "Nassi et al. \"ComPromptMized\" Morris II multi-agent worm",
+      "year": 2024,
+      "severity": "Critical",
+      "category": "research-demonstrated",
+      "corpus": "security",
+      "attack_vector": "data-exfiltration",
+      "description": "Nassi et al. (Cornell Tech, Technion, Intuit) demonstrated the first generative AI worm capable of self-replicating across multi-agent systems. Named \"Morris II\" after the 1988 Morris worm, the attack embeds adversarial self-replicating prompts in emails processed by AI email assistants (GenAI-powered). When the assistant reads the poisoned email, the inj...",
+      "owasp_llm": [
+        "LLM01",
+        "LLM02",
+        "LLM06",
+        "LLM08"
+      ],
+      "owasp_asi": [
+        "ASI01",
+        "ASI02",
+        "ASI06",
+        "ASI07",
+        "ASI08"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.4",
+        "GOVERN-6.2",
+        "MANAGE-2.1",
+        "MANAGE-2.3",
+        "MANAGE-4.1",
+        "MAP-2.1",
+        "MAP-3.5",
+        "MAP-4.1",
+        "MAP-4.2",
+        "MEASURE-2.10",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0020",
+        "AML.T0048",
+        "AML.T0051",
+        "AML.T0051.000",
+        "AML.T0051.001",
+        "AML.T0053",
+        "AML.T0057",
+        "AML.T0059",
+        "AML.T0066"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0003",
+        "AML.TA0005",
+        "AML.TA0006",
+        "AML.TA0010",
+        "AML.TA0011",
+        "AML.TA0012"
+      ],
+      "mitigations": [
+        "Human approval required before any outbound agent action (email send, contact access)",
+        "Immutable audit log of all agent communications with anomaly detection",
+        "Input validation and sanitisation for all inter-agent messages",
+        "Memory content integrity checks - validate stored content against trust policy before execution"
+      ],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "ComPromptMized: Unleashing Zero-click Worms that Target GenAI-Powered Applications - Nassi et al. (2024)",
+          "url": "https://arxiv.org/abs/2403.02817"
+        },
+        {
+          "title": "Morris II AI Worm - Wired coverage",
+          "url": "https://www.wired.com/story/here-come-the-ai-worms/"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-04070",
+      "title": "OpenAI Whisper hallucinating medical transcriptions - fabricated diagnoses in healthcare AI",
+      "year": 2024,
+      "severity": "Critical",
+      "category": "research-demonstrated",
+      "corpus": "security",
+      "attack_vector": "hallucination",
+      "description": "Researchers at the University of Michigan found that OpenAI's Whisper speech-to-text model, widely used in healthcare for medical transcription, hallucinated content in approximately 1% of transcriptions. Hallucinations included fabricated medical diagnoses, medication names, and patient statements that never occurred. The problem was particularly severe...",
+      "owasp_llm": [
+        "LLM08",
+        "LLM09"
+      ],
+      "owasp_asi": [],
+      "nist_ai_rmf": [
+        "MANAGE-4.3",
+        "MEASURE-2.5",
+        "MEASURE-2.7",
+        "MEASURE-2.8"
+      ],
+      "mitre_atlas": [
+        "AML.T0048.001",
+        "AML.T0058",
+        "AML.T0066",
+        "AML.T0070"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0003",
+        "AML.TA0006",
+        "AML.TA0011"
+      ],
+      "mitigations": [
+        "Human review requirement for all AI-generated medical transcriptions",
+        "Confidence scoring with mandatory manual review below threshold",
+        "Hallucination detection for medical terminology and clinical assertions",
+        "FDA pre-market review for AI systems generating medical records"
+      ],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "Whisper hallucinations in medical transcription",
+          "url": "https://apnews.com/article/openai-whisper-ai-medical-transcription-hallucination-0a7bdf3c59438a9a81ae8ce5e33da81e"
+        },
+        {
+          "title": "University of Michigan Whisper hallucination study",
+          "url": "https://arxiv.org/abs/2402.08021"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-04142",
+      "title": "RAG corpus poisoning - embedding-space manipulation to force retrieval",
+      "year": 2024,
+      "severity": "Critical",
+      "category": "research-demonstrated",
+      "corpus": "security",
+      "attack_vector": "memory-poisoning",
+      "description": "Researchers Zou et al. (PoisonedRAG) and independently Chaudhari et al. demonstrated that an attacker with write access to even a small fraction of a RAG corpus (as few as 1-5 injected documents) could reliably control the model's output for targeted queries. The attack crafts documents whose embeddings are close to target query embeddings, ensuring they...",
+      "owasp_llm": [
+        "LLM01",
+        "LLM04",
+        "LLM08"
+      ],
+      "owasp_asi": [
+        "ASI01",
+        "ASI02",
+        "ASI06",
+        "ASI07",
+        "ASI08"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-6.2",
+        "MANAGE-2.3",
+        "MANAGE-4.1",
+        "MAP-2.1",
+        "MAP-3.5",
+        "MAP-4.1",
+        "MAP-4.2",
+        "MAP-5.1",
+        "MEASURE-2.11",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0020",
+        "AML.T0048",
+        "AML.T0051",
+        "AML.T0051.000",
+        "AML.T0051.001",
+        "AML.T0053",
+        "AML.T0059",
+        "AML.T0066"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0003",
+        "AML.TA0005",
+        "AML.TA0006",
+        "AML.TA0011",
+        "AML.TA0012"
+      ],
+      "mitigations": [
+        "Anomaly detection on retrieved chunk relevance scores",
+        "Cryptographic message signing between trusted agents - reject unsigned messages",
+        "Each agent must independently verify that requested actions are within its authorised scope",
+        "Monitor for anomalous agent communication patterns (unexpected message sizes, instruction-like content)"
+      ],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "PoisonedRAG: Knowledge Poisoning Attacks to Retrieval-Augmented Generation (Zou et al., 2024)",
+          "url": "https://arxiv.org/abs/2402.07867"
+        },
+        {
+          "title": "Phantom: General Trigger Attacks on Retrieval Augmented Language Generation",
+          "url": "https://arxiv.org/abs/2405.20485"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-04207",
+      "title": "Skeleton Key: direct system prompt override (Microsoft)",
+      "year": 2024,
+      "severity": "Critical",
+      "category": "research-demonstrated",
+      "corpus": "security",
+      "attack_vector": "prompt-injection",
+      "description": "Microsoft researchers disclosed the Skeleton Key attack - a direct jailbreak technique where the attacker instructs the model to augment (not replace) its safety behavior by adding a new \"override mode\" framing. Unlike earlier jailbreaks that attempt to confuse or deceive the model, Skeleton Key directly asks the model to acknowledge that it can generate...",
+      "owasp_llm": [
+        "LLM01",
+        "LLM06",
+        "LLM07"
+      ],
+      "owasp_asi": [
+        "ASI01"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-3.2",
+        "MANAGE-2.3",
+        "MANAGE-2.4",
+        "MAP-2.1",
+        "MAP-3.5",
+        "MEASURE-2.10",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0048",
+        "AML.T0051",
+        "AML.T0051.000",
+        "AML.T0051.001",
+        "AML.T0053",
+        "AML.T0054",
+        "AML.T0056",
+        "AML.T0067"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0005",
+        "AML.TA0007",
+        "AML.TA0010",
+        "AML.TA0011",
+        "AML.TA0012"
+      ],
+      "mitigations": [
+        "Monitor for prompts explicitly requesting safety behavior modification or override",
+        "Output review for disclaimer-prefixed harmful content patterns",
+        "Safety evaluation must include direct override request test cases",
+        "System prompt immutability enforcement - user turns cannot modify declared safety behavior"
+      ],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "Skeleton Key: New jailbreak technique targets AI models - Microsoft (2024)",
+          "url": "https://www.microsoft.com/en-us/security/blog/2024/06/26/mitigating-skeleton-key-a-new-type-of-generative-ai-jailbreak-technique/"
+        },
+        {
+          "title": "Skeleton Key jailbreak - arXiv (2024)",
+          "url": "https://arxiv.org/abs/2402.06627"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-04212",
+      "title": "Snowflake customer data breach via stolen credentials - 165+ organisations affected",
+      "year": 2024,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "auth-bypass",
+      "description": "Attackers used credentials stolen via infostealer malware to access Snowflake customer environments containing AI training data, ML feature stores, and analytics pipelines. Over 165 organisations were affected including AT&T (110M records), Ticketmaster (560M records), and Santander. Many victims used Snowflake for AI/ML data pipelines, exposing training...",
+      "owasp_llm": [],
+      "owasp_asi": [
+        "ASI03"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.4",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0012",
+        "AML.T0055"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0004",
+        "AML.TA0012",
+        "AML.TA0013"
+      ],
+      "mitigations": [
+        "Mandatory MFA on all data platform accounts, especially those with AI/ML data access",
+        "Credential monitoring and session anomaly detection",
+        "Data classification and access controls for AI training data",
+        "Third-party data platform security assessment and continuous monitoring"
+      ],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "Snowflake breach investigation - Mandiant",
+          "url": "https://cloud.google.com/blog/topics/threat-intelligence/unc5537-snowflake-data-theft-extortion"
+        },
+        {
+          "title": "Snowflake customer data breach - 165 orgs",
+          "url": "https://www.wired.com/story/snowflake-breach-advanced-auto-parts-lendingtree/"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-04349",
+      "title": "Web-Scale Data Poisoning: Split-View Attack",
+      "year": 2024,
+      "severity": "High",
+      "category": "research",
+      "corpus": "security",
+      "attack_vector": "adversarial-input",
+      "description": "Many recent large-scale datasets are distributed as a list of URLs pointing to individual datapoints. The researchers show that many of these datasets are vulnerable to a \"split-view\" poisoning attack. The attack exploits the fact that the data viewed when it was initially collected may differ from the data viewed by a user during training. The researcher...",
+      "owasp_llm": [
+        "LLM03",
+        "LLM04"
+      ],
+      "owasp_asi": [
+        "ASI04"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.4",
+        "GOVERN-6.1",
+        "MANAGE-3.1",
+        "MAP-4.2",
+        "MEASURE-2.10"
+      ],
+      "mitre_atlas": [
+        "AML.T0010",
+        "AML.T0010.003",
+        "AML.T0019",
+        "AML.T0020"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0003",
+        "AML.TA0004",
+        "AML.TA0006"
+      ],
+      "mitigations": [],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "MITRE ATLAS - AML.CS0025",
+          "url": "https://atlas.mitre.org/studies/AML.CS0025"
+        },
+        {
+          "title": "Poisoning Web-Scale Training Datasets is Practical",
+          "url": "https://arxiv.org/pdf/2302.10149"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-04391",
+      "title": "AI Model Tampering via Supply Chain Attack",
+      "year": 2023,
+      "severity": "High",
+      "category": "research",
+      "corpus": "security",
+      "attack_vector": "adversarial-input",
+      "description": "Researchers at Trend Micro, Inc. used service indexing portals and web searching tools to identify over 8,000 misconfigured private container registries exposed on the internet. Approximately 70% of the registries also had overly permissive access controls that allowed write access. In their analysis, the researchers found over 1,000 unique AI models embe...",
+      "owasp_llm": [
+        "LLM03",
+        "LLM04"
+      ],
+      "owasp_asi": [
+        "ASI04"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.4",
+        "GOVERN-6.1",
+        "MANAGE-3.1",
+        "MAP-4.2",
+        "MEASURE-2.10"
+      ],
+      "mitre_atlas": [
+        "AML.T0010",
+        "AML.T0010.001",
+        "AML.T0018",
+        "AML.T0019",
+        "AML.T0020"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0001",
+        "AML.TA0003",
+        "AML.TA0004",
+        "AML.TA0006"
+      ],
+      "mitigations": [],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "MITRE ATLAS - AML.CS0028",
+          "url": "https://atlas.mitre.org/studies/AML.CS0028"
+        },
+        {
+          "title": "Silent Sabotage: Weaponizing AI Models in Exposed Containers",
+          "url": "https://www.trendmicro.com/vinfo/br/security/news/cyber-attacks/silent-sabotage-weaponizing-ai-models-in-exposed-containers"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-04715",
+      "title": "LangChain and LlamaIndex RCE - agent code execution via prompt injection",
+      "year": 2023,
+      "severity": "Critical",
+      "category": "research-demonstrated",
+      "corpus": "security",
+      "attack_vector": "prompt-injection",
+      "description": "Multiple CVEs were filed against LangChain (CVE-2023-36258, CVE-2023-44467) and LlamaIndex for unsafe code execution in their Python agent frameworks. Agents configured with code execution tools (Python REPL, bash execution) could be manipulated through prompt injection to run arbitrary code. Researchers demonstrated that injecting instructions through do...",
+      "owasp_llm": [
+        "LLM01",
+        "LLM03",
+        "LLM05",
+        "LLM06"
+      ],
+      "owasp_asi": [
+        "ASI01",
+        "ASI02",
+        "ASI04",
+        "ASI05"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-3.2",
+        "GOVERN-6.1",
+        "MANAGE-2.3",
+        "MAP-2.1",
+        "MAP-3.5",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0010",
+        "AML.T0011",
+        "AML.T0049",
+        "AML.T0050",
+        "AML.T0051",
+        "AML.T0051.000",
+        "AML.T0051.001",
+        "AML.T0053"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0012"
+      ],
+      "mitigations": [
+        "Disable code execution tools in production unless strictly required",
+        "Input validation before any tool invocation - do not pass unvalidated content to execution tools",
+        "Least-privilege principle - agents should not have host execution capabilities",
+        "Run code execution in sandboxed environments with no network access (containers, gVisor)"
+      ],
+      "cve_ids": [
+        "CVE-2023-36188",
+        "CVE-2023-36258",
+        "CVE-2023-38896"
+      ],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "CVE-2023-36258 - LangChain Python execution vulnerability",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-36258"
+        },
+        {
+          "title": "Security Advisory: LlamaIndex code execution via prompt injection",
+          "url": "https://github.com/run-llama/llama_index/security/advisories"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-04803",
+      "title": "PoisonGPT: Mithril Security demonstrates LLM supply-chain disinfo via Hugging Face typosquat",
+      "year": 2023,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "supply-chain",
+      "description": "Mithril Security modified an open-source GPT-J variant to surgically alter factual outputs (e.g., claiming Yuri Gagarin was first on the moon) and uploaded it to a typosquatted Hugging Face repo 'EleuterAI' (vs. 'EleutherAI'). Downloaded 40+ times before takedown. Demonstrated AI supply-chain risk.",
+      "owasp_llm": [
+        "LLM03",
+        "LLM04",
+        "LLM09"
+      ],
+      "owasp_asi": [
+        "ASI04"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.1",
+        "GOVERN-1.4",
+        "GOVERN-6.1",
+        "MANAGE-3.1",
+        "MAP-4.1",
+        "MAP-4.2",
+        "MEASURE-2.10",
+        "MEASURE-2.8"
+      ],
+      "mitre_atlas": [
+        "AML.T0010",
+        "AML.T0010.001",
+        "AML.T0018",
+        "AML.T0019",
+        "AML.T0020",
+        "AML.T0058"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0001",
+        "AML.TA0003",
+        "AML.TA0004",
+        "AML.TA0006"
+      ],
+      "mitigations": [],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "PoisonGPT: How to poison LLM supply chain on Hugging Face - Mithril Security",
+          "url": "https://blog.mithrilsecurity.io/poisongpt-how-we-hid-a-lobotomized-llm-on-hugging-face-to-spread-fake-news/"
+        },
+        {
+          "title": "Researchers Demonstrate AI 'Supply Chain' Disinfo Attack With PoisonGPT - Vice",
+          "url": "https://www.vice.com/en/article/researchers-demonstrate-ai-supply-chain-disinfo-attack-with-poisongpt/"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-04862",
+      "title": "ShadowRay: Anyscale Ray Dashboard RCE (CVE-2023-48022) exploited in the wild",
+      "year": 2023,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "rce",
+      "description": "Oligo Security disclosed 'ShadowRay': active exploitation of CVE-2023-48022 in Anyscale's Ray AI framework. Thousands of internet-exposed Ray clusters were compromised, exposing AI workloads, model weights, cloud credentials, and customer data. Anyscale disputed the CVE as expected behavior; later added token auth in 2.52.0.",
+      "owasp_llm": [
+        "LLM01",
+        "LLM02",
+        "LLM03",
+        "LLM05",
+        "LLM06"
+      ],
+      "owasp_asi": [
+        "ASI01",
+        "ASI04",
+        "ASI05"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.1",
+        "GOVERN-1.4",
+        "GOVERN-6.1",
+        "GOVERN-6.2",
+        "MANAGE-2.3",
+        "MANAGE-3.1",
+        "MAP-2.1",
+        "MAP-3.5",
+        "MAP-4.1",
+        "MEASURE-2.10",
+        "MEASURE-2.5",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0010",
+        "AML.T0010.001",
+        "AML.T0011",
+        "AML.T0018",
+        "AML.T0040",
+        "AML.T0048",
+        "AML.T0049",
+        "AML.T0050",
+        "AML.T0051",
+        "AML.T0051.000",
+        "AML.T0051.001",
+        "AML.T0053",
+        "AML.T0055",
+        "AML.T0057",
+        "AML.T0060"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0000",
+        "AML.TA0001",
+        "AML.TA0003",
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0006",
+        "AML.TA0010",
+        "AML.TA0011",
+        "AML.TA0012",
+        "AML.TA0013"
+      ],
+      "mitigations": [
+        "Authentication on job submission APIs",
+        "Network segmentation for AI compute clusters",
+        "Patch Ray framework promptly"
+      ],
+      "cve_ids": [
+        "CVE-2023-48022"
+      ],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "ShadowRay: First Known Attack Campaign Targeting AI Workloads - Oligo",
+          "url": "https://www.oligo.security/blog/shadowray-attack-ai-workloads-actively-exploited-in-the-wild"
+        },
+        {
+          "title": "CVE-2023-48022 Anyscale Ray Dashboard RCE - Censys",
+          "url": "https://censys.com/advisory/cve-2023-48022"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-04976",
+      "title": "Universal Jailbreak Backdoors from Poisoned Human Feedback",
+      "year": 2023,
+      "severity": "Critical",
+      "category": "research",
+      "corpus": "security",
+      "attack_vector": "backdoor",
+      "description": "Rando and Tramer poison RLHF preference data so a hidden trigger word acts as a universal 'sudo' command that unlocks harmful behavior. Just 0.5 percent poisoned data corrupts the reward model. ICLR 2024.",
+      "owasp_llm": [
+        "LLM03",
+        "LLM04"
+      ],
+      "owasp_asi": [
+        "ASI02"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-6.1",
+        "MAP-3.5",
+        "MAP-4.2",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0010",
+        "AML.T0018",
+        "AML.T0020",
+        "AML.T0053"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0001",
+        "AML.TA0003",
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0006",
+        "AML.TA0012"
+      ],
+      "mitigations": [],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "Universal Jailbreak Backdoors from Poisoned Human Feedback",
+          "url": "https://arxiv.org/abs/2311.14455"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-05172",
+      "title": "Perez & Ribeiro - 'Ignore Previous Prompt': foundational direct injection study",
+      "year": 2022,
+      "severity": "Critical",
+      "category": "research-demonstrated",
+      "corpus": "security",
+      "attack_vector": "prompt-injection",
+      "description": "Fabio Perez and Ian Ribeiro published the foundational paper systematically documenting prompt injection attacks. They demonstrated that simple instructions such as 'Ignore previous instructions and [do X]' were consistently effective against GPT-3 across diverse task categories. They introduced the taxonomy of goal hijacking (redirecting the task) vs. pr...",
+      "owasp_llm": [
+        "LLM01",
+        "LLM07"
+      ],
+      "owasp_asi": [],
+      "nist_ai_rmf": [
+        "MANAGE-2.3",
+        "MAP-2.1",
+        "MEASURE-2.10",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0051",
+        "AML.T0051.000",
+        "AML.T0051.001",
+        "AML.T0056",
+        "AML.T0067"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0005",
+        "AML.TA0007",
+        "AML.TA0010"
+      ],
+      "mitigations": [
+        "Design system so business logic leak is not catastrophic - defence in depth",
+        "Do not embed secrets, credentials, or internal URLs in system prompts",
+        "Input sanitisation for common injection patterns",
+        "Instruction hierarchy - system prompt has absolute priority regardless of user content"
+      ],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "Ignore Previous Prompt: Attack Techniques For Language Models - Perez & Ribeiro (2022)",
+          "url": "https://arxiv.org/abs/2211.09527"
+        },
+        {
+          "title": "Leaked system prompts collection - community-maintained",
+          "url": "https://github.com/linexjlin/GPTs"
+        }
+      ],
+      "quality_tier": "curated"
+    },
+    {
+      "id": "INC-05496",
+      "title": "Backdoor Attack on Deep Learning Models in Mobile Apps",
+      "year": 2021,
+      "severity": "Critical",
+      "category": "research",
+      "corpus": "security",
+      "attack_vector": "adversarial-input",
+      "description": "Deep learning models are increasingly used in mobile applications as critical components. Researchers from Microsoft Research demonstrated that many deep learning models deployed in mobile apps are vulnerable to backdoor attacks via \"neural payload injection.\" They conducted an empirical study on real-world mobile deep learning apps collected from Google...",
+      "owasp_llm": [
+        "LLM03",
+        "LLM04"
+      ],
+      "owasp_asi": [
+        "ASI04"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-6.1",
+        "MANAGE-3.1",
+        "MAP-4.2",
+        "MEASURE-2.7"
+      ],
+      "mitre_atlas": [
+        "AML.T0010",
+        "AML.T0010.001",
+        "AML.T0018",
+        "AML.T0019",
+        "AML.T0020"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0001",
+        "AML.TA0003",
+        "AML.TA0004",
+        "AML.TA0006"
+      ],
+      "mitigations": [],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "MITRE ATLAS - AML.CS0013",
+          "url": "https://atlas.mitre.org/studies/AML.CS0013"
+        },
+        {
+          "title": "DeepPayload: Black-box Backdoor Attack on Deep Learning Models through Neural Payload Injection",
+          "url": "https://arxiv.org/abs/2101.06896"
+        }
+      ],
+      "quality_tier": "reviewed"
+    },
+    {
+      "id": "INC-07386",
+      "title": "Clearview AI Algorithm Built on Photos Scraped from Social Media Profiles without Consent",
+      "year": 2017,
+      "severity": "Critical",
+      "category": "real-world",
+      "corpus": "security",
+      "attack_vector": "privacy-violation",
+      "description": "Face-matching algorithm by Clearview AI was built using scraped images from social media sites such as Instagram and Facebook without user consent, violating social media site policies, and allegedly privacy regulations.",
+      "owasp_llm": [
+        "LLM02",
+        "LLM04",
+        "LLM05",
+        "LLM09"
+      ],
+      "owasp_asi": [
+        "ASI03",
+        "ASI05",
+        "ASI09"
+      ],
+      "nist_ai_rmf": [
+        "GOVERN-1.1",
+        "GOVERN-1.4",
+        "GOVERN-3.2",
+        "MAP-3.5",
+        "MAP-4.1",
+        "MAP-4.2",
+        "MEASURE-2.10",
+        "MEASURE-2.7",
+        "MEASURE-2.8"
+      ],
+      "mitre_atlas": [
+        "AML.T0012",
+        "AML.T0019",
+        "AML.T0020",
+        "AML.T0048.003",
+        "AML.T0050",
+        "AML.T0057",
+        "AML.T0058"
+      ],
+      "mitre_atlas_tactics": [
+        "AML.TA0003",
+        "AML.TA0004",
+        "AML.TA0005",
+        "AML.TA0006",
+        "AML.TA0010",
+        "AML.TA0011",
+        "AML.TA0012"
+      ],
+      "mitigations": [],
+      "cve_ids": [],
+      "cvss_score": null,
+      "references": [
+        {
+          "title": "AIID incident #267",
+          "url": "https://incidentdatabase.ai/cite/267/"
+        },
+        {
+          "title": "Clearview AI Customers Exposed in Data Breach - Dark Reading",
+          "url": "https://www.darkreading.com/cyberattacks-data-breaches/clearview-ai-customers-exposed-in-data-breach"
+        }
+      ],
+      "quality_tier": "reviewed"
+    }
+  ]
+}

@@ -52,6 +52,12 @@ class Finding(BaseModel):
     compound_risk_type: str = Field(default="", max_length=64)
     applicable_roles: list[str] = Field(default_factory=list, max_length=16)
     threat_categories: list[str] = Field(default_factory=list, max_length=16)
+    # ── Real-world incident grounding (v0.4) ────────────────────────────
+    # IDs from the vendored GenAI-incidents corpus (e.g. "INC-00671") that
+    # exploited this gap class. Populated post-analysis by
+    # ``scanner.incident_grounding`` — empty when the finding has no
+    # crosswalkable threat/dimension signal, or for positive evidence.
+    related_incidents: list[str] = Field(default_factory=list, max_length=8)
 
 
 class AnalyzerResult(BaseModel):

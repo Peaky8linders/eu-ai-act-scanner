@@ -7,9 +7,12 @@
 ![Status: alpha](https://img.shields.io/badge/status-alpha-orange)
 ![100 days](https://img.shields.io/badge/T--100%20days-Aug%202%2C%202026-red)
 
-**Ships as two things in one repo:**
-1. A **Claude Code plugin** with three commands (`/ai-act-scan`, `/ai-act-scan-fix`, `/ai-act-article`) and **12 article-grounded skills** covering classification, obligations, deployer duties, GPAI, Annex IV, timeline, and penalties
-2. A **Python library** (`from scanner import scan_project`) with **21 analyzers**, including 7 new agent-aware analyzers grounded in Nannini et al. (2026), *AI Agents under EU Law* — covering the four compound-risk axes (cascading, emergent, attribution, temporal), AEPD lethal-trifecta detection, runtime drift, regulatory perimeter classification, and tool-permission minimization
+**Ships as three things in one repo:**
+1. A **Claude Code plugin** with four commands (`/ai-act-scan`, `/ai-act-scan-fix`, `/ai-act-article`, `/ai-act-incidents`) and **13 article-grounded skills** covering classification, obligations, deployer duties, GPAI, Annex IV, timeline, penalties, and real-world incident grounding
+2. A **Python library** (`from scanner import scan_project`) with **21 analyzers**, including 7 agent-aware analyzers grounded in Nannini et al. (2026), *AI Agents under EU Law* — covering the four compound-risk axes (cascading, emergent, attribution, temporal), AEPD lethal-trifecta detection, runtime drift, regulatory perimeter classification, and tool-permission minimization
+3. An **MCP server** (`eu-ai-act-scan-mcp`) so non-Claude-Code agents can call the scanner and query the incident corpus over the Model Context Protocol
+
+Every finding is **grounded in real-world incidents** (new in v0.4): the scanner crosswalks its gaps to a vendored, reviewed-tier subset of the open [GenAI & Agentic AI Security Incidents dataset](https://huggingface.co/datasets/emmanuelgjr/genai-incidents) (CC-BY-4.0, 7,725+ incidents mapped to OWASP LLM Top 10 2025, OWASP Agentic (ASI) Top 10, NIST AI RMF, and MITRE ATLAS). A gap stops being "you have no prompt-injection defence" and becomes "...and here are the documented incidents where exactly that gap was exploited, with the published mitigations." See [Incident grounding](#incident-grounding).
 
 The skills are written to the same standard: every regulatory claim cites an article (and paragraph where relevant), every skill names its audience (engineer / compliance officer / legal counsel / deployer), every skill has a Common Rationalizations table that heads off the most common mistakes, and every skill ends with a citation to the Official Journal. See [`skills/authoring-eu-ai-act-skills.md`](skills/authoring-eu-ai-act-skills.md) for the authoring standard — new skills must meet it.
 
@@ -17,7 +20,7 @@ The skills are written to the same standard: every regulatory claim cites an art
 
 ## ⏳ 100 days to enforcement
 
-**2 August 2026** is the date high-risk AI system obligations (Art. 6 + Annex III, and Art. 9–15 / 17 / 27) become enforceable. As of today, that is **~100 days away**.
+**2 August 2026** is the date high-risk AI system obligations (Art. 6 + Annex III, and Art. 9–15 / 17 / 27) become enforceable — and it is closing fast. The snippet below prints the exact days remaining from your clock.
 
 If you ship AI and your system touches biometrics, critical infrastructure, education, employment, essential services, law enforcement, migration, or justice, you are in scope. Most teams don't know what their code currently shows against the regulation.
 
@@ -68,7 +71,7 @@ That runs the same scan and narrates the results in plain English, cites the art
 
 The EU AI Act (Regulation 2024/1689) entered into force in August 2024, with high-risk obligations applying from August 2026. Most teams are flying blind on what their code actually shows vs. what the regulation asks for.
 
-This tool does one thing: **scan your repo and surface evidence and gaps against 19 compliance dimensions mapped to EU AI Act articles**. It does *not* replace a conformity assessment, legal review, or a Quality Management System. It is the static-analysis layer underneath all of those.
+This tool does one thing: **scan your repo and surface evidence and gaps against 23 compliance dimensions mapped to EU AI Act articles, grounded in the real-world incidents that exploited each gap class**. It does *not* replace a conformity assessment, legal review, or a Quality Management System. It is the static-analysis layer underneath all of those.
 
 ## What the scanner looks at
 
@@ -107,6 +110,46 @@ This tool does one thing: **scan your repo and surface evidence and gaps against
 
 Findings are aggregated into **23 compliance dimensions** (see [`scanner/kb.py`](scanner/kb.py)), and gap findings from the four agent-aware analyzers are auto-tagged with their compound-risk axis, threat categories, and applicable operator roles via [`scanner/data/agentic_taxonomy.py`](scanner/data/agentic_taxonomy.py) and [`scanner/data/role_obligations.py`](scanner/data/role_obligations.py).
 
+## Incident grounding
+
+A normative gap ("you have no prompt-injection defence — Art. 15(4)") is easy to wave away. An *evidence-based* one is not: "...and here are the documented incidents where exactly that gap was exploited, mapped to OWASP LLM01 + MITRE ATLAS AML.T0051, with the published mitigations." That is what incident grounding does.
+
+The scanner bundles a curated, reviewed-tier subset of the open **[GenAI & Agentic AI Security Incidents dataset](https://huggingface.co/datasets/emmanuelgjr/genai-incidents)** (`emmanuelgjr/genai-incidents`, **CC-BY-4.0**) — real-world and research incidents aggregated and de-duplicated from AIID, OECD AIM, AIAAIC, MITRE ATLAS, AVID, the MIT AI Risk Repository, NVD, GHSA, OSV, garak, promptfoo, and others. Every incident carries its native taxonomy: OWASP Top 10 for LLM Applications (2025), OWASP Agentic (ASI) Top 10, NIST AI RMF, and MITRE ATLAS techniques/tactics, plus documented mitigations and CVE IDs.
+
+The crosswalk in [`scanner/data/incident_crosswalk.py`](scanner/data/incident_crosswalk.py) maps the scanner's own vocabulary — KB dimensions, agentic threat categories, and EU AI Act article refs — to that incident taxonomy. So:
+
+- **Every gap finding** gets a `related_incidents` list (the documented incidents that exploited its class).
+- **Every scan result** carries `incident_grounding` — the worst-scoring dimensions paired with real incidents.
+- **The Python/CLI/MCP API** can surface incidents for any dimension, article, or threat category on demand.
+
+```python
+from scanner import incidents_for_dimension, incidents_for_article, incident_corpus_stats
+
+for inc in incidents_for_article("art15", limit=3):
+    print(f"{inc.id} [{inc.severity}] {inc.title}")
+    print(f"   OWASP-LLM {inc.owasp_llm} | MITRE {inc.mitre_atlas[:2]} | NIST {inc.nist_ai_rmf[:2]}")
+    if inc.mitigations:
+        print(f"   mitigation: {inc.mitigations[0]}")
+
+print(incident_corpus_stats()["count"], "incidents bundled, attribution:",
+      incident_corpus_stats()["license"])
+```
+
+Or from Claude Code / the CLI:
+
+```
+/ai-act-incidents art15            # incidents for an article
+/ai-act-incidents security         # incidents for a KB dimension
+/ai-act-incidents prompt_injection # incidents for an agentic threat category
+```
+
+```bash
+eu-ai-act-scan --incidents art15 --limit 5     # JSON
+eu-ai-act-scan ./my-app --markdown             # scan report with a grounding section
+```
+
+**Offline by design.** The bundled subset ships in the wheel and needs no network. The full 7,725-incident dataset is one step away — `pip install genai-incidents` or `load_dataset("emmanuelgjr/genai-incidents")` — and the bundled snapshot is regenerated deterministically by [`scripts/sync_incident_corpus.py`](scripts/sync_incident_corpus.py) (`pip install eu-ai-act-scanner[sync]`). Incident grounding is **evidence input to your Art. 9 risk management and Art. 72 post-market monitoring — not a compliance verdict.** See the [`eu-ai-act-incident-grounding`](skills/eu-ai-act-incident-grounding.md) skill.
+
 ## Install
 
 ### As a Claude Code plugin
@@ -132,6 +175,23 @@ Or (once published):
 pip install eu-ai-act-scanner
 ```
 
+### As an MCP server
+
+For non-Claude-Code agents (or any MCP client), install the optional MCP extra and run the server:
+
+```bash
+pip install "eu-ai-act-scanner[mcp]"
+eu-ai-act-scan-mcp          # stdio MCP server
+```
+
+Register it with an MCP client using the bundled [`.mcp.json`](.mcp.json):
+
+```json
+{ "mcpServers": { "eu-ai-act-scanner": { "command": "eu-ai-act-scan-mcp", "args": [] } } }
+```
+
+It exposes seven tools: `scan_project`, `list_dimensions`, `get_article`, `incidents_for_dimension`, `incidents_for_threat`, `incidents_for_article`, and `incident_corpus_stats` — the same engine as the library and CLI.
+
 ## Usage
 
 ### In Claude Code (recommended)
@@ -140,9 +200,10 @@ pip install eu-ai-act-scanner
 /ai-act-scan ./my-app                # full scan + narration + article cites
 /ai-act-article art14                # Art. 14 human-oversight deep-dive
 /ai-act-scan-fix --top 3             # propose fixes for worst 3 gaps
+/ai-act-incidents art15              # real-world incidents for an article/dimension/threat
 ```
 
-The plugin narrates the output in plain English, cites the articles, and offers remediation tasks. The 12 shipped skills (Art. 5 prohibited, Art. 6 classification, FRIA, operator roles, GPAI, Annex IV, timeline, penalties, and three meta-skills) become automatically invocable once the plugin is installed — ask "is this prohibited under Art. 5?" or "what goes in Annex IV?" and Claude pulls the right skill.
+The plugin narrates the output in plain English, cites the articles, and offers remediation tasks. The 13 shipped skills (Art. 5 prohibited, Art. 6 classification, FRIA, operator roles, GPAI, Annex IV, timeline, penalties, incident grounding, and three meta-skills) become automatically invocable once the plugin is installed — ask "is this prohibited under Art. 5?", "what goes in Annex IV?", or "what real incidents map to this gap?" and Claude pulls the right skill.
 
 ### Python
 
@@ -174,7 +235,7 @@ Scores are on a 0–100 scale:
 ## What it does NOT do
 
 - **No LLM calls by default.** Pure local static analysis. (Optional LLM mode behind `EU_AI_ACT_SCANNER_LLM=true` for README quality scoring.)
-- **No network requests, no telemetry.** Your code never leaves your machine.
+- **No network requests, no telemetry.** Your code never leaves your machine. The incident corpus is vendored offline; only `scripts/sync_incident_corpus.py` (run by maintainers, never at scan time) reaches the network to regenerate it.
 - **No risk-tier classification.** Whether your system is high-risk, limited-risk, or minimal-risk depends on use case (Art. 6 + Annex III) — a human has to decide.
 - **No legal advice.** Use this alongside legal counsel, not instead of it.
 
@@ -194,9 +255,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the dev loop.
 
 - **v0.1**: Plugin + library (Apr 2026)
 - **v0.2**: 11 article-grounded skill harness for law practitioners (Apr 2026)
-- **v0.3**: 7 agent-aware analyzers per Nannini et al. (2026) + 4 new compliance dimensions + four-axis compound-risk taxonomy (this release, May 2026)
-- **v0.4**: MCP server so non-Claude-Code agents can call the scanner
+- **v0.3**: 7 agent-aware analyzers per Nannini et al. (2026) + 4 new compliance dimensions + four-axis compound-risk taxonomy (May 2026)
+- **v0.4**: Real-world incident grounding (GenAI-incidents corpus crosswalked to OWASP LLM/ASI, NIST AI RMF, MITRE ATLAS) + MCP server + `/ai-act-incidents` command (this release, Jun 2026)
 - **v0.5**: Baseline / diff mode — scan twice, report only what changed
+- **v0.6**: Live `genai-incidents` enrichment — opt in to the full dataset at runtime when installed
 
 ## License
 
@@ -205,3 +267,5 @@ Apache-2.0. See [LICENSE](LICENSE).
 ## Acknowledgements
 
 Extracted from [CodexAI](https://antifragile-ai.net) — the full EU AI Act compliance platform. CodexAI adds risk classification, maturity scoring, roadmap generation, Annex IV / FRIA / Art. 13 documentation, cross-framework mapping, and audit evidence chains on top of this scanner.
+
+Incident grounding is built on the **GenAI & Agentic AI Security Incidents** dataset by Emmanuel G. ([`emmanuelgjr/genai-incidents`](https://huggingface.co/datasets/emmanuelgjr/genai-incidents)), licensed **CC-BY-4.0** and aggregated/de-duplicated from AIID, OECD AIM, AIAAIC, MITRE ATLAS, AVID, the MIT AI Risk Repository, NVD, GHSA, OSV, garak, promptfoo, and others. The bundled subset under `scanner/data/incidents.json` is a curated, reviewed-tier derivative used for offline grounding; the full dataset is available via `pip install genai-incidents`. Thank you to the maintainer for making AI-security evidence open and citable.

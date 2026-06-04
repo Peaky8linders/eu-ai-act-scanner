@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "eu-ai-act-scanner"
-version = "0.3.0"
-description = "Scan any codebase for EU AI Act (Regulation 2024/1689) compliance evidence and gaps. 21 analyzers (incl. 7 agent-aware per Nannini et al. 2026), local-only static analysis, Claude Code plugin."
+version = "0.4.0"
+description = "Scan any codebase for EU AI Act (Regulation 2024/1689) compliance evidence and gaps, grounded in real-world AI security incidents. 21 analyzers (incl. 7 agent-aware per Nannini et al. 2026), a vendored GenAI/agentic-AI incident corpus crosswalked to OWASP LLM Top 10, OWASP Agentic (ASI), NIST AI RMF and MITRE ATLAS, plus an MCP server. Local-only static analysis, Claude Code plugin."
 readme = "README.md"
 license = { text = "Apache-2.0" }
 authors = [{ name = "Andrei Bacu", email = "andrei@antifragile-ai.net" }]
@@ -31,6 +31,10 @@ dependencies = [
 
 [project.optional-dependencies]
 llm = ["anthropic>=0.25"]
+# MCP server (scanner.mcp_server) so non-Claude-Code agents can call the scanner.
+mcp = ["mcp>=1.2"]
+# Regenerating the vendored incident corpus from the HuggingFace dataset.
+sync = ["pyarrow>=15"]
 dev = [
     "pytest>=8.0",
     "ruff>=0.4",
@@ -38,6 +42,7 @@ dev = [
 
 [project.scripts]
 eu-ai-act-scan = "scanner.cli:main"
+eu-ai-act-scan-mcp = "scanner.mcp_server:main"
 
 [project.urls]
 Homepage = "https://github.com/Peaky8linders/eu-ai-act-scanner"
@@ -46,6 +51,9 @@ Issues = "https://github.com/Peaky8linders/eu-ai-act-scanner/issues"
 
 [tool.setuptools.packages.find]
 include = ["scanner*"]
+
+[tool.setuptools.package-data]
+"scanner.data" = ["*.json"]
 
 [tool.ruff]
 line-length = 110

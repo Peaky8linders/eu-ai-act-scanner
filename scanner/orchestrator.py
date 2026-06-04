@@ -19,6 +19,7 @@ from scanner.analyzers import (
     compute_dimension_scores,
     run_all_analyzers,
 )
+from scanner.incident_grounding import incidents_for_dimension
 from scanner.models import (
     ArchitectureNode,
     DiscoveredComponent,
@@ -241,6 +242,18 @@ def scan_project(root: Path | str, project_name: str | None = None) -> ScanResul
 
     pre_filled = collect_pre_filled_answers(all_findings)
 
+    # Ground the actionable (gap / partial-evidence) dimensions in documented
+    # real-world incidents. Deterministic, offline — top-3 incident IDs per
+    # dimension scoring below the "broad evidence" band. Resolve IDs via
+    # scanner.incident_grounding / scanner.data.incident_corpus.
+    incident_grounding_map: dict[str, list[str]] = {}
+    for dim_id, score in compliance_scores.items():
+        if score >= 80:
+            continue
+        matches = incidents_for_dimension(dim_id, limit=3)
+        if matches:
+            incident_grounding_map[dim_id] = [inc.id for inc in matches]
+
     from scanner import __version__
     logger.info(
         "scan_complete",
@@ -266,4 +279,5 @@ def scan_project(root: Path | str, project_name: str | None = None) -> ScanResul
         evidence_map=evidence_map_clean,
         file_findings=file_findings,
         pre_filled_answers=pre_filled,
+        incident_grounding=incident_grounding_map,
     )
