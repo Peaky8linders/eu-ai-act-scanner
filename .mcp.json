@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "eu-ai-act-scanner": {
+      "command": "eu-ai-act-scan-mcp",
+      "args": [],
+      "description": "EU AI Act (Regulation 2024/1689) code scanner + real-world incident grounding. Tools: scan a codebase, list compliance dimensions, get article detail, and surface GenAI/agentic-AI security incidents (OWASP LLM/ASI, NIST AI RMF, MITRE ATLAS) for a dimension/article/threat."
+    }
+  }
+}

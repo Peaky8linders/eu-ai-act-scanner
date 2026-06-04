@@ -5,6 +5,67 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-06-05
+
+### Added — real-world incident grounding + MCP server
+
+Turns every finding from a normative gap into an evidence-based one: each gap is
+crosswalked to the documented incidents that exploited its class, mapped to the
+frameworks security teams already report against.
+
+**Incident corpus** (`scanner/data/incidents.json` + `scanner/data/incident_corpus.py`):
+
+- A curated, reviewed-tier subset of the open **GenAI & Agentic AI Security
+  Incidents** dataset (`emmanuelgjr/genai-incidents`, **CC-BY-4.0**) — real-world
+  and research incidents aggregated from AIID, OECD AIM, AIAAIC, MITRE ATLAS,
+  AVID, the MIT AI Risk Repository, NVD, GHSA, OSV, garak, promptfoo, and others.
+- Each incident carries its native taxonomy verbatim: OWASP Top 10 for LLM
+  Applications (2025), OWASP Agentic (ASI) Top 10, NIST AI RMF, MITRE ATLAS
+  techniques + tactics, plus documented mitigations and CVE IDs.
+- Bundled offline (ships in the wheel via `package-data`); no network at scan
+  time. Regenerated deterministically by `scripts/sync_incident_corpus.py`
+  (`pip install eu-ai-act-scanner[sync]`), which selects a coverage-complete
+  subset so every KB dimension and threat category is groundable.
+
+**Crosswalk + grounding** (`scanner/data/incident_crosswalk.py`,
+`scanner/incident_grounding.py`):
+
+- Maps the scanner's vocabulary (KB dimensions, agentic threat categories,
+  EU AI Act article refs) to the incident taxonomy. Pure, deterministic, offline.
+- New public API on `scanner`: `incidents_for_dimension`, `incidents_for_article`,
+  `incidents_for_threat`, `incidents_for_finding`, `incident_corpus_stats`.
+- `Finding` gains `related_incidents: list[str]`; gap findings are auto-grounded
+  in `run_all_analyzers` (`_attach_incident_grounding`).
+- `ScanResult` gains `incident_grounding: dict[str, list[str]]` — worst-scoring
+  dimensions paired with the incidents that exploited them.
+
+**MCP server** (`scanner/mcp_server.py` + `.mcp.json`):
+
+- Roadmap v0.4 item delivered: `eu-ai-act-scan-mcp` exposes seven tools over the
+  Model Context Protocol (`scan_project`, `list_dimensions`, `get_article`,
+  `incidents_for_dimension`, `incidents_for_threat`, `incidents_for_article`,
+  `incident_corpus_stats`) so non-Claude-Code agents can call the same engine.
+  Tool logic is plain importable functions; the `mcp` SDK is an optional extra
+  (`pip install eu-ai-act-scanner[mcp]`).
+
+**Plugin surface**:
+
+- New command `/ai-act-incidents <dimension|article|threat>` and CLI flag
+  `eu-ai-act-scan --incidents KEY [--limit N]`; `--markdown` output now includes
+  a "Real-world incident grounding" section.
+- New skill `eu-ai-act-incident-grounding` (authored to the plugin standard:
+  article-cited, audience-tiered, Common Rationalizations table, Official-Journal
+  + dataset source footer).
+- Plugin: 3 → 4 commands, 12 → 13 skills.
+
+### Changed
+
+- `pyproject.toml`: `[mcp]` and `[sync]` optional-dependency extras; package-data
+  ships `scanner/data/*.json`; second console script `eu-ai-act-scan-mcp`.
+- README + plugin description rewritten around the three-deliverable framing
+  (plugin + library + MCP server) and the incident-grounding feature; corrected
+  a stale "19 dimensions" reference to 23.
+
 ## [0.3.0] - 2026-05-03
 
 ### Added — agent-aware analyzers and four-axis compound-risk taxonomy

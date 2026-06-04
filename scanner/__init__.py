@@ -11,8 +11,15 @@ Quick start:
     print(result.overall_compliance_pct)
 """
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
+from scanner.incident_grounding import (
+    incident_corpus_stats,
+    incidents_for_article,
+    incidents_for_dimension,
+    incidents_for_finding,
+    incidents_for_threat,
+)
 from scanner.models import ArchitectureNode, DiscoveredComponent, FileFinding, ScanResult
 from scanner.orchestrator import scan_project
 
@@ -23,4 +30,10 @@ __all__ = [
     "DiscoveredComponent",
     "ArchitectureNode",
     "FileFinding",
+    # Incident grounding (v0.4)
+    "incidents_for_dimension",
+    "incidents_for_article",
+    "incidents_for_threat",
+    "incidents_for_finding",
+    "incident_corpus_stats",
 ]

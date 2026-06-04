@@ -43,6 +43,7 @@ from scanner.data.role_obligations import (
     ROLE_PRODUCT_MANUFACTURER,
     ROLE_PROVIDER,
 )
+from scanner.incident_grounding import incidents_for_finding
 
 ANALYZER_REGISTRY: dict[str, Callable[[AnalyzerContext], AnalyzerResult]] = {
     "ai_frameworks": analyze_ai_frameworks,
@@ -146,6 +147,26 @@ def _apply_default_taxonomy_tags(findings: list[Finding]) -> list[Finding]:
     return findings
 
 
+def _attach_incident_grounding(findings: list[Finding], limit: int = 3) -> list[Finding]:
+    """Ground gap findings in real-world incidents from the vendored corpus.
+
+    For each *gap* finding, crosswalks its threat categories / compliance
+    dimensions to the GenAI-incidents corpus and records up to ``limit``
+    matching incident IDs in ``related_incidents`` (resolve via
+    :mod:`scanner.incident_grounding`). Positive / neutral evidence is left
+    untouched — grounding answers "where has this gap bitten people", which
+    only makes sense for gaps. Must run *after* :func:`_apply_default_taxonomy_tags`
+    so threat-category tags are populated first.
+    """
+    for f in findings:
+        if f.compliance_impact != "gap" or f.related_incidents:
+            continue
+        matches = incidents_for_finding(f, limit=limit)
+        if matches:
+            f.related_incidents = [inc.id for inc in matches]
+    return findings
+
+
 def run_all_analyzers(ctx: AnalyzerContext) -> list[AnalyzerResult]:
     """Run all registered analyzers and return their results.
 
@@ -154,10 +175,15 @@ def run_all_analyzers(ctx: AnalyzerContext) -> list[AnalyzerResult]:
     threat categories, and applicable operator roles per paper §10.4.
     Analyzer-level overrides (a Finding that already carries the field)
     win over the defaults, so per-finding precision is preserved.
+
+    Gap findings are then grounded in real-world incidents
+    (:func:`_attach_incident_grounding`) so each gap carries the documented
+    incidents that exploited its class.
     """
     results = [fn(ctx) for fn in ANALYZER_REGISTRY.values()]
     for r in results:
         _apply_default_taxonomy_tags(r.findings)
+        _attach_incident_grounding(r.findings)
     return results
 
 
@@ -211,5 +237,6 @@ __all__ = [
     "compute_dimension_scores",
     "collect_pre_filled_answers",
     "_apply_default_taxonomy_tags",
+    "_attach_incident_grounding",
     "_DEFAULT_TAXONOMY_TAGS",
 ]
