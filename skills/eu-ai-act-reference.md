@@ -122,7 +122,7 @@ Art. 113 sets staggered application dates. Most of the regulation applies 24 mon
 | Excuse | Rebuttal |
 |---|---|
 | "Art. 6(3) says preparatory tasks are exempt, so our classifier is fine." | Art. 6(3) exempts only narrow categories (preparatory, narrow procedural, decision-pattern detection without replacing decisions, human-oversight-assistive). Profiling of natural persons is always high-risk (Art. 6(3) final paragraph). Check whether the classifier profiles individuals. |
-| "Art. 50 only applies to deepfakes, we have a chatbot." | Art. 50(1) applies to any AI system *intended to interact directly with natural persons* — users must be informed they're interacting with AI unless obvious. Chatbots fall under Art. 50(1). Art. 50(2-4) covers generated content. Both subsections can apply to the same system. |
+| "Art. 50 only applies to deepfakes, we have a chatbot." | Art. 50(1) applies to any AI system *intended to interact directly with natural persons* — users must be informed they're interacting with AI unless obvious. Chatbots fall under Art. 50(1). Art. 50(2-4) covers generated content. Both subsections can apply to the same system. Route to [eu-ai-act-article-50-transparency](eu-ai-act-article-50-transparency.md) for the per-paragraph provider/deployer split. |
 | "We registered an LLM-based customer service tool in the EU database." | Art. 49 EU database registration is required for providers of high-risk AI (Art. 6) and *deployers* that are public authorities. Non-public-authority deployers of limited-risk chatbots do not register. Registering a non-high-risk system is not harmful but suggests a misclassification — verify risk tier. |
 | "The Commission hasn't published standards, so Art. 15 is not enforceable." | Art. 15 is directly applicable. Harmonised standards (when published) offer a presumption of conformity, but their absence does not suspend the obligation. State-of-the-art engineering is the current baseline. |
 
@@ -132,6 +132,7 @@ Art. 113 sets staggered application dates. Most of the regulation applies 24 mon
 - [interpreting-findings](interpreting-findings.md) — how to read dimension scores
 - [eu-ai-act-article-5-prohibited](eu-ai-act-article-5-prohibited.md)
 - [eu-ai-act-article-6-classification](eu-ai-act-article-6-classification.md)
+- [eu-ai-act-article-50-transparency](eu-ai-act-article-50-transparency.md)
 - [eu-ai-act-fria-guide](eu-ai-act-fria-guide.md)
 - [eu-ai-act-operator-roles](eu-ai-act-operator-roles.md)
 - [eu-ai-act-gpai-classification](eu-ai-act-gpai-classification.md)

@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-06-13
+
+### Added — Art. 50 limited-risk transparency skill
+
+New `eu-ai-act-article-50-transparency` skill, closing the Art. 50 coverage gap
+flagged in the authoring meta-skill's own coverage audit (Art. 50 was listed as a
+required topic with no dedicated decision-tree skill). It encodes the per-paragraph
+**provider vs deployer** split — Art. 50(1) provider interaction-disclosure,
+Art. 50(2) provider synthetic-content marking, Art. 50(3) deployer emotion/biometric
+notice, Art. 50(4) deployer deep-fake disclosure — with a decision tree, a Common
+Rationalizations table, and two cross-cutting guards: the **GPAI + Art. 50 dual
+trigger** (a GPAI generating content is covered by Art. 50(2) by its own terms, and
+by Art. 50(1) when it interacts with natural persons, on top of the Art. 53 GPAI
+duties), and the **classify-first rule** (a general-purpose chatbot is limited-risk
+and owes Art. 50(1) alone — do not stack high-risk Art. 13 transparency unless the
+system is independently high-risk). Application date 2 August 2026; penalty tier
+Art. 99(4). This is the scanner-side counterpart of the same legal-accuracy guards
+added to the CodexAI Lexy RAG engine.
+
+### Changed
+
+- `plugin.json`: registered the new skill, bumped to 0.5.0, and added Art. 50
+  limited-risk transparency to the description (14 article-grounded skills).
+- `eu-ai-act-reference` and `eu-ai-act-gpai-classification` now cross-reference the
+  new skill (the Art. 50 routing pointer and the GPAI dual-trigger).
+
 ## [0.4.0] - 2026-06-05
 
 ### Added — real-world incident grounding + MCP server
@@ -130,7 +156,6 @@ Law: A Compliance Architecture for AI Providers*.
 - `ARTICLE_TO_DIMENSIONS` map extended for Art. 11, 12, 14, 15, 25, 72.
 - README rewritten with a separate "Agent-aware analyzers" table and a
   reference to the [arXiv preprint](https://arxiv.org/abs/2504.06255).
-
 ## [0.2.0] - 2026-04-19
 
 ### Added — full EU AI Act skill harness for law practitioners
