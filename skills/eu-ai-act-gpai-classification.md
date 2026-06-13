@@ -123,6 +123,7 @@ A company that fine-tunes a GPAI model may cross a threshold. Under Art. 25(1)(b
 
 - [eu-ai-act-operator-roles](eu-ai-act-operator-roles.md) — GPAI provider vs. downstream AI system provider
 - [eu-ai-act-article-6-classification](eu-ai-act-article-6-classification.md) — a downstream product can still be high-risk
+- [eu-ai-act-article-50-transparency](eu-ai-act-article-50-transparency.md) — a GPAI that generates synthetic content (Art. 50(2)) or interacts with natural persons (Art. 50(1)) owes Art. 50 in addition to Art. 53
 - [eu-ai-act-annex-iv-guide](eu-ai-act-annex-iv-guide.md) — for downstream high-risk AI systems using GPAI
 - [eu-ai-act-timeline](eu-ai-act-timeline.md) — GPAI obligations applied from 2 August 2025
 
