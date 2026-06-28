@@ -11,7 +11,7 @@ Quick start:
     print(result.overall_compliance_pct)
 """
 
-__version__ = "0.6.0"
+__version__ = "0.7.0"
 
 from scanner.fix_loop import FixLoopResult, FixProposal, run_fix_loop
 from scanner.incident_grounding import (
