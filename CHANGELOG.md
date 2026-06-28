@@ -19,9 +19,12 @@ the fix loop was effectively gaming its own score.
 
 - **`scanner.analyzers.detect_ai_system`** — new gate keying on the three
   purpose-built AI detectors (`ai_frameworks` detected list, `model_typology`
-  typology ≠ `none`, `agent_inventory` runtime signals). None of these fire on
-  ordinary non-AI code; the generic action-verb / deployment-category
-  heuristics are deliberately excluded.
+  typology ≠ `none`, `agent_inventory` runtime signals). `ai_frameworks` is
+  AST-import precise; `model_typology` / `agent_inventory` are heuristic and may
+  occasionally match non-AI code — the gate intentionally errs toward in-scope
+  (a false negative would wrongly drop a real AI system). The generic
+  action-verb / deployment-category heuristics are deliberately excluded — they
+  match ordinary non-AI code far too aggressively.
 - **`ScanResult`** gains `is_ai_system`, `ai_system_signals`, and `scope_note`.
   When no AI signal is found, `scan_project` skips scoring entirely:
   `compliance_scores` is empty, `overall_compliance_pct` is `0.0` (not a

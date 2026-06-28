@@ -183,7 +183,8 @@ def scan_project(root: Path | str, project_name: str | None = None) -> ScanResul
     # signal is out of scope: skip scoring entirely rather than report a
     # misleading "compliance %" (and stop the fix loop from gaming it with
     # boilerplate evidence). detect_ai_system keys on the purpose-built AI
-    # detectors, which never fire on plain non-AI code.
+    # detectors and errs toward in-scope when a signal is ambiguous (a false
+    # negative would wrongly drop a real AI system out of scope).
     is_ai_system, ai_system_signals = detect_ai_system(analyzer_results)
     scope_note = ""
     if is_ai_system:

@@ -205,20 +205,30 @@ def detect_ai_system(analyzer_results: list[AnalyzerResult]) -> tuple[bool, list
     game the score by writing boilerplate evidence (``MODEL_CARD.md``, tests,
     ``Dockerfile``) into a project the law does not touch.
 
-    The gate keys on the three *purpose-built* AI detectors, none of which fire
-    on ordinary non-AI code:
+    The gate keys on the three *purpose-built* AI detectors. Only
+    ``ai_frameworks`` is import-precise; ``model_typology`` and
+    ``agent_inventory`` use broader heuristics that can occasionally match
+    non-AI code. That imprecision is accepted on purpose — erring toward *in
+    scope* is the conservative direction for a compliance gate: a non-AI repo
+    incidentally scored is a smaller harm than a real AI system wrongly ruled
+    out of scope (a false negative the Regulation would not forgive).
 
-    * ``ai_frameworks`` — an actual ML/LLM framework import was detected
+    * ``ai_frameworks`` — an actual ML/LLM framework import was detected via AST
       (``metadata['detected']``: pytorch, tensorflow, sklearn, openai,
-      anthropic, langchain, ...).
+      anthropic, langchain, ...). Precise.
     * ``model_typology`` — the typology classifier resolved to something other
-      than ``"none"`` (``llm`` / ``classical_ml`` / ``both``).
+      than ``"none"`` (``llm`` / ``classical_ml`` / ``both``). Heuristic: a bare
+      ``.fit(`` / ``.predict(`` or an ``nn.Module`` reference is enough, so the
+      odd non-AI repo can land here.
     * ``agent_inventory`` — a modern agent-*runtime* signal was detected
       (``metadata['runtime_signals']``: MCP / Assistants v2 / LangGraph /
-      CrewAI ...). The generic action-verb and deployment-category heuristics
-      are deliberately *excluded* — ``write_file`` / ``execute_code`` and the
-      external-system regexes also match plain non-AI code, which would defeat
-      the gate.
+      CrewAI / Selenium ...). Heuristic: e.g. a Selenium import counts even when
+      used only for end-to-end tests.
+
+    The generic action-verb and deployment-category heuristics are deliberately
+    *excluded* — ``write_file`` / ``execute_code`` and the external-system
+    (CRM / GitHub / Gmail) regexes match ordinary non-AI code far too
+    aggressively and would collapse the gate.
 
     Returns ``(is_ai_system, signals)`` where ``signals`` is a sorted, de-duped
     list of human-readable evidence strings (e.g. ``"ai_framework:pytorch"``,
