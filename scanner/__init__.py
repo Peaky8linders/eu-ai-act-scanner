@@ -11,8 +11,9 @@ Quick start:
     print(result.overall_compliance_pct)
 """
 
-__version__ = "0.4.0"
+__version__ = "0.6.0"
 
+from scanner.fix_loop import FixLoopResult, FixProposal, run_fix_loop
 from scanner.incident_grounding import (
     incident_corpus_stats,
     incidents_for_article,
@@ -20,7 +21,9 @@ from scanner.incident_grounding import (
     incidents_for_finding,
     incidents_for_threat,
 )
+from scanner.llm_bridge import bridge_config, bridge_health
 from scanner.models import ArchitectureNode, DiscoveredComponent, FileFinding, ScanResult
+from scanner.obligations import RoleProfile, infer_role_profile, infer_roles
 from scanner.orchestrator import scan_project
 
 __all__ = [
@@ -36,4 +39,15 @@ __all__ = [
     "incidents_for_threat",
     "incidents_for_finding",
     "incident_corpus_stats",
+    # Operator-role + obligation inference (v0.6)
+    "infer_roles",
+    "infer_role_profile",
+    "RoleProfile",
+    # Autonomous fix loop (v0.6)
+    "run_fix_loop",
+    "FixLoopResult",
+    "FixProposal",
+    # Claude Max bridge (v0.6)
+    "bridge_config",
+    "bridge_health",
 ]
