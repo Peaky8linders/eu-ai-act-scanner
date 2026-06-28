@@ -128,6 +128,13 @@ def scan_project(root: Path | str, project_name: str | None = None) -> ScanResul
     )
     analyzer_results = run_all_analyzers(ctx)
 
+    # Deterministically infer which operator role(s) the scanned codebase
+    # occupies (provider / deployer / GPAI provider) from code signals. Drives
+    # which obligations apply and which roles owe each gap. Lazy import to keep
+    # the package import graph acyclic (obligations pulls scanner.grounding).
+    from scanner import obligations
+    inferred_roles = obligations.infer_roles(ctx)
+
     all_findings = []
     for ar in analyzer_results:
         all_findings.extend(ar.findings)
@@ -280,4 +287,5 @@ def scan_project(root: Path | str, project_name: str | None = None) -> ScanResul
         file_findings=file_findings,
         pre_filled_answers=pre_filled,
         incident_grounding=incident_grounding_map,
+        inferred_roles=inferred_roles,
     )

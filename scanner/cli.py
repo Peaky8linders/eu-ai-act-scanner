@@ -42,6 +42,7 @@ def _format_markdown(result, top_gaps: int = 10) -> str:
         f"- **Files scanned**: {result.total_files:,}",
         f"- **Overall compliance**: **{result.overall_compliance_pct}%**",
         f"- **Languages**: {', '.join(f'{k} ({v})' for k, v in list(result.languages.items())[:5]) or 'none detected'}",
+        f"- **Inferred operator role(s)**: {', '.join(result.inferred_roles) or 'none detected'}",
         "",
         "## Compliance by dimension",
         "",
@@ -190,11 +191,27 @@ def main(argv: list[str] | None = None) -> int:
         help="Max incidents to return for --incidents (default: 5).",
     )
     parser.add_argument(
+        "--llm-status",
+        action="store_true",
+        help=(
+            "Report the Claude Max LLM-bridge configuration and probe the "
+            "wrapper's /health endpoint. Does not scan a codebase."
+        ),
+    )
+    parser.add_argument(
         "--version",
         action="version",
         version=f"%(prog)s {__version__}",
     )
     args = parser.parse_args(argv)
+
+    # LLM-bridge diagnostics — config + live health probe, no codebase scan.
+    if args.llm_status:
+        from scanner.llm_bridge import bridge_config, bridge_health
+
+        payload = {"config": bridge_config(), "health": bridge_health()}
+        print(json.dumps(payload, indent=2, default=str))
+        return 0 if payload["health"]["reachable"] else 1
 
     # Incident lookup is a corpus query — no codebase scan required.
     if args.incidents:

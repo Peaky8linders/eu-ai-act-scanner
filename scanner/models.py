@@ -63,3 +63,9 @@ class ScanResult(BaseModel):
     # exploited that gap class. Populated for gap/partial dimensions only.
     # Resolve IDs via scanner.incident_grounding / scanner.data.incident_corpus.
     incident_grounding: dict[str, list[str]] = Field(default_factory=dict)
+    # Operator role(s) the scanned codebase most plausibly occupies, inferred
+    # deterministically from code signals (scanner.obligations.infer_roles).
+    # Drives which EU AI Act obligations apply; ordered by NLF hierarchy
+    # (provider first). Always contains at least one role — a codebase with no
+    # detectable signal defaults to "deployer" (the most conservative role).
+    inferred_roles: list[str] = Field(default_factory=list)

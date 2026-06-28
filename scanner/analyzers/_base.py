@@ -10,7 +10,6 @@ Provides:
 from __future__ import annotations
 
 import ast
-import os
 import re
 from typing import Literal
 
@@ -237,7 +236,7 @@ def parse_python_functions(ctx: AnalyzerContext) -> list[PythonFunction]:
 
                 has_docstring = (
                     isinstance(node.body[0], ast.Expr)
-                    and isinstance(node.body[0].value, (ast.Constant, ast.Str))
+                    and isinstance(node.body[0].value, ast.Constant)
                     if node.body else False
                 )
 
@@ -274,7 +273,7 @@ def parse_python_classes(ctx: AnalyzerContext) -> list[PythonClass]:
                 methods = sum(1 for n in node.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)))
                 has_docstring = (
                     isinstance(node.body[0], ast.Expr)
-                    and isinstance(node.body[0].value, (ast.Constant, ast.Str))
+                    and isinstance(node.body[0].value, ast.Constant)
                     if node.body else False
                 )
                 classes.append(PythonClass(
@@ -307,9 +306,6 @@ def get_import_modules(ctx: AnalyzerContext) -> set[str]:
 
 # ─── LLM Helpers (optional semantic analysis) ───────────────────────────
 
-
-_LLM_ENABLED = os.getenv("EU_AI_ACT_SCANNER_LLM", "false").lower() in ("true", "1", "yes")
-_LLM_MODEL = os.getenv("EU_AI_ACT_SCANNER_LLM_MODEL", "claude-haiku-4-5-20251001")
 _LLM_MAX_INPUT = 4000
 
 
@@ -324,40 +320,30 @@ class LLMAssessment(BaseModel):
 def llm_assess(prompt: str, content: str, max_input: int = _LLM_MAX_INPUT) -> LLMAssessment:
     """Run optional LLM assessment on content.
 
-    Only runs if EU_AI_ACT_SCANNER_LLM=true. Uses Haiku by default.
-    Falls back gracefully — never blocks the scan.
+    Only runs if EU_AI_ACT_SCANNER_LLM=true. Routes through the Claude Max
+    bridge (:mod:`scanner.llm_bridge`) so calls hit the local Claude-Code
+    subscription wrapper rather than a metered API key. The bridge applies the
+    ported multi-strategy JSON extraction and is fully graceful — a disabled
+    flag, missing SDK, or unreachable wrapper degrades to an ``error`` result
+    and never blocks the scan.
     """
-    if not _LLM_ENABLED:
+    from scanner import llm_bridge
+
+    if not llm_bridge.is_enabled():
         return LLMAssessment(error="LLM scanner disabled (EU_AI_ACT_SCANNER_LLM=false)")
 
-    try:
-        import anthropic
-
-        client = anthropic.Anthropic()
-        truncated = content[:max_input]
-
-        response = client.messages.create(
-            model=_LLM_MODEL,
-            max_tokens=500,
-            system=prompt,
-            messages=[{"role": "user", "content": truncated}],
-        )
-
-        text = response.content[0].text if response.content else ""
-
-        import json
+    parsed, result = llm_bridge.complete_json(
+        system=prompt, user=content[:max_input], max_tokens=500
+    )
+    if result.error is not None:
+        return LLMAssessment(error=result.error)
+    if parsed is not None:
         try:
-            parsed = json.loads(text)
             return LLMAssessment(
-                score=min(max(float(parsed.get("score", 0.5)), 0), 1),
+                score=min(max(float(parsed.get("score", 0.5)), 0.0), 1.0),
                 reasoning=str(parsed.get("reasoning", "")),
                 findings=list(parsed.get("findings", [])),
             )
-        except (json.JSONDecodeError, TypeError, ValueError):
-            return LLMAssessment(score=0.5, reasoning=text[:200])
-
-    except ImportError:
-        return LLMAssessment(error="anthropic SDK not installed")
-    except Exception as exc:
-        logger.warning("llm_assess_failed", error=str(exc)[:100])
-        return LLMAssessment(error=f"LLM call failed: {str(exc)[:100]}")
+        except (TypeError, ValueError):
+            pass
+    return LLMAssessment(score=0.5, reasoning=result.text[:200])

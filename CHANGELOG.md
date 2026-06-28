@@ -5,6 +5,49 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-06-28
+
+### Added — deterministic obligations, an autonomous fix loop, and a Claude Max bridge
+
+Five new modules port the production-hardened optimizations from the
+`regenold-eu-ai-act-rag` system into the scanner and close the scan→fix loop.
+
+- **`scanner/obligations.py` — deterministic operator-role + obligation inference.**
+  A closed-vocabulary code-signal scan (ported in spirit from regenold's
+  `entity_extractor.py`) infers which EU AI Act role(s) the scanned codebase occupies
+  (provider / deployer / GPAI provider) and back-fills `applicable_roles` on every
+  **gap** finding from the roles that actually owe its articles
+  (`scanner.data.role_obligations`). `ScanResult` now carries `inferred_roles`. Runs
+  automatically inside `run_all_analyzers` (gap findings only, idempotent, never
+  overwrites analyzer-level tags).
+- **`scanner/grounding.py` — authoritative article text + a citation guard.**
+  `OBLIGATION_TEXT` covers every article in `kb.ARTICLE_TO_DIMENSIONS` with a faithful
+  paraphrase grounded in the verbatim EUR-Lex prose; `filter_unsupported_sentences`
+  (ported from regenold's `citation_guard.py`) drops any LLM sentence not supported by
+  its cited articles. Anti-hallucination layer for the optional LLM paths.
+- **`scanner/refs.py` — single-source EU AI Act citation converter.** Bridges the
+  three citation vocabularies in the codebase (bare `14(4)`, display `Art. 13 & 50`,
+  canonical `Art. 25(4)`) and the user-facing `Article 14.4` form.
+- **`scanner/llm_bridge.py` — Claude Max bridge.** Routes the scanner's optional LLM
+  calls through a local Claude-Code subscription wrapper
+  (`EU_AI_ACT_SCANNER_LLM_BASE_URL`, default `http://127.0.0.1:8000`, also reachable
+  over a Cloudflare tunnel) instead of a metered API key — so the LLM-assisted paths
+  run on a Claude Max subscription. Includes the ported multi-strategy JSON extractor
+  and structural-truncation heuristic from regenold's `graph_rag.py`. Fully graceful;
+  never blocks a scan. `eu-ai-act-scan --llm-status` reports config + live health.
+- **`scanner/fix_loop.py` — autonomous scan→fix→rescan loop.** New `eu-ai-act-fix`
+  command. Ranks gaps, generates deterministic remediations validated against the
+  analyzers' own positive-detection patterns (LLM-drafted fallback when the bridge is
+  enabled), and in `--apply` mode writes each fix, re-scans, and **reverts any fix that
+  regresses another dimension** (the antifragile property) before converging. Defaults
+  to a safe dry-run; compliance docs use `<FILL IN: …>` placeholders — never fabricated.
+
+### Changed
+
+- `scanner/analyzers/_base.py`: the optional `llm_assess` helper now delegates to the
+  Claude Max bridge; fixed the `ast.Str` Python 3.14 deprecation.
+- `eu-ai-act-scan --markdown` now reports the inferred operator role(s).
+
 ## [0.5.0] - 2026-06-13
 
 ### Added — Art. 50 limited-risk transparency skill

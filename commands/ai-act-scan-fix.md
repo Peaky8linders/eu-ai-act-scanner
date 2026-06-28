@@ -47,6 +47,17 @@ When proposing fixes, lean on these canonical patterns — they are what the sca
 | `security_controls` | Auth middleware, rate limiting, input validation on any AI-serving endpoint |
 | `fairness_testing` | Tests that import `aif360`, `fairlearn`, or compute disparate-impact metrics |
 
+## Autonomous loop (`eu-ai-act-fix`)
+
+This command is the **human-in-the-loop** remediation flow. For unattended use there is a
+programmatic counterpart, the `eu-ai-act-fix` CLI / `scanner.fix_loop.run_fix_loop`, which
+runs the same scan → propose → apply → **re-scan** → revert-on-regression → repeat cycle to
+convergence. It defaults to a safe dry-run; `--apply` is required to write. Its deterministic
+fixers are validated against the analyzers' own positive-detection patterns, and a
+**regression guard** reverts any fix that lowers another dimension's score. Reach for it when
+you want the loop to drive itself (e.g. CI, batch remediation); use this command when a human
+should approve each change.
+
 ## Safety notes
 
 - Never fabricate claims. If proposing a `MODEL_CARD.md`, leave content the user must fill in as `<FILL IN: …>` placeholders. Compliance documents with invented facts are worse than none.

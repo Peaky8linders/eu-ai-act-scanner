@@ -178,12 +178,21 @@ def run_all_analyzers(ctx: AnalyzerContext) -> list[AnalyzerResult]:
 
     Gap findings are then grounded in real-world incidents
     (:func:`_attach_incident_grounding`) so each gap carries the documented
-    incidents that exploited its class.
+    incidents that exploited its class, and enriched with the operator
+    role(s) that owe the implicated obligation
+    (:func:`scanner.obligations.enrich_findings`) — back-filled from the
+    inferred role profile of the scanned codebase, gap findings only.
     """
+    # Lazy import: obligations pulls scanner.grounding/refs which import the
+    # scanner package; importing it here (not at module top) sidesteps any
+    # partial-initialisation cycle during ``import scanner``.
+    from scanner import obligations
+
     results = [fn(ctx) for fn in ANALYZER_REGISTRY.values()]
     for r in results:
         _apply_default_taxonomy_tags(r.findings)
         _attach_incident_grounding(r.findings)
+        obligations.enrich_findings(r.findings, ctx)
     return results
 
 

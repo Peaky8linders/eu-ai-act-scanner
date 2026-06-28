@@ -150,6 +150,55 @@ eu-ai-act-scan ./my-app --markdown             # scan report with a grounding se
 
 **Offline by design.** The bundled subset ships in the wheel and needs no network. The full 7,725-incident dataset is one step away — `pip install genai-incidents` or `load_dataset("emmanuelgjr/genai-incidents")` — and the bundled snapshot is regenerated deterministically by [`scripts/sync_incident_corpus.py`](scripts/sync_incident_corpus.py) (`pip install eu-ai-act-scanner[sync]`). Incident grounding is **evidence input to your Art. 9 risk management and Art. 72 post-market monitoring — not a compliance verdict.** See the [`eu-ai-act-incident-grounding`](skills/eu-ai-act-incident-grounding.md) skill.
 
+## Obligations & operator-role inference
+
+A gap only matters if *you* owe the obligation. The scanner deterministically infers which EU AI Act role(s) the scanned codebase occupies — **provider** (you build/train/publish a model), **deployer** (you use someone else's), **GPAI provider** (you train a general-purpose model) — from a closed vocabulary of code signals, with no LLM and no network. Every **gap** finding is then back-filled with `applicable_roles`: the roles that actually owe its articles, drawn from the [role-obligation registry](scanner/data/role_obligations.py). `ScanResult.inferred_roles` carries the project-level profile.
+
+```python
+from scanner import scan_project
+
+result = scan_project("./my-app")
+print(result.inferred_roles)   # e.g. ["provider"] — drives which obligations apply
+```
+
+Article citations are normalised through a single source of truth ([`scanner/refs.py`](scanner/refs.py)) so the same article reads identically everywhere — internal `Art. 14(4)`, user-facing `Article 14.4`, or KB key `art14`. Obligation text is grounded in the verbatim EUR-Lex prose ([`scanner/grounding.py`](scanner/grounding.py)), and a citation guard drops any LLM-generated sentence not supported by its cited articles.
+
+## Autonomous fix loop
+
+`eu-ai-act-fix` closes the loop: scan → rank gaps → propose a remediation → (optionally) apply → **re-scan** → keep the fix only if it doesn't regress anything → repeat until convergence.
+
+```bash
+eu-ai-act-fix ./my-app                 # safe dry-run: proposals only, nothing written
+eu-ai-act-fix ./my-app --apply         # write fixes, re-scan, revert any regression
+eu-ai-act-fix ./my-app --top 5 --json  # widen the gap set, machine-readable output
+```
+
+Each deterministic remediation is validated against the analyzers' own positive-detection patterns, so applying it demonstrably raises the score on re-scan. The **regression guard** is the antifragile property: because the overall score averages across dimensions and adding a file can activate another analyzer, a "good" fix can lower a sibling dimension — so every applied fix is re-scanned and **reverted if any dimension drops**. Compliance documents (`MODEL_CARD.md`, `DATA_CARD.md`) are scaffolded with `<FILL IN: …>` placeholders — the loop never fabricates regulatory claims. The default mode writes nothing; `--apply` is required to touch the tree.
+
+```python
+from scanner import run_fix_loop
+
+res = run_fix_loop("./my-app", top_n=3, apply=False)
+print(res.baseline_overall, "->", res.final_overall, f"({res.overall_delta:+})")
+for p in res.proposals:
+    print(p.dimension, p.article, p.title)
+```
+
+## Claude Max bridge (optional LLM)
+
+The scanner is local-first and runs fully without an LLM. When you *do* want the optional LLM-assisted paths (richer documentation scoring, LLM-drafted fixes for gaps with no deterministic fixer), the [Claude Max bridge](scanner/llm_bridge.py) routes them through a local [Claude-Code subscription wrapper](https://github.com/) (Anthropic-compatible) instead of a metered API key — so they run on your **Claude Max subscription**. The wrapper defaults to `http://127.0.0.1:8000` and is also reachable over a Cloudflare tunnel for remote/CI use.
+
+```bash
+export EU_AI_ACT_SCANNER_LLM=true                              # opt in
+export EU_AI_ACT_SCANNER_LLM_BASE_URL=http://127.0.0.1:8000    # local wrapper (default)
+# or, remote:  https://wrapper.<your-domain>      + EU_AI_ACT_SCANNER_LLM_API_KEY=...
+export EU_AI_ACT_SCANNER_LLM_MODEL=claude-sonnet-4-6           # optional model override
+
+eu-ai-act-scan --llm-status        # report bridge config + probe wrapper /health
+```
+
+The bridge is **graceful by construction** — a disabled flag, a missing `anthropic` SDK, or an unreachable wrapper degrades to an inert result and never blocks a scan. It ports the multi-strategy JSON extractor and structural-truncation heuristic battle-tested in the `regenold-eu-ai-act-rag` system.
+
 ## Install
 
 ### As a Claude Code plugin
