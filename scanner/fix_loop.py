@@ -114,6 +114,11 @@ class FixLoopResult(BaseModel):
     skipped_regressions: list[str] = Field(default_factory=list)
     converged: bool = False
     llm_used: bool = False
+    # False when the scanned project is not an AI system (EU AI Act Art. 3(1)):
+    # the loop short-circuits, proposes nothing, and writes nothing. ``scope_note``
+    # carries the human-readable reason (mirrors ``ScanResult.scope_note``).
+    is_ai_system: bool = True
+    scope_note: str = ""
 
 
 # ── Article weighting + gap ranking ──────────────────────────────────────────
@@ -184,8 +189,14 @@ def rank_gaps(result: ScanResult) -> list[tuple[str, float]]:
     (risk_mgmt > data_gov > human_oversight > logging > rest), then by lowest
     raw score, then alphabetically, so the result is fully deterministic.
 
-    Returns ``[(dimension_id, raw_score), ...]`` worst-first.
+    Returns ``[(dimension_id, raw_score), ...]`` worst-first. A project that is
+    not an AI system (EU AI Act Art. 3(1)) has nothing actionable — the
+    Regulation does not govern it — so ranking is empty regardless of any
+    incidental findings.
     """
+    if not result.is_ai_system:
+        return []
+
     actionable = [
         (dim_id, score)
         for dim_id, score in result.compliance_scores.items()
@@ -720,6 +731,25 @@ def run_fix_loop(
         use_llm = False
 
     baseline = scan_project(root_path)
+
+    # Out-of-scope short-circuit: the EU AI Act only governs AI systems
+    # (Art. 3(1)). If the baseline scan found no AI/ML/agent signal, propose
+    # nothing and write nothing — fabricating "evidence" for a non-AI project
+    # would invent a compliance story the Regulation does not ask for.
+    if not baseline.is_ai_system:
+        logger.info("fix_loop_out_of_scope", project=baseline.project_name)
+        return FixLoopResult(
+            project_name=baseline.project_name,
+            iterations=0,
+            baseline_overall=round(baseline.overall_compliance_pct, 1),
+            final_overall=round(baseline.overall_compliance_pct, 1),
+            overall_delta=0.0,
+            converged=True,
+            llm_used=False,
+            is_ai_system=False,
+            scope_note=baseline.scope_note,
+        )
+
     baseline_overall = baseline.overall_compliance_pct
     baseline_scores = dict(baseline.compliance_scores)
 
@@ -834,6 +864,16 @@ def _render_markdown(result: FixLoopResult, *, applied_mode: bool) -> str:
     lines: list[str] = []
     lines.append(f"# Fix loop — {result.project_name}")
     lines.append("")
+
+    if not result.is_ai_system:
+        lines.append("**Not an AI system — out of EU AI Act scope.**")
+        lines.append("")
+        lines.append(
+            result.scope_note
+            or "No AI/ML/agent signal detected; no remediation proposed."
+        )
+        return "\n".join(lines)
+
     mode = "APPLY" if applied_mode else "DRY-RUN (no files written)"
     lines.append(f"Mode: **{mode}**")
     lines.append(

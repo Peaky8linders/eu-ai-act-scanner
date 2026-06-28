@@ -14,7 +14,12 @@ Run `/ai-act-scan`, then build a remediation plan for the top compliance gaps.
 
 ## Behaviour
 
-1. Invoke the scanner as in `/ai-act-scan`.
+1. Invoke the scanner as in `/ai-act-scan`. **If the result has `is_ai_system: false`,
+   stop**: the project is not an AI system (EU AI Act Art. 3(1)), so there is nothing
+   to remediate. Surface `scope_note` and do not propose any fixes — writing
+   compliance "evidence" into a non-AI project fabricates a story the Regulation
+   does not ask for. (The `eu-ai-act-fix` CLI enforces this automatically: it
+   short-circuits and writes nothing.)
 2. Select the top `N` gap findings by (low score × article weight). Prioritisation order when scores are tied:
    1. `risk_mgmt` (Art. 9) — foundational, blocks conformity assessment
    2. `data_gov` (Art. 10) — training-data provenance affects all downstream

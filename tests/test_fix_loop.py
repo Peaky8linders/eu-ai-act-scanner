@@ -24,6 +24,7 @@ from scanner.fix_loop import (
 )
 
 FIXTURE = Path(__file__).parent / "fixtures" / "sample_project"
+NON_AI_FIXTURE = Path(__file__).parent / "fixtures" / "non_ai_project"
 
 
 @pytest.fixture(autouse=True)
@@ -37,6 +38,14 @@ def project(tmp_path) -> Path:
     """A writable copy of the fixture project under tmp_path."""
     dst = tmp_path / "proj"
     shutil.copytree(FIXTURE, dst, ignore=shutil.ignore_patterns("__pycache__"))
+    return dst
+
+
+@pytest.fixture
+def non_ai_project(tmp_path) -> Path:
+    """A writable copy of the non-AI fixture under tmp_path."""
+    dst = tmp_path / "nonai"
+    shutil.copytree(NON_AI_FIXTURE, dst, ignore=shutil.ignore_patterns("__pycache__"))
     return dst
 
 
@@ -98,6 +107,49 @@ def test_rank_gaps_is_worst_first_by_weighted_score():
     scores = [score for _dim, score in ranked]
     # The very first ranked dimension should be a genuine gap (low score).
     assert scores[0] <= 85.0
+
+
+# ─── Out-of-scope (non-AI project) short-circuit ──────────────────────────
+
+
+def test_rank_gaps_empty_for_non_ai_project():
+    """Nothing is actionable in a project the EU AI Act does not govern."""
+    result = scan_project(NON_AI_FIXTURE)
+    assert rank_gaps(result) == []
+
+
+def test_fix_loop_dry_run_non_ai_proposes_nothing(non_ai_project):
+    result = run_fix_loop(non_ai_project, top_n=8, apply=False)
+    assert result.proposals == []
+    assert result.is_ai_system is False
+    assert result.scope_note
+
+
+def test_fix_loop_apply_non_ai_writes_nothing_and_does_not_game_score(non_ai_project):
+    """The headline bug: --apply on a non-AI project used to raise overall 0 → ~60
+    by writing MODEL_CARD.md / tests / Dockerfile. It must now write nothing."""
+    before = _project_files(non_ai_project)
+    result = run_fix_loop(non_ai_project, top_n=8, max_iterations=5, apply=True)
+
+    assert _project_files(non_ai_project) == before, "out-of-scope apply must write nothing"
+    assert result.proposals == []
+    assert result.applied == []
+    assert result.skipped_regressions == []
+    assert result.is_ai_system is False
+    assert result.converged is True
+    assert result.iterations == 0
+    # No boilerplate-driven score movement.
+    assert result.baseline_overall == result.final_overall
+    assert result.overall_delta == 0.0
+    # The evidence files the loop would otherwise have written are absent.
+    assert "MODEL_CARD.md" not in _project_files(non_ai_project)
+
+
+def test_cli_fix_loop_non_ai_reports_out_of_scope(non_ai_project, capsys):
+    exit_code = main([str(non_ai_project)])
+    assert exit_code == 0
+    out = capsys.readouterr().out.lower()
+    assert "out of scope" in out or "not an ai system" in out
 
 
 # ─── Dry-run (safe default) ───────────────────────────────────────────────

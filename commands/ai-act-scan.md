@@ -20,13 +20,23 @@ Run the EU AI Act compliance scanner on a local codebase and summarise the findi
    ```
    If `$1` is empty, scan the current directory.
 2. Parse the JSON output. Key fields:
-   - `overall_compliance_pct` — 0–100
+   - `is_ai_system` — bool. **Check this first.** When `false` the codebase is
+     out of EU AI Act scope (no AI/ML/agent signal): `compliance_scores` is empty
+     and `overall_compliance_pct` is `0.0` but **not** a compliance measure.
+   - `ai_system_signals` — the AI evidence that put the project in scope (e.g.
+     `ai_framework:pytorch`, `model_typology:llm`); empty when out of scope.
+   - `scope_note` — populated only when `is_ai_system` is `false`; explains why
+     scoring was skipped.
+   - `overall_compliance_pct` — 0–100 (only meaningful when `is_ai_system` is `true`)
    - `compliance_scores` — map of dimension id → 0–100
    - `components` — list of discovered components with `component_type`, `compliance_impact`, `compliance_dimensions`
    - `risk_indicators` — top 10 gap-severity findings
    - `recommendations` — prioritised remediation suggestions
    - `file_findings` — per-file roll-up of findings/gaps/status
-3. Present a summary in this order:
+3. **If `is_ai_system` is `false`**: do not present a compliance percentage.
+   State that the project is not an AI system and is out of EU AI Act scope,
+   show `scope_note` verbatim, and stop (optionally point to `CONTRIBUTING.md`
+   if the user believes an AI pattern was missed). Otherwise present a summary in this order:
    1. **Headline**: overall compliance % and file count
    2. **Lowest-scoring dimensions** (bottom 3) with article references — use the `eu-ai-act-reference` skill if the user wants deeper article context
    3. **Top 3 risk indicators** verbatim from the result

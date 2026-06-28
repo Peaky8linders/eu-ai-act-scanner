@@ -107,6 +107,84 @@ def test_scan_rejects_non_directory(tmp_path):
         scan_project(f)
 
 
+# ─── AI-system scope gate (Art. 3(1)) ────────────────────────────────────
+
+NON_AI_FIXTURE = Path(__file__).parent / "fixtures" / "non_ai_project"
+
+
+def test_ai_fixture_is_in_scope():
+    """The sample project imports torch/transformers — it IS an AI system, so
+    scoring applies and the scope flag is set."""
+    result = scan_project(FIXTURE)
+    assert result.is_ai_system is True
+    assert result.ai_system_signals, "an in-scope project must record its AI signals"
+    assert result.compliance_scores, "an AI system must be scored"
+    assert result.scope_note == ""
+
+
+def test_non_ai_project_is_out_of_scope():
+    """A plain arithmetic library is not an AI system. Scoring must be skipped —
+    not reported as 0% and not gameable up to ~60% by writing boilerplate."""
+    result = scan_project(NON_AI_FIXTURE)
+    assert result.is_ai_system is False
+    assert result.ai_system_signals == []
+    # No misleading compliance percentage / per-dimension scores.
+    assert result.compliance_scores == {}
+    assert result.overall_compliance_pct == 0.0
+    # A human-readable explanation is surfaced instead of a number.
+    assert result.scope_note
+    assert "AI system" in result.scope_note
+
+
+def test_out_of_scope_suppresses_compliance_framed_output():
+    """An out-of-scope scan must not present compliance-framed risk indicators,
+    recommendations, or incident grounding (all keyed off scoring)."""
+    result = scan_project(NON_AI_FIXTURE)
+    assert result.risk_indicators == []
+    assert result.incident_grounding == {}
+
+
+def test_detect_ai_system_keys_only_on_purpose_built_detectors():
+    """detect_ai_system fires on framework / typology / agent-runtime signals,
+    and stays silent for a project with none of them."""
+    from scanner.analyzers import AnalyzerResult, detect_ai_system
+
+    silent = [
+        AnalyzerResult(analyzer_id="ai_frameworks", label="AI Frameworks",
+                       metadata={"detected": []}),
+        AnalyzerResult(analyzer_id="model_typology", label="Model Typology",
+                       metadata={"typology": "none"}),
+        AnalyzerResult(analyzer_id="agent_inventory", label="Agent Inventory",
+                       metadata={"runtime_signals": []}),
+    ]
+    is_ai, signals = detect_ai_system(silent)
+    assert is_ai is False
+    assert signals == []
+
+
+def test_detect_ai_system_flips_on_any_single_signal():
+    """Any one of the three purpose-built signals is sufficient to be in scope."""
+    from scanner.analyzers import AnalyzerResult, detect_ai_system
+
+    framework = [AnalyzerResult(analyzer_id="ai_frameworks", label="AI Frameworks",
+                                metadata={"detected": ["pytorch"]})]
+    is_ai, signals = detect_ai_system(framework)
+    assert is_ai is True
+    assert "ai_framework:pytorch" in signals
+
+    typology = [AnalyzerResult(analyzer_id="model_typology", label="Model Typology",
+                               metadata={"typology": "llm"})]
+    is_ai, signals = detect_ai_system(typology)
+    assert is_ai is True
+    assert "model_typology:llm" in signals
+
+    agent = [AnalyzerResult(analyzer_id="agent_inventory", label="Agent Inventory",
+                            metadata={"runtime_signals": ["mcp_client"]})]
+    is_ai, signals = detect_ai_system(agent)
+    assert is_ai is True
+    assert "agent_runtime:mcp_client" in signals
+
+
 # ─── CLI ────────────────────────────────────────────────────────────────
 
 
@@ -152,3 +230,27 @@ def test_cli_article_unknown_reports_error(capsys):
     import json as _json
     payload = _json.loads(capsys.readouterr().out)
     assert "error" in payload
+
+
+def test_cli_article_filter_carries_scope_flag(capsys):
+    """The --article JSON payload exposes is_ai_system so a single-article query
+    can tell an out-of-scope project from a genuinely 0-scoring one."""
+    from scanner.cli import main
+    exit_code = main([str(NON_AI_FIXTURE), "--article", "art15"])
+    assert exit_code == 0
+    import json as _json
+    payload = _json.loads(capsys.readouterr().out)
+    assert payload["is_ai_system"] is False
+    assert payload["compliance_scores"] == {}
+
+
+def test_cli_markdown_flags_non_ai_as_out_of_scope(capsys):
+    """The markdown summary must not show a compliance percentage for a non-AI
+    project — it shows an out-of-scope banner instead."""
+    from scanner.cli import main
+    exit_code = main([str(NON_AI_FIXTURE), "--markdown"])
+    assert exit_code == 0
+    out = capsys.readouterr().out
+    assert "Not an AI system" in out
+    # The misleading "Overall compliance: 0.0%" line must be gone.
+    assert "Overall compliance" not in out

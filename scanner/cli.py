@@ -35,6 +35,23 @@ from scanner.kb import DIMENSIONS, dimensions_for_article  # noqa: E402
 
 def _format_markdown(result, top_gaps: int = 10) -> str:
     """Render a human-readable scan summary."""
+    if not result.is_ai_system:
+        # Out of EU AI Act scope — surface the reason, never a compliance %.
+        return "\n".join([
+            f"# EU AI Act Scan — {result.project_name}",
+            "",
+            "**Not an AI system — out of EU AI Act scope.**",
+            "",
+            result.scope_note or (
+                "No AI/ML framework, model, or agent signal was detected; "
+                "compliance scoring was skipped."
+            ),
+            "",
+            f"- **Scanner version**: {result.scanner_version}",
+            f"- **Files scanned**: {result.total_files:,}",
+            f"- **Languages**: {', '.join(f'{k} ({v})' for k, v in list(result.languages.items())[:5]) or 'none detected'}",
+        ])
+
     lines = [
         f"# EU AI Act Scan — {result.project_name}",
         "",
@@ -133,6 +150,7 @@ def _filter_by_article(result, article: str) -> dict:
 
     return {
         "article": article,
+        "is_ai_system": result.is_ai_system,
         "dimensions": sorted(dims),
         "compliance_scores": {k: v for k, v in result.compliance_scores.items() if k in dims},
         "components": [

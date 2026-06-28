@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "eu-ai-act-scanner"
-version = "0.6.0"
+version = "0.7.0"
 description = "Scan any codebase for EU AI Act (Regulation 2024/1689) compliance evidence and gaps, grounded in real-world AI security incidents and authoritative article text. 21 analyzers (incl. 7 agent-aware per Nannini et al. 2026), deterministic operator-role + obligation inference, a vendored GenAI/agentic-AI incident corpus crosswalked to OWASP LLM Top 10, OWASP Agentic (ASI), NIST AI RMF and MITRE ATLAS, an autonomous scan->fix->rescan loop with a regression guard, and an MCP server. Local-only static analysis with an optional Claude Max bridge, Claude Code plugin."
 readme = "README.md"
 license = { text = "Apache-2.0" }

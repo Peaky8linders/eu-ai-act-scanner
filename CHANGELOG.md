@@ -5,6 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-06-28
+
+### Fixed — AI-system scope gate (don't score / "fix" non-AI projects)
+
+The compliance model previously rewarded the *presence* of evidence artifacts
+regardless of whether the scanned project was an AI system at all. Running
+`eu-ai-act-fix <dir> --apply` on a directory with **zero** AI source code still
+raised "overall compliance" from 0 → ~60 by writing boilerplate evidence files
+(`MODEL_CARD.md`, tests, `Dockerfile`, ...). The EU AI Act only governs *AI
+systems* (Art. 3(1)), so a percentage for a non-AI project is meaningless and
+the fix loop was effectively gaming its own score.
+
+- **`scanner.analyzers.detect_ai_system`** — new gate keying on the three
+  purpose-built AI detectors (`ai_frameworks` detected list, `model_typology`
+  typology ≠ `none`, `agent_inventory` runtime signals). None of these fire on
+  ordinary non-AI code; the generic action-verb / deployment-category
+  heuristics are deliberately excluded.
+- **`ScanResult`** gains `is_ai_system`, `ai_system_signals`, and `scope_note`.
+  When no AI signal is found, `scan_project` skips scoring entirely:
+  `compliance_scores` is empty, `overall_compliance_pct` is `0.0` (not a
+  compliance measure — check `is_ai_system` first), and compliance-framed
+  `risk_indicators` / `recommendations` / `incident_grounding` are suppressed.
+- **`scanner.fix_loop`** — `rank_gaps` returns `[]` for an out-of-scope result,
+  and `run_fix_loop` short-circuits after the baseline scan: it proposes
+  nothing and writes nothing. `FixLoopResult` gains `is_ai_system` / `scope_note`.
+- **CLI / fix-loop markdown** render a "Not an AI system — out of EU AI Act
+  scope" banner instead of a percentage; the `/ai-act-scan` and
+  `/ai-act-scan-fix` commands check `is_ai_system` before reporting.
+- Tradeoff: an AI system built only on a framework the scanner doesn't yet
+  recognise is treated as out of scope (a false negative) rather than scored
+  on boilerplate. The gate reuses the scanner's existing AI detectors, so its
+  coverage tracks theirs — add an analyzer/framework signal to widen scope.
+
 ## [0.6.0] - 2026-06-28
 
 ### Added — deterministic obligations, an autonomous fix loop, and a Claude Max bridge

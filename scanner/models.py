@@ -50,6 +50,18 @@ class ScanResult(BaseModel):
     total_files: int = 0
     total_size_bytes: int = 0
     languages: dict[str, int] = Field(default_factory=dict)
+    # Whether the scanned codebase is an "AI system" under EU AI Act Art. 3(1).
+    # When False the regulation does not apply: `compliance_scores` is empty and
+    # `overall_compliance_pct` is 0.0 but NOT meaningful — consumers MUST check
+    # this flag before presenting a compliance percentage. Defaults True so
+    # ScanResults built directly stay in-scope unless the orchestrator decides
+    # otherwise (scanner.analyzers.detect_ai_system).
+    is_ai_system: bool = True
+    # Human-readable AI-system evidence (e.g. "ai_framework:pytorch",
+    # "model_typology:llm"). Empty iff is_ai_system is False.
+    ai_system_signals: list[str] = Field(default_factory=list)
+    # Set only when is_ai_system is False — explains why scoring was skipped.
+    scope_note: str = ""
     components: list[DiscoveredComponent] = Field(default_factory=list)
     architecture: list[ArchitectureNode] = Field(default_factory=list)
     compliance_scores: dict[str, float] = Field(default_factory=dict)

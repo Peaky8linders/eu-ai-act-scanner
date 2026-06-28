@@ -43,6 +43,11 @@ def tool_scan_project(path: str, project_name: str | None = None) -> dict:
     Returns the full :class:`scanner.models.ScanResult` serialised as a dict,
     including per-dimension compliance scores, architecture graph, file
     findings, and incident grounding links.
+
+    Check ``is_ai_system`` first: when ``False`` the codebase is out of EU AI
+    Act scope (no AI/ML/agent signal), ``compliance_scores`` is empty, and
+    ``overall_compliance_pct`` is ``0.0`` but **not** a compliance measure —
+    ``scope_note`` explains why scoring was skipped.
     """
     result = scan_project(path, project_name=project_name)
     return result.model_dump()

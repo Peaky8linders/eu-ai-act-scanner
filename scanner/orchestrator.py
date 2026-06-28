@@ -17,6 +17,7 @@ from scanner.analyzers import (
     AnalyzerContext,
     collect_pre_filled_answers,
     compute_dimension_scores,
+    detect_ai_system,
     run_all_analyzers,
 )
 from scanner.incident_grounding import incidents_for_dimension
@@ -177,11 +178,29 @@ def scan_project(root: Path | str, project_name: str | None = None) -> ScanResul
             icon=ar.graph_icon,
         ))
 
-    compliance_scores = compute_dimension_scores(all_findings)
-    overall = (
-        sum(compliance_scores.values()) / len(compliance_scores)
-        if compliance_scores else 0.0
-    )
+    # ── AI-system scope gate (EU AI Act Art. 3(1)) ─────────────────────────
+    # The Regulation only governs "AI systems". A codebase with no AI/ML/agent
+    # signal is out of scope: skip scoring entirely rather than report a
+    # misleading "compliance %" (and stop the fix loop from gaming it with
+    # boilerplate evidence). detect_ai_system keys on the purpose-built AI
+    # detectors, which never fire on plain non-AI code.
+    is_ai_system, ai_system_signals = detect_ai_system(analyzer_results)
+    scope_note = ""
+    if is_ai_system:
+        compliance_scores = compute_dimension_scores(all_findings)
+        overall = (
+            sum(compliance_scores.values()) / len(compliance_scores)
+            if compliance_scores else 0.0
+        )
+    else:
+        compliance_scores = {}
+        overall = 0.0
+        scope_note = (
+            "No AI system detected (EU AI Act Art. 3(1)): no AI/ML framework, "
+            "model typology, or agent-runtime signal was found. Compliance "
+            "scoring is not applicable and has been skipped — this is not a "
+            "measure of (non-)compliance. Add the AI/ML components, then re-scan."
+        )
 
     evidence_map: dict[str, list[str]] = defaultdict(list)
     for f in all_findings:
@@ -223,18 +242,21 @@ def scan_project(root: Path | str, project_name: str | None = None) -> ScanResul
             status=status,
         ))
 
+    # Compliance-framed risk indicators only make sense for an in-scope AI
+    # system. For an out-of-scope project they would misrepresent ordinary
+    # "missing test/doc" findings as regulatory risk, so leave them empty.
     risk_indicators: list[str] = []
-    has_ai = any(ar.analyzer_id == "ai_frameworks" and ar.findings for ar in analyzer_results)
-    for ar in analyzer_results:
-        if has_ai and not ar.findings and ar.analyzer_id in (
-            "test_suite", "documentation", "human_oversight",
-            "logging_monitoring", "security_controls",
-        ):
-            risk_indicators.append(f"AI system detected but no {ar.label.lower()} found")
-    for f in all_findings:
-        if f.compliance_impact == "gap":
-            risk_indicators.append(f.title)
-    risk_indicators = risk_indicators[:10]
+    if is_ai_system:
+        for ar in analyzer_results:
+            if not ar.findings and ar.analyzer_id in (
+                "test_suite", "documentation", "human_oversight",
+                "logging_monitoring", "security_controls",
+            ):
+                risk_indicators.append(f"AI system detected but no {ar.label.lower()} found")
+        for f in all_findings:
+            if f.compliance_impact == "gap":
+                risk_indicators.append(f.title)
+        risk_indicators = risk_indicators[:10]
 
     recommendations: list[str] = []
     for dim_id, score in sorted(compliance_scores.items(), key=lambda x: x[1]):
@@ -268,6 +290,7 @@ def scan_project(root: Path | str, project_name: str | None = None) -> ScanResul
         total_files=total_files,
         components=len(components),
         analyzers_active=len([ar for ar in analyzer_results if ar.findings]),
+        is_ai_system=is_ai_system,
         overall_compliance=round(overall, 1),
     )
 
@@ -277,6 +300,9 @@ def scan_project(root: Path | str, project_name: str | None = None) -> ScanResul
         total_files=total_files,
         total_size_bytes=total_size,
         languages=dict(languages.most_common(20)),
+        is_ai_system=is_ai_system,
+        ai_system_signals=ai_system_signals,
+        scope_note=scope_note,
         components=components,
         architecture=architecture,
         compliance_scores=compliance_scores,

@@ -196,6 +196,50 @@ def run_all_analyzers(ctx: AnalyzerContext) -> list[AnalyzerResult]:
     return results
 
 
+def detect_ai_system(analyzer_results: list[AnalyzerResult]) -> tuple[bool, list[str]]:
+    """Decide whether the scanned codebase is an *AI system* under EU AI Act scope.
+
+    The Regulation (2024/1689) governs "AI systems" (Art. 3(1)). A repository
+    with no AI/ML/agent signal at all is out of scope, and reporting a
+    "compliance %" for it is misleading — it also lets the autonomous fix loop
+    game the score by writing boilerplate evidence (``MODEL_CARD.md``, tests,
+    ``Dockerfile``) into a project the law does not touch.
+
+    The gate keys on the three *purpose-built* AI detectors, none of which fire
+    on ordinary non-AI code:
+
+    * ``ai_frameworks`` — an actual ML/LLM framework import was detected
+      (``metadata['detected']``: pytorch, tensorflow, sklearn, openai,
+      anthropic, langchain, ...).
+    * ``model_typology`` — the typology classifier resolved to something other
+      than ``"none"`` (``llm`` / ``classical_ml`` / ``both``).
+    * ``agent_inventory`` — a modern agent-*runtime* signal was detected
+      (``metadata['runtime_signals']``: MCP / Assistants v2 / LangGraph /
+      CrewAI ...). The generic action-verb and deployment-category heuristics
+      are deliberately *excluded* — ``write_file`` / ``execute_code`` and the
+      external-system regexes also match plain non-AI code, which would defeat
+      the gate.
+
+    Returns ``(is_ai_system, signals)`` where ``signals`` is a sorted, de-duped
+    list of human-readable evidence strings (e.g. ``"ai_framework:pytorch"``,
+    ``"model_typology:llm"``). ``signals`` is empty iff ``is_ai_system`` is
+    False.
+    """
+    signals: set[str] = set()
+    for ar in analyzer_results:
+        if ar.analyzer_id == "ai_frameworks":
+            for fw in ar.metadata.get("detected", []):
+                signals.add(f"ai_framework:{fw}")
+        elif ar.analyzer_id == "model_typology":
+            typology = ar.metadata.get("typology", "none")
+            if typology and typology != "none":
+                signals.add(f"model_typology:{typology}")
+        elif ar.analyzer_id == "agent_inventory":
+            for sig in ar.metadata.get("runtime_signals", []):
+                signals.add(f"agent_runtime:{sig}")
+    return bool(signals), sorted(signals)
+
+
 def compute_dimension_scores(all_findings: list[Finding]) -> dict[str, float]:
     """Compute compliance scores per KB dimension from all findings.
 
@@ -244,6 +288,7 @@ __all__ = [
     "Finding",
     "run_all_analyzers",
     "compute_dimension_scores",
+    "detect_ai_system",
     "collect_pre_filled_answers",
     "_apply_default_taxonomy_tags",
     "_attach_incident_grounding",
