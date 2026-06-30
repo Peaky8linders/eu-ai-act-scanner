@@ -212,7 +212,7 @@ def analyze_lethal_trifecta(ctx: AnalyzerContext) -> AnalyzerResult:
         if gaps and not positives:
             score = max(15.0, 50.0 - len(gaps) * 25)
         elif gaps and positives:
-            score = max(35.0, 65.0 - len(gaps) * 15 + len(positives) * 5)
+            score = min(100.0, max(35.0, 65.0 - len(gaps) * 15 + len(positives) * 5))
         elif positives:
             score = min(95.0, 80.0 + len(positives) * 5)
         else:

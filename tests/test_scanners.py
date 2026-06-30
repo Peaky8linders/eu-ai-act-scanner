@@ -254,3 +254,43 @@ def test_cli_markdown_flags_non_ai_as_out_of_scope(capsys):
     assert "Not an AI system" in out
     # The misleading "Overall compliance: 0.0%" line must be gone.
     assert "Overall compliance" not in out
+
+
+# ─── lethal_trifecta scoring ─────────────────────────────────────────────
+
+
+def test_lethal_trifecta_score_stays_within_bounds_with_many_gated_files():
+    """A project with many gated (positive) trifecta files and at least one
+    ungated (gap) file used to push the `gaps and positives` score branch
+    above 100, tripping AnalyzerResult's `le=100.0` validation (found while
+    dogfooding the scanner against a large real-world repo). The branch must
+    clamp its upper bound like every other branch in this analyzer."""
+    from scanner.analyzers.lethal_trifecta import analyze_lethal_trifecta
+
+    gated_file = (
+        "import requests\n"
+        "from agent import run\n\n"
+        "@app.post('/webhook')\n"
+        "def handle():\n"
+        "    data = request.json\n"
+        "    customer = customers.find(data['id'])\n"
+        "    if confidence_threshold >= 0.9:\n"
+        "        approve()\n"
+        "    resend.send(customer)\n"
+    )
+    ungated_file = (
+        "import requests\n"
+        "from agent import run\n\n"
+        "@app.post('/webhook')\n"
+        "def handle():\n"
+        "    data = request.json\n"
+        "    customer = customers.find(data['id'])\n"
+        "    resend.send(customer)\n"
+    )
+    files = {f"gated_{i}.py": gated_file for i in range(14)}
+    files["ungated.py"] = ungated_file
+
+    ctx = AnalyzerContext(files=files, file_list=list(files), languages={"python": len(files)})
+    result = analyze_lethal_trifecta(ctx)
+
+    assert 0.0 <= result.score <= 100.0
