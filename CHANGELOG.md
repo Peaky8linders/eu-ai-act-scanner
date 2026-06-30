@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.1] - 2026-07-01
+
+### Fixed — lethal_trifecta score could exceed the 0-100 bound
+
+Found while dogfooding the scanner against a large real-world repo: the
+`gaps and positives` scoring branch in `analyze_lethal_trifecta`
+(`65.0 - len(gaps) * 15 + len(positives) * 5`) had no upper clamp, so a
+project with many gated trifecta files and at least one ungated file could
+push the score above 100 and crash `scan_project()` on `AnalyzerResult`'s
+`score: float = Field(ge=0.0, le=100.0)` validation. Every other branch in
+the same function already clamps its bound (`min(95.0, ...)`,
+`max(15.0, ...)`); this branch now does too:
+`min(100.0, max(35.0, ...))`. Added a regression test
+(`test_lethal_trifecta_score_stays_within_bounds_with_many_gated_files`)
+that reproduces the overflow with 14 gated files + 1 ungated file.
+
 ## [0.7.0] - 2026-06-28
 
 ### Fixed — AI-system scope gate (don't score / "fix" non-AI projects)
