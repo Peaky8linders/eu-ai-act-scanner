@@ -247,12 +247,41 @@ It exposes seven tools: `scan_project`, `list_dimensions`, `get_article`, `incid
 
 ```
 /ai-act-scan ./my-app                # full scan + narration + article cites
-/ai-act-article art14                # Art. 14 human-oversight deep-dive
-/ai-act-scan-fix --top 3             # propose fixes for worst 3 gaps
+/ai-act-article art50                # Art. 50 transparency deep-dive
+/ai-act-scan-fix --top 3             # propose fixes for the worst gaps
 /ai-act-incidents art15              # real-world incidents for an article/dimension/threat
+/ai-act-ask "..."                    # grounded Q&A over the bundled EU AI Act text
+/ai-act-settings                     # view / set mode (deterministic | assisted)
 ```
 
 The plugin narrates the output in plain English, cites the articles, and offers remediation tasks. The 13 shipped skills (Art. 5 prohibited, Art. 6 classification, FRIA, operator roles, GPAI, Annex IV, timeline, penalties, incident grounding, and three meta-skills) become automatically invocable once the plugin is installed — ask "is this prohibited under Art. 5?", "what goes in Annex IV?", or "what real incidents map to this gap?" and Claude pulls the right skill.
+
+### Article 50 example
+
+Article 50 transparency — chatbot disclosure, synthetic-content marking, deep-fakes, emotion/biometric notice — is **enforceable 2 August 2026**, the one obligation the Digital Omnibus did *not* defer. The dedicated `article_50_transparency` analyzer checks all four duties:
+
+```
+/ai-act-scan ./my-chatbot
+#  art50-no-ai-disclosure   (Art. 50(1)) — a chat surface with no "you're talking to an AI" notice
+#  art50-unmarked-synthetic (Art. 50(2)) — image/audio generation with no C2PA / watermark
+
+/ai-act-ask "What are a deployer's Article 50 duties for deepfakes?"
+#  cited answer from the bundled statute text — Art. 50(3) emotion/biometric, 50(4) deep-fake + AI-text
+
+/ai-act-scan-fix --top 3
+#  proposes the disclosure / marking fixes, shows the plan, applies only what you approve
+```
+
+### Use your own Claude Code (assisted mode)
+
+The scan is 100% local and deterministic by default. Opt into a deeper pass driven by **your own Claude Code** — no API key, no wrapper needed:
+
+```
+python -m scanner.cli --set mode=assisted            # persist to .eu-ai-act-scanner.toml
+python -m scanner.cli --set auto-apply=true          # let it apply approved fixes too
+```
+
+In `assisted` mode the commands use the host Claude Code session to review findings semantically, answer grounded questions, and (with `auto-apply`) apply fixes with its own edit tools. The deterministic scores stay the objective baseline.
 
 ### Python
 
@@ -283,7 +312,7 @@ Scores are on a 0–100 scale:
 
 ## What it does NOT do
 
-- **No LLM calls by default.** Pure local static analysis. (Optional LLM mode behind `EU_AI_ACT_SCANNER_LLM=true` for README quality scoring.)
+- **No LLM calls by default.** Pure local static analysis. Opt-in only: `assisted` mode uses your own Claude Code (`/ai-act-settings`), or the headless LLM bridge (`EU_AI_ACT_SCANNER_LLM=true`) — both off unless you enable them.
 - **No network requests, no telemetry.** Your code never leaves your machine. The incident corpus is vendored offline; only `scripts/sync_incident_corpus.py` (run by maintainers, never at scan time) reaches the network to regenerate it.
 - **No risk-tier classification.** Whether your system is high-risk, limited-risk, or minimal-risk depends on use case (Art. 6 + Annex III) — a human has to decide.
 - **No legal advice.** Use this alongside legal counsel, not instead of it.
