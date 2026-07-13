@@ -44,6 +44,26 @@ Run the EU AI Act compliance scanner on a local codebase and summarise the findi
    5. Offer to drill into a specific dimension, article, or file
 4. Never invent findings. If the scanner reports zero components, say so and suggest the project may not be an AI system or may use patterns the scanner does not yet recognise (and link to `CONTRIBUTING.md` for adding an analyzer).
 
+Note: the dedicated **`article_50_transparency`** analyzer now reports real
+findings for chatbot disclosure (Art. 50(1)), synthetic-content marking
+(50(2)), emotion/biometric exposure notices (50(3)) and deep-fake / AI-generated
+public-interest-text labelling (50(4)), under the `transparency` /
+`content_transparency` dimensions.
+
+## Mode: deterministic vs assisted (use your own Claude Code)
+
+Read the active mode first: `python -m scanner.cli --settings`.
+
+- **deterministic** (default) — present the scanner's findings as-is. The scan is
+  100% local static analysis; do not add findings the scanner did not report.
+- **assisted** — after presenting the deterministic report, use YOUR OWN
+  reasoning (you are the user's Claude Code — no API key or wrapper needed) to add
+  what the static pass cannot: read the flagged files, confirm or down-rank likely
+  false positives, spot obligations the regex missed, and ground any regulatory
+  claim with `/ai-act-ask`. Keep the deterministic scores as the objective
+  baseline and label your additions clearly as an AI semantic review — never
+  overwrite the scanner's numbers.
+
 ## Example
 
 User: `/ai-act-scan ./my-rag-app`

@@ -23,6 +23,16 @@ structlog.configure(
     wrapper_class=structlog.make_filtering_bound_logger(logging.WARNING),
 )
 
+# Ensure UTF-8 output regardless of the host console code page. Windows cmd /
+# PowerShell default to cp1252/cp437, which can't encode the em-dashes, smart
+# quotes and ellipses in the bundled verbatim statute text — without this a
+# `--ask` answer could raise UnicodeEncodeError on those consoles.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
+    except (AttributeError, ValueError):  # pragma: no cover - stream without reconfigure
+        pass
+
 from scanner import __version__, scan_project  # noqa: E402
 from scanner.data.incident_corpus import get_incident  # noqa: E402
 from scanner.incident_grounding import (  # noqa: E402
@@ -162,6 +172,20 @@ def _filter_by_article(result, article: str) -> dict:
     }
 
 
+def _format_qa(result) -> str:
+    """Render a grounded Q&A answer for human reading."""
+    lines = [f"# {result.question}", "", result.answer, "", f"_Mode: {result.mode}_"]
+    if result.citations:
+        lines.append(f"_Citations: {', '.join(result.citations)}_")
+    if result.dimensions:
+        lines.append(f"_Compliance dimensions: {', '.join(result.dimensions)}_")
+    if result.sources:
+        lines += ["", "## Grounded sources", ""]
+        for s in result.sources:
+            lines.append(f"- **{s.ref}** ({s.title}): {s.excerpt}")
+    return "\n".join(lines)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="eu-ai-act-scan",
@@ -217,11 +241,93 @@ def main(argv: list[str] | None = None) -> int:
         ),
     )
     parser.add_argument(
+        "--ask", "-q",
+        metavar="QUESTION",
+        help=(
+            "Answer an EU AI Act question, grounded in the bundled knowledge base "
+            "(verbatim statute text + obligation paraphrases + risk taxonomy). "
+            "Offline + deterministic by default; uses the LLM bridge / assisted "
+            "mode when available. Does not scan a codebase."
+        ),
+    )
+    parser.add_argument(
+        "--top-k",
+        type=int,
+        default=4,
+        help="Max grounded sources to retrieve for --ask (default: 4).",
+    )
+    parser.add_argument(
+        "--settings",
+        action="store_true",
+        help="Print the resolved scanner settings (mode, auto_apply, LLM bridge).",
+    )
+    parser.add_argument(
+        "--set",
+        metavar="KEY=VALUE",
+        action="append",
+        help=(
+            "Persist a setting to .eu-ai-act-scanner.toml, e.g. "
+            "--set mode=assisted --set auto-apply=true. Repeatable."
+        ),
+    )
+    parser.add_argument(
+        "--mode",
+        choices=("deterministic", "assisted"),
+        help="Override the mode for this invocation (affects --ask synthesis).",
+    )
+    parser.add_argument(
         "--version",
         action="version",
         version=f"%(prog)s {__version__}",
     )
     args = parser.parse_args(argv)
+
+    # Settings persistence — no codebase scan.
+    if args.set:
+        from scanner.settings import save_settings
+
+        updates: dict[str, str] = {}
+        for item in args.set:
+            if "=" not in item:
+                print(f"error: --set expects KEY=VALUE, got '{item}'", file=sys.stderr)
+                return 2
+            k, v = item.split("=", 1)
+            updates[k.strip().lower().replace("-", "_")] = v.strip()
+        unknown = set(updates) - {"mode", "auto_apply"}
+        if unknown:
+            print(f"error: unknown setting(s): {', '.join(sorted(unknown))}", file=sys.stderr)
+            return 2
+        try:
+            saved_path, saved = save_settings(
+                mode=updates.get("mode"), auto_apply=updates.get("auto_apply")
+            )
+        except ValueError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
+        print(json.dumps({"saved_to": str(saved_path), "settings": saved.to_dict()},
+                         indent=2, default=str))
+        return 0
+
+    # Settings view — no codebase scan.
+    if args.settings:
+        from scanner.settings import load_settings
+
+        print(json.dumps(load_settings().to_dict(), indent=2, default=str))
+        return 0
+
+    # Grounded Q&A over the bundled knowledge base — no codebase scan.
+    if args.ask:
+        from scanner.qa import answer_question
+        from scanner.settings import load_settings
+
+        mode = args.mode or load_settings().mode
+        use_llm = True if mode == "assisted" else None
+        qa_result = answer_question(args.ask, top_k=max(1, args.top_k), use_llm=use_llm)
+        if args.json:
+            print(qa_result.model_dump_json(indent=2))
+        else:
+            print(_format_qa(qa_result))
+        return 0
 
     # LLM-bridge diagnostics — config + live health probe, no codebase scan.
     if args.llm_status:

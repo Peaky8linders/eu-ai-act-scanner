@@ -1,6 +1,6 @@
 """Top-level scanner orchestration.
 
-Walks a project directory, builds an AnalyzerContext, runs all 14 analyzers,
+Walks a project directory, builds an AnalyzerContext, runs all 22 analyzers,
 aggregates findings into a ScanResult.
 
 No network calls, no database writes, no telemetry. Purely local static analysis.

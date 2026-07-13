@@ -45,8 +45,8 @@ def test_dimensions_for_article_unknown_returns_empty():
 def test_analyzer_registry_has_expected_analyzers():
     # 14 baseline analyzers + 7 added in v0.3 (lethal_trifecta, cloud_deployment,
     # model_typology, agent_inventory, privilege_minimization, runtime_drift,
-    # regulatory_perimeter)
-    assert len(ANALYZER_REGISTRY) == 21
+    # regulatory_perimeter) + article_50_transparency (v0.8)
+    assert len(ANALYZER_REGISTRY) == 22
 
 
 def test_every_analyzer_is_callable():
@@ -59,7 +59,7 @@ def test_every_analyzer_is_callable():
 def test_analyzers_tolerate_empty_project():
     ctx = AnalyzerContext(files={}, file_list=[], binary_files={}, languages={})
     results = run_all_analyzers(ctx)
-    assert len(results) == 21
+    assert len(results) == 22
     for r in results:
         assert 0.0 <= r.score <= 100.0
 

@@ -9,7 +9,7 @@
 
 **Ships as three things in one repo:**
 1. A **Claude Code plugin** with four commands (`/ai-act-scan`, `/ai-act-scan-fix`, `/ai-act-article`, `/ai-act-incidents`) and **13 article-grounded skills** covering classification, obligations, deployer duties, GPAI, Annex IV, timeline, penalties, and real-world incident grounding
-2. A **Python library** (`from scanner import scan_project`) with **21 analyzers**, including 7 agent-aware analyzers grounded in Nannini et al. (2026), *AI Agents under EU Law* — covering the four compound-risk axes (cascading, emergent, attribution, temporal), AEPD lethal-trifecta detection, runtime drift, regulatory perimeter classification, and tool-permission minimization
+2. A **Python library** (`from scanner import scan_project`) with **22 analyzers**, including a dedicated Article 50 transparency analyzer and 7 agent-aware analyzers grounded in Nannini et al. (2026), *AI Agents under EU Law* — covering the four compound-risk axes (cascading, emergent, attribution, temporal), AEPD lethal-trifecta detection, runtime drift, regulatory perimeter classification, and tool-permission minimization
 3. An **MCP server** (`eu-ai-act-scan-mcp`) so non-Claude-Code agents can call the scanner and query the incident corpus over the Model Context Protocol
 
 Every finding is **grounded in real-world incidents** (new in v0.4): the scanner crosswalks its gaps to a vendored, reviewed-tier subset of the open [GenAI & Agentic AI Security Incidents dataset](https://huggingface.co/datasets/emmanuelgjr/genai-incidents) (CC-BY-4.0, 7,725+ incidents mapped to OWASP LLM Top 10 2025, OWASP Agentic (ASI) Top 10, NIST AI RMF, and MITRE ATLAS). A gap stops being "you have no prompt-injection defence" and becomes "...and here are the documented incidents where exactly that gap was exploited, with the published mitigations." See [Incident grounding](#incident-grounding).
@@ -75,7 +75,7 @@ This tool does one thing: **scan your repo and surface evidence and gaps against
 
 ## What the scanner looks at
 
-21 specialized analyzers, all deterministic static analysis (no LLM calls by default):
+22 specialized analyzers, all deterministic static analysis (no LLM calls by default):
 
 **Baseline analyzers (14):**
 

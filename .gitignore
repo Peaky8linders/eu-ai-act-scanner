@@ -27,3 +27,4 @@ Thumbs.db
 # scanner/data/incidents.json which IS committed).
 *.parquet
 scripts/.genai-incidents.parquet
+.eu-ai-act-scanner.toml

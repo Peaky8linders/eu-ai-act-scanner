@@ -211,24 +211,12 @@ def analyze_model_typology(ctx: AnalyzerContext) -> AnalyzerResult:  # noqa: C90
             suggested_answer="partial",
         ))
 
-        # Transparency gap — LLM needs Art. 50
-        findings.append(Finding(
-            id="mt-llm-transparency-gap",
-            category="model_typology",
-            title="LLM detected: Art. 50 transparency controls required",
-            description=(
-                "LLM-based systems interacting with users must disclose the AI nature of the "
-                "interaction (Art. 50(1)) and label AI-generated content (Art. 50(2)). "
-                "Verify these disclosures are implemented."
-            ),
-            file_path=rep_file,
-            confidence=0.85,
-            compliance_impact="gap",
-            compliance_dimensions=["transparency"],
-            evidence_snippet=rep_snip,
-            kb_question_ids=["tr-1", "tr-2"],
-            suggested_answer="partial",
-        ))
+        # Art. 50 transparency is now handled precisely by the dedicated
+        # ``article_50_transparency`` analyzer, which checks whether the AI
+        # disclosure / content marking actually EXISTS in the code. model_typology
+        # therefore no longer emits a blanket transparency gap for every detected
+        # LLM — that double-penalised the ``transparency`` dimension even when the
+        # app already discloses the AI interaction.
 
         # Human oversight gap — LLMs need Art. 14 controls
         findings.append(Finding(
