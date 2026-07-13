@@ -5,7 +5,7 @@
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 ![Status: alpha](https://img.shields.io/badge/status-alpha-orange)
-![100 days](https://img.shields.io/badge/T--100%20days-Aug%202%2C%202026-red)
+<!-- countdown-badge -->![Article 50 countdown](https://img.shields.io/badge/Art.%2050%20transparency-T--20%20days%20(2%20Aug%202026)-red)<!-- /countdown-badge -->
 
 **Ships as three things in one repo:**
 1. A **Claude Code plugin** with four commands (`/ai-act-scan`, `/ai-act-scan-fix`, `/ai-act-article`, `/ai-act-incidents`) and **13 article-grounded skills** covering classification, obligations, deployer duties, GPAI, Annex IV, timeline, penalties, and real-world incident grounding
@@ -18,22 +18,33 @@ The skills are written to the same standard: every regulatory claim cites an art
 
 ---
 
-## ⏳ 100 days to enforcement
+## ⏳ Enforcement countdown
 
-**2 August 2026** is the date high-risk AI system obligations (Art. 6 + Annex III, and Art. 9–15 / 17 / 27) become enforceable — and it is closing fast. The snippet below prints the exact days remaining from your clock.
+The EU AI Act applies in waves. The **Digital Omnibus** (adopted 29 June 2026) deferred the high-risk Annex III regime to **2 December 2027** — but deliberately **left Article 50 transparency untouched**, making it the sharpest live deadline for anyone shipping a chatbot, generating synthetic content, or running emotion/biometric systems.
 
-If you ship AI and your system touches biometrics, critical infrastructure, education, employment, essential services, law enforcement, migration, or justice, you are in scope. Most teams don't know what their code currently shows against the regulation.
+<!-- countdown-table:start -->
+| Milestone | Articles | Date | Status |
+|---|---|---|---|
+| Prohibited practices | Art. 5 | 2 Feb 2025 | ✅ in force |
+| GPAI model obligations | Art. 53 / 55 | 2 Aug 2025 | ✅ in force |
+| **Transparency** | Art. 50 | 2 Aug 2026 | ⏳ **T-20 days** |
+| High-risk (Annex III) | Art. 9-15 / 17 / 27 | 2 Dec 2027 | ⏳ T-507 days |
 
-**Run this to find out:**
+_Countdown generated 2026-07-13 by `scripts/update_readme_countdown.py` (refreshed weekly in CI). The Digital Omnibus deferred high-risk to Dec 2027 but left Article 50 at 2 Aug 2026._
+<!-- countdown-table:end -->
+
+If your system touches biometrics, critical infrastructure, education, employment, essential services, law enforcement, migration, or justice, the high-risk regime (Dec 2027) is in scope too. Most teams don't know what their code currently shows against the regulation.
+
+**Run this to see where you stand against the live Article 50 deadline:**
 
 ```python
 from datetime import date
 from scanner import scan_project
 
 result = scan_project("./my-ai-project")
-days_left = (date(2026, 8, 2) - date.today()).days
+days_left = (date(2026, 8, 2) - date.today()).days  # Article 50 transparency
 
-print(f"T-{days_left} days to Art. 6 high-risk enforcement")
+print(f"T-{days_left} days to Article 50 transparency enforcement")
 print(f"Overall compliance score: {result.overall_compliance_pct}%")
 print()
 print("Worst-scoring dimensions (fix these first):")
@@ -44,7 +55,7 @@ for dim_id, score in sorted(result.compliance_scores.items(), key=lambda x: x[1]
 Sample output on a mid-compliance RAG app:
 
 ```
-T-100 days to Art. 6 high-risk enforcement
+T-20 days to Article 50 transparency enforcement
 Overall compliance score: 47%
 
 Worst-scoring dimensions (fix these first):
@@ -69,7 +80,7 @@ That runs the same scan and narrates the results in plain English, cites the art
 
 ## Why
 
-The EU AI Act (Regulation 2024/1689) entered into force in August 2024, with high-risk obligations applying from August 2026. Most teams are flying blind on what their code actually shows vs. what the regulation asks for.
+The EU AI Act (Regulation 2024/1689) entered into force in August 2024. Prohibited practices (Art. 5) and GPAI obligations are already live; Article 50 transparency applies from 2 August 2026; and the high-risk regime — deferred by the Digital Omnibus — applies from 2 December 2027. Most teams are flying blind on what their code actually shows vs. what the regulation asks for.
 
 This tool does one thing: **scan your repo and surface evidence and gaps against 23 compliance dimensions mapped to EU AI Act articles, grounded in the real-world incidents that exploited each gap class**. It does *not* replace a conformity assessment, legal review, or a Quality Management System. It is the static-analysis layer underneath all of those.
 
@@ -298,7 +309,7 @@ for gap in result.risk_indicators[:5]:
     print(f"  ! {gap}")
 ```
 
-See the [100-day countdown example](#-100-days-to-enforcement) above for a ready-to-run snippet that surfaces your worst-scoring dimensions sorted by urgency.
+See the [enforcement countdown](#-enforcement-countdown) above for a ready-to-run snippet that surfaces your worst-scoring dimensions sorted by urgency.
 
 ## What the output means
 
@@ -334,9 +345,11 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the dev loop.
 - **v0.1**: Plugin + library (Apr 2026)
 - **v0.2**: 11 article-grounded skill harness for law practitioners (Apr 2026)
 - **v0.3**: 7 agent-aware analyzers per Nannini et al. (2026) + 4 new compliance dimensions + four-axis compound-risk taxonomy (May 2026)
-- **v0.4**: Real-world incident grounding (GenAI-incidents corpus crosswalked to OWASP LLM/ASI, NIST AI RMF, MITRE ATLAS) + MCP server + `/ai-act-incidents` command (this release, Jun 2026)
-- **v0.5**: Baseline / diff mode — scan twice, report only what changed
-- **v0.6**: Live `genai-incidents` enrichment — opt in to the full dataset at runtime when installed
+- **v0.4**: Real-world incident grounding (GenAI-incidents corpus crosswalked to OWASP LLM/ASI, NIST AI RMF, MITRE ATLAS) + MCP server + `/ai-act-incidents` command (Jun 2026)
+- **v0.6**: Deterministic operator-role inference + autonomous fix loop + Claude Max bridge (Jun 2026)
+- **v0.7**: AI-system scope gate — stop scoring/fixing non-AI projects (Jul 2026)
+- **v0.8**: Article 50 transparency analyzer + grounded Q&A (`/ai-act-ask`) + assisted mode (`/ai-act-settings`) that uses your own Claude Code (this release, Jul 2026)
+- **Next**: baseline / diff mode (scan twice, report only what changed); opt-in live `genai-incidents` enrichment
 
 ## License
 
