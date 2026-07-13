@@ -20,6 +20,7 @@ from scanner.analyzers.adversarial_robustness import analyze_adversarial_robustn
 from scanner.analyzers.agent_cascade import analyze_agent_cascade
 from scanner.analyzers.agent_inventory import analyze_agent_inventory
 from scanner.analyzers.ai_frameworks import analyze_ai_frameworks
+from scanner.analyzers.article_50_transparency import analyze_article_50_transparency
 from scanner.analyzers.cicd_dockerfile import analyze_cicd_dockerfile
 from scanner.analyzers.cloud_deployment import analyze_cloud_deployment
 from scanner.analyzers.cloudformation_k8s import analyze_cloudformation_k8s
@@ -63,6 +64,7 @@ ANALYZER_REGISTRY: dict[str, Callable[[AnalyzerContext], AnalyzerResult]] = {
     "cicd_dockerfile": analyze_cicd_dockerfile,
     "cloud_deployment": analyze_cloud_deployment,
     "model_typology": analyze_model_typology,
+    "article_50_transparency": analyze_article_50_transparency,
     # Agent-aware analyzers from Nannini et al. (2026) "AI Agents under EU Law"
     "agent_inventory": analyze_agent_inventory,
     "privilege_minimization": analyze_privilege_minimization,

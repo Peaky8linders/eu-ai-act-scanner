@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] - 2026-07-13
+
+### Added — Article 50 transparency analyzer, grounded Q&A, and assisted mode
+
+- **Real Article 50 detection.** New `article_50_transparency` analyzer (the 22nd
+  analyzer) deterministically detects all four Art. 50 transparency obligations:
+  AI-interaction disclosure (50(1)), machine-readable synthetic-content marking
+  (50(2)), emotion-recognition / biometric-categorisation exposure notice (50(3)),
+  and deep-fake / AI-generated-public-interest-text labelling (50(4)) — with
+  positive-evidence detection and a no-false-gaps guard for backend-only repos.
+  Ported from the CodexAI product scanner. Enforceable 2 Aug 2026 (the Digital
+  Omnibus, adopted 29 Jun 2026, deferred high-risk to Dec 2027 but left Art. 50
+  untouched).
+- Removed the blanket `mt-llm-transparency-gap` from `model_typology` — it fired
+  for every detected LLM regardless of whether disclosure existed, double-
+  penalising the `transparency` dimension. The dedicated analyzer now owns the
+  `transparency` / `content_transparency` dimensions precisely.
+- **Grounded offline Q&A** — new `/ai-act-ask` command + `scanner.cli --ask` +
+  `scanner.qa.answer_question`. Retrieves over a bundled knowledge base — verbatim
+  EU AI Act statute text (`scanner/data/official_eu_ai_act.py`, EUR-Lex CELEX
+  32024R1689) + obligation paraphrases + the compound-risk taxonomy — and returns a
+  cited answer. Runs 100% locally with no LLM/network by default (mirrors the
+  CodexAI "Lexy" deterministic fallback path); the optional LLM path runs through
+  the citation guard so no uncited sentence survives.
+- **Bundled knowledge graph / ontology** — vendored the full Regulation (EU)
+  2024/1689 verbatim text and the typed offline ontology
+  (`scanner/data/ontology.py`) for grounding and host-Claude traversal.
+- **Assisted mode + settings** — new `scanner.settings` layer (project
+  `.eu-ai-act-scanner.toml` + env overrides) surfaced via `/ai-act-settings` and
+  `scanner.cli --settings` / `--set` / `--mode`. `mode: assisted` opts into using
+  your **own Claude Code** (the host session — no API key, no wrapper) for a
+  semantic pass over the deterministic findings, grounded Q&A, and — with
+  `auto_apply: true` — applying fixes agentically. `deterministic` (default) keeps
+  the historical 100%-local behaviour.
+
+### Changed
+- Reconciled the four skewed versions (`plugin.json` 0.5.0, `scanner/__init__.py`
+  0.7.0, `pyproject.toml` 0.7.1) to a single **0.8.0**.
+- CLI now forces UTF-8 stdout/stderr so `--ask` answers render on Windows
+  cp1252/cp437 consoles.
+
 ## [0.7.1] - 2026-07-01
 
 ### Fixed — lethal_trifecta score could exceed the 0-100 bound

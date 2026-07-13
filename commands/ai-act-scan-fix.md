@@ -51,6 +51,7 @@ When proposing fixes, lean on these canonical patterns — they are what the sca
 | `data_gov` | A `DATA_CARD.md` or `docs/data/` describing sources, collection, bias assessment |
 | `security_controls` | Auth middleware, rate limiting, input validation on any AI-serving endpoint |
 | `fairness_testing` | Tests that import `aif360`, `fairlearn`, or compute disparate-impact metrics |
+| `transparency` / `content_transparency` (Art. 50) | An AI-interaction disclosure string ("you are chatting with an AI"), a C2PA / watermark / SynthID marking call on generated output, an emotion/biometric exposure notice, or a visible "AI-generated" deep-fake label |
 
 ## Autonomous loop (`eu-ai-act-fix`)
 
@@ -63,7 +64,27 @@ fixers are validated against the analyzers' own positive-detection patterns, and
 you want the loop to drive itself (e.g. CI, batch remediation); use this command when a human
 should approve each change.
 
+## Assisted mode & auto-apply (use your own Claude Code power)
+
+Check the mode + auto-apply flag: `python -m scanner.cli --settings`.
+
+- **deterministic** (default) — behave exactly as above: propose, show the plan,
+  apply only what the user approves.
+- **assisted** — go beyond the deterministic fixers: for a gap with no canonical
+  pattern, design a real, minimal fix yourself (you are the user's own Claude
+  Code), read the surrounding code, and write it with your edit tools. Ground
+  every regulatory claim with `/ai-act-ask`. Still show the plan first unless
+  `auto_apply` is `true`.
+- **assisted + `auto_apply: true`** — apply the approved plan directly with your
+  own edit tools, re-running `python -m scanner.cli "$1" --json` after each change
+  to confirm the dimension score moved and nothing regressed.
+
+No API key or wrapper is needed for assisted mode — the command runs inside your
+Claude Code, so your session **is** the LLM. The `EU_AI_ACT_SCANNER_LLM` wrapper
+bridge is only for headless CLI use outside Claude Code.
+
 ## Safety notes
 
 - Never fabricate claims. If proposing a `MODEL_CARD.md`, leave content the user must fill in as `<FILL IN: …>` placeholders. Compliance documents with invented facts are worse than none.
 - Never commit without explicit user approval. Compliance code changes can touch regulatory obligations — the human stays in the loop.
+- Even with `auto_apply: true`, never modify auth, secrets, or database migrations without an explicit extra confirmation.
