@@ -9,14 +9,26 @@ never rot.
 
 from __future__ import annotations
 
+import importlib.util
+import sys
 from datetime import date
+from pathlib import Path
 
-from scripts.update_readme_countdown import (
-    MILESTONES,
-    render_badge,
-    render_table,
-    update,
-)
+# Load the generator by file path — ``scripts/`` is not an installed package,
+# so a plain ``import scripts.…`` fails under CI's non-editable install. The
+# module is registered in ``sys.modules`` before execution so its frozen
+# dataclass can resolve its own ``__module__`` during annotation processing.
+_SCRIPT = Path(__file__).resolve().parent.parent / "scripts" / "update_readme_countdown.py"
+_spec = importlib.util.spec_from_file_location("update_readme_countdown", _SCRIPT)
+assert _spec is not None and _spec.loader is not None
+_mod = importlib.util.module_from_spec(_spec)
+sys.modules[_spec.name] = _mod
+_spec.loader.exec_module(_mod)
+
+MILESTONES = _mod.MILESTONES
+render_badge = _mod.render_badge
+render_table = _mod.render_table
+update = _mod.update
 
 # 20 days before Article 50 enforcement (2 Aug 2026).
 FIXED = date(2026, 7, 13)
