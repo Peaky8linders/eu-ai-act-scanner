@@ -5,7 +5,7 @@
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 ![Status: alpha](https://img.shields.io/badge/status-alpha-orange)
-<!-- countdown-badge -->![Article 50 countdown](https://img.shields.io/badge/Art.%2050%20transparency-T--20%20days%20(2%20Aug%202026)-red)<!-- /countdown-badge -->
+<!-- countdown-badge -->![Article 50 countdown](https://img.shields.io/badge/Art.%2050%20transparency-T--13%20days%20(2%20Aug%202026)-red)<!-- /countdown-badge -->
 
 **Ships as three things in one repo:**
 1. A **Claude Code plugin** with four commands (`/ai-act-scan`, `/ai-act-scan-fix`, `/ai-act-article`, `/ai-act-incidents`) and **13 article-grounded skills** covering classification, obligations, deployer duties, GPAI, Annex IV, timeline, penalties, and real-world incident grounding
@@ -27,10 +27,10 @@ The EU AI Act applies in waves. The **Digital Omnibus** (adopted 29 June 2026) d
 |---|---|---|---|
 | Prohibited practices | Art. 5 | 2 Feb 2025 | ✅ in force |
 | GPAI model obligations | Art. 53 / 55 | 2 Aug 2025 | ✅ in force |
-| **Transparency** | Art. 50 | 2 Aug 2026 | ⏳ **T-20 days** |
-| High-risk (Annex III) | Art. 9-15 / 17 / 27 | 2 Dec 2027 | ⏳ T-507 days |
+| **Transparency** | Art. 50 | 2 Aug 2026 | ⏳ **T-13 days** |
+| High-risk (Annex III) | Art. 9-15 / 17 / 27 | 2 Dec 2027 | ⏳ T-500 days |
 
-_Countdown generated 2026-07-13 by `scripts/update_readme_countdown.py` (refreshed weekly in CI). The Digital Omnibus deferred high-risk to Dec 2027 but left Article 50 at 2 Aug 2026._
+_Countdown generated 2026-07-20 by `scripts/update_readme_countdown.py` (refreshed weekly in CI). The Digital Omnibus deferred high-risk to Dec 2027 but left Article 50 at 2 Aug 2026._
 <!-- countdown-table:end -->
 
 If your system touches biometrics, critical infrastructure, education, employment, essential services, law enforcement, migration, or justice, the high-risk regime (Dec 2027) is in scope too. Most teams don't know what their code currently shows against the regulation.
@@ -55,7 +55,7 @@ for dim_id, score in sorted(result.compliance_scores.items(), key=lambda x: x[1]
 Sample output on a mid-compliance RAG app:
 
 ```
-T-20 days to Article 50 transparency enforcement
+T-13 days to Article 50 transparency enforcement
 Overall compliance score: 47%
 
 Worst-scoring dimensions (fix these first):
