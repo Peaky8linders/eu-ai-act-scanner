@@ -28,9 +28,9 @@ The EU AI Act applies in waves. The **Digital Omnibus** (adopted 29 June 2026) d
 | Prohibited practices | Art. 5 | 2 Feb 2025 | ✅ in force |
 | GPAI model obligations | Art. 53 / 55 | 2 Aug 2025 | ✅ in force |
 | **Transparency** | Art. 50 | 2 Aug 2026 | ✅ in force |
-| High-risk (Annex III) | Art. 9-15 / 17 / 27 | 2 Dec 2027 | ⏳ T-486 days |
+| High-risk (Annex III) | Art. 9-15 / 17 / 27 | 2 Dec 2027 | ⏳ T-479 days |
 
-_Countdown generated 2026-08-03 by `scripts/update_readme_countdown.py` (refreshed weekly in CI). The Digital Omnibus deferred high-risk to Dec 2027 but left Article 50 at 2 Aug 2026._
+_Countdown generated 2026-08-10 by `scripts/update_readme_countdown.py` (refreshed weekly in CI). The Digital Omnibus deferred high-risk to Dec 2027 but left Article 50 at 2 Aug 2026._
 <!-- countdown-table:end -->
 
 If your system touches biometrics, critical infrastructure, education, employment, essential services, law enforcement, migration, or justice, the high-risk regime (Dec 2027) is in scope too. Most teams don't know what their code currently shows against the regulation.
