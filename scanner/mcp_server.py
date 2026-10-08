@@ -23,6 +23,11 @@ Run the server (stdio transport):
 
 from __future__ import annotations
 
+from pathlib import Path
+
+from scanner.cross_framework import project_scan_to_frameworks
+from scanner.dossier import generate_dossier
+from scanner.fix_loop import run_fix_loop
 from scanner.incident_grounding import (
     incident_corpus_stats,
     incidents_for_article,
@@ -37,7 +42,13 @@ from scanner.orchestrator import scan_project
 # ---------------------------------------------------------------------------
 
 
-def tool_scan_project(path: str, project_name: str | None = None) -> dict:
+def tool_scan_project(
+    path: str,
+    project_name: str | None = None,
+    role: str | None = None,
+    deep: bool = False,
+    cross_framework: bool = False,
+) -> dict:
     """Scan a codebase at *path* for EU AI Act compliance evidence and gaps.
 
     Returns the full :class:`scanner.models.ScanResult` serialised as a dict,
@@ -49,8 +60,77 @@ def tool_scan_project(path: str, project_name: str | None = None) -> dict:
     ``overall_compliance_pct`` is ``0.0`` but **not** a compliance measure —
     ``scope_note`` explains why scoring was skipped.
     """
-    result = scan_project(path, project_name=project_name)
+    result = scan_project(
+        path,
+        project_name=project_name,
+        role=role,
+        deep=deep,
+        cross_framework=cross_framework,
+    )
     return result.model_dump()
+
+
+def tool_project_cross_framework(
+    path: str,
+    target_frameworks: list[str] | None = None,
+) -> dict:
+    """Scan codebase and project findings onto international AI governance frameworks.
+
+    Maps to NIST AI RMF 1.0, ISO/IEC 42001:2023, OWASP LLM 2025, OWASP Agentic Top 10,
+    GDPR, MITRE ATLAS, SOC 2, and CSA AICM. Identifies high-leverage 'Satisfy Once,
+    Comply Everywhere' remediation targets.
+    """
+    result = scan_project(path, cross_framework=True)
+    projection = project_scan_to_frameworks(result, target_framework_ids=target_frameworks)
+    return projection.model_dump()
+
+
+def tool_generate_dossier(
+    path: str,
+    output_path: str = "compliance-dossier.json",
+) -> dict:
+    """Generate and seal a cryptographic, tamper-evident compliance release dossier.
+
+    Binds SHA-256 file digests, git provenance, compliance scores, and statutory grounding
+    under Regulation (EU) 2024/1689 and Digital Omnibus Regulation (EU) 2026/1744.
+    """
+    result = scan_project(path, cross_framework=True)
+    dossier = generate_dossier(result, path)
+    dossier.export_json(output_path)
+    return dossier.model_dump()
+
+
+def tool_remediation_loop(
+    path: str,
+    apply: bool = False,
+    max_iterations: int = 3,
+) -> dict:
+    """Run autonomous scan -> fix -> rescan remediation pipeline with regression guard.
+
+    When *apply* is False, returns ranked proposals and verification instructions (safe preview).
+    When *apply* is True, writes production-grade remediation artifacts and re-evaluates scores.
+    """
+    fix_result = run_fix_loop(path, apply=apply, max_iterations=max_iterations)
+    return fix_result.model_dump()
+
+
+def tool_generate_visual_graph(
+    path: str,
+    output_path: str = "context-graph.html",
+) -> dict:
+    """Generate an interactive visual context graph browser for the scanned codebase.
+
+    Allows users to inspect nodes for compliance gaps, regulatory articles, cross-framework
+    linkages, grounded real-world incidents, and copyable recommended fixes.
+    """
+    from scanner.visual_graph import build_graph_data, generate_visual_graph
+    result = scan_project(path, cross_framework=True)
+    generate_visual_graph(result, output_path=output_path, root_path=path)
+    return {
+        "status": "success",
+        "output_path": output_path,
+        "graph_summary": build_graph_data(result, Path(path)),
+    }
 
 
 def tool_list_dimensions() -> list[dict]:
@@ -226,6 +306,53 @@ def build_server():  # noqa: ANN201  (returns FastMCP — type only available wi
         MITRE ATLAS techniques.
         """
         return tool_incident_corpus_stats()
+
+    @mcp.tool()
+    def project_cross_framework_tool(
+        path: str,
+        target_frameworks: list[str] | None = None,
+    ) -> dict:
+        """Project EU AI Act scan onto NIST AI RMF, ISO 42001, GDPR, and OWASP.
+
+        Outputs framework readiness percentages, control mappings, and 'Satisfy Once,
+        Comply Everywhere' levers.
+        """
+        return tool_project_cross_framework(path, target_frameworks)
+
+    @mcp.tool()
+    def generate_dossier_tool(
+        path: str,
+        output_path: str = "compliance-dossier.json",
+    ) -> dict:
+        """Generate and export a cryptographic, tamper-evident compliance release dossier.
+
+        Binds git commit, file SHA-256 digests, and statutory grounding under
+        Regulation (EU) 2024/1689 and Digital Omnibus Regulation (EU) 2026/1744.
+        """
+        return tool_generate_dossier(path, output_path)
+
+    @mcp.tool()
+    def remediation_loop_tool(
+        path: str,
+        apply: bool = False,
+        max_iterations: int = 3,
+    ) -> dict:
+        """Run autonomous scan -> fix -> rescan remediation pipeline with regression guard.
+
+        When *apply* is False, previews proposals. When *apply* is True, writes fixes to disk.
+        """
+        return tool_remediation_loop(path, apply, max_iterations)
+
+    @mcp.tool()
+    def generate_visual_graph_tool(
+        path: str,
+        output_path: str = "context-graph.html",
+    ) -> dict:
+        """Generate an interactive visual context graph browser for the scanned codebase.
+
+        Allows users to browse the architecture, click nodes to view gaps, and inspect recommended fixes.
+        """
+        return tool_generate_visual_graph(path, output_path)
 
     return mcp
 

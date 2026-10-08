@@ -60,6 +60,7 @@ the legacy maps will be migrated into derived views in a follow-up.
 """
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
@@ -115,10 +116,16 @@ class RiskClass(StrEnum):
 class Phase:
     """One applicability date in the AI Act rollout.
 
-    The Digital Omnibus political agreement (7 May 2026) defers several
-    obligations; we encode the original date plus a ``superseded_by``
-    pointer to the deferred phase so date-shaped queries can resolve
-    "what applies on date X?" deterministically.
+    Regulation (EU) 2026/1744 (Digital Omnibus on AI, OJ L 24.7.2026,
+    in force 27 July 2026) replaced Art. 113, third paragraph, points
+    (a) and (c) and so moved several dates. We keep the superseded
+    phase with its original date plus a ``superseded_by`` pointer to
+    the replacement, so date-shaped queries can resolve "what applies
+    on date X?" deterministically and an auditor can still see what the
+    pre-Omnibus deadline was.
+
+    A phase carrying ``superseded_by`` is NOT a live deadline — resolve
+    the pointer before quoting a date to a customer.
     """
 
     id: str
@@ -141,7 +148,7 @@ PHASE_REGISTRY: dict[str, Phase] = {
             "profiling-based criminal-risk prediction, untargeted facial-image "
             "scraping, workplace/education emotion recognition, biometric "
             "categorisation by sensitive attributes, real-time RBI in public "
-            "spaces). AI literacy obligation also takes effect."
+            "spaces). AI literacy obligation under Art. 4 is also in force."
         ),
     ),
     "phase_2025_08_02": Phase(
@@ -159,42 +166,82 @@ PHASE_REGISTRY: dict[str, Phase] = {
     ),
     "phase_2026_08_02": Phase(
         id="phase_2026_08_02",
-        label="High-risk AI obligations (Annex III + most other obligations)",
+        label="High-risk AI obligations (Annex III) — SUPERSEDED, now 2 Dec 2027",
         effective_date=date(2026, 8, 2),
         articles=("Art. 6", "Art. 8", "Art. 9", "Art. 10", "Art. 11", "Art. 13",
                   "Art. 14", "Art. 15", "Art. 16", "Art. 17", "Art. 26", "Art. 27",
                   "Annex III"),
         description=(
-            "Full Chapter III Section 2 obligations for Annex III high-risk AI "
-            "systems take effect. Deployer obligations under Art. 26, FRIA "
-            "under Art. 27, transparency under Arts. 13/50."
+            "The ORIGINAL Art. 113 date for Chapter III obligations on Annex III "
+            "high-risk AI systems. No longer live: Regulation (EU) 2026/1744, "
+            "Art. 1(40)(b), replaced Art. 113, third paragraph, point (c) so that "
+            "Chapter III Sections 1, 2 and 3 apply from 2 December 2027 for "
+            "Annex III systems. Retained for audit trail only — see "
+            "phase_omnibus_2027_12_02 for the live date. Note that Art. 50 "
+            "transparency is Chapter IV, was NOT moved by the Omnibus, and "
+            "has been in force since 2 August 2026; do not read this phase as deferring it."
+        ),
+        superseded_by="phase_omnibus_2027_12_02",
+    ),
+    "phase_2026_08_02_transparency": Phase(
+        id="phase_2026_08_02_transparency",
+        label="Transparency obligations (Art. 50) — IN FORCE",
+        effective_date=date(2026, 8, 2),
+        articles=("Art. 50",),
+        description=(
+            "Article 50 transparency obligations in force since 2 August 2026. "
+            "Was NOT deferred by Regulation (EU) 2026/1744. Applies to natural-person-facing "
+            "AI chatbots (Art. 50(1)), synthetic audio/image/video/text marking and C2PA "
+            "provenance (Art. 50(2)), emotion recognition / biometric categorization "
+            "notices (Art. 50(3)), and deepfakes / public-interest AI text disclosure (Art. 50(4))."
         ),
     ),
     "phase_2027_08_02": Phase(
         id="phase_2027_08_02",
-        label="High-risk AI obligations (Annex I safety-component path)",
+        label="High-risk AI obligations (Annex I) — SUPERSEDED, now 2 Aug 2028",
         effective_date=date(2027, 8, 2),
         articles=("Art. 6", "Annex I"),
         description=(
-            "Full high-risk obligations for AI as a safety component of a "
-            "product regulated by Annex I harmonisation legislation (MDR, "
-            "IVDR, machinery, toys, etc.). The longer runway lets sectoral "
-            "conformity-assessment bodies update procedures."
+            "The ORIGINAL Art. 113 date for Annex I safety-component high-risk obligations. "
+            "No longer live: Regulation (EU) 2026/1744 moved this to 2 Aug 2028 for ALL Annex I "
+            "systems — see phase_omnibus_2028_08_02."
         ),
-        # Digital Omnibus defers this to 2 Aug 2028 in some sectors —
-        # see PHASE_REGISTRY["phase_omnibus_2028_08_02"].
         superseded_by="phase_omnibus_2028_08_02",
     ),
     "phase_omnibus_2026_12_02": Phase(
         id="phase_omnibus_2026_12_02",
-        label="Digital Omnibus 9th prohibition (CSAM / NCII)",
+        label="Art. 5(1)(ba) + (bb) prohibitions — NCII and CSAM generation",
         effective_date=date(2026, 12, 2),
         articles=("Art. 5",),
         description=(
-            "Pending the Digital Omnibus political agreement of 7 May 2026 "
-            "and formal adoption: adds a 9th prohibition under Article 5 for "
-            "AI systems that generate child sexual abuse material (CSAM) or "
-            "non-consensual intimate imagery. Currently in draft."
+            "ADOPTED. Regulation (EU) 2026/1744 (Digital Omnibus on AI), "
+            "published in OJ L on 24 July 2026 and in force from 27 July 2026, "
+            "inserted two new prohibitions into Article 5(1), first "
+            "subparagraph, by its Art. 1(7)(a): point (ba) (non-consensual "
+            "intimate imagery, the 'nudifier' limb) and point (bb) "
+            "(child sexual abuse material by reference to Article 2, points "
+            "(c) and (e), of Directive 2011/93/EU). Its Art. 1(7)(b) added "
+            "Art. 5(1a) and (1b), which narrow both. Art. 1(40)(a) replaced "
+            "Art. 113, third paragraph, point (a) so that these points and "
+            "Art. 5(1a) and (1b) apply from 2 December 2026, while the rest "
+            "of Chapters I and II continue to apply from 2 February 2025."
+        ),
+    ),
+    "phase_omnibus_2027_12_02": Phase(
+        id="phase_omnibus_2027_12_02",
+        label="Digital Omnibus deferred Annex III high-risk obligations",
+        effective_date=date(2027, 12, 2),
+        articles=("Art. 6", "Art. 8", "Art. 9", "Art. 10", "Art. 11", "Art. 13",
+                  "Art. 14", "Art. 15", "Art. 16", "Art. 17", "Art. 26", "Art. 27",
+                  "Annex III"),
+        description=(
+            "ADOPTED. Regulation (EU) 2026/1744, Art. 1(40)(b), replaced "
+            "Art. 113, third paragraph, point (c) so that Chapter III "
+            "Sections 1, 2 and 3 — with the exception of Art. 6(5) — apply "
+            "from 2 December 2027 to AI systems classified as high-risk "
+            "under Art. 6(2) and Annex III. This replaces the original "
+            "2 August 2026 date (phase_2026_08_02). Art. 50 transparency is "
+            "Chapter IV and was not deferred."
         ),
     ),
     "phase_omnibus_2028_08_02": Phase(
@@ -203,9 +250,12 @@ PHASE_REGISTRY: dict[str, Phase] = {
         effective_date=date(2028, 8, 2),
         articles=("Art. 6", "Annex I"),
         description=(
-            "Digital Omnibus defers Annex I safety-component high-risk "
-            "obligations by 12 months in selected sectors to align with "
-            "sectoral conformity-assessment infrastructure readiness."
+            "ADOPTED. Regulation (EU) 2026/1744, Art. 1(40)(b), replaced "
+            "Art. 113, third paragraph, point (c) so that Chapter III "
+            "Sections 1, 2 and 3 apply from 2 August 2028 to AI systems "
+            "classified as high-risk under Art. 6(1) and Annex I — the "
+            "safety-component and Annex I product route. This applies to the "
+            "whole Annex I route and replaces the original 2 August 2027 date (phase_2027_08_02)."
         ),
     ),
 }
@@ -418,26 +468,80 @@ PRACTICE_REGISTRY: dict[str, Practice] = {
                   "real-time remote biometric", "biometric identification",
                   "rbi in public", "remote biometric identification"),
     ),
-    "omnibus_csam_ncii": Practice(
-        id="omnibus_csam_ncii",
-        sub_paragraph="5.1.i",  # proposed 9th paragraph
-        short_name="AI-generated CSAM / non-consensual intimate imagery (Omnibus)",
+    # (ba) and (bb) were INSERTED after (b) by Regulation (EU) 2026/1744,
+    # Art. 1(7)(a) — the legislator chose lettered insertions precisely so
+    # that (c)..(h) keep their pre-Omnibus letters.
+    "ncii_generation": Practice(
+        id="ncii_generation",
+        sub_paragraph="5.1.ba",
+        short_name="Non-consensual intimate imagery generation ('nudifiers')",
         description=(
-            "Pending Digital Omnibus adoption (political agreement 7 May 2026): "
-            "AI systems specifically intended to generate or modify content "
-            "constituting child sexual abuse material (CSAM) or non-consensual "
-            "intimate imagery of natural persons. Captured by Member State "
-            "criminal law and the AI Act's Art. 50 transparency duty for "
-            "synthetic content until the Omnibus takes effect."
+            "AI systems that generate or manipulate realistic images, videos, "
+            "audio or similar material of an identifiable natural person's "
+            "intimate parts, or of an identifiable natural person engaged in "
+            "sexually explicit activities, without that person's freely-given, "
+            "specific, informed, unambiguous and explicit consent for that "
+            "generation or manipulation. Prohibits placing on the market, "
+            "putting into service, and use. Inserted by Regulation (EU) "
+            "2026/1744, Art. 1(7)(a); applies from 2 December 2026."
         ),
-        citation=("Art. 5",),
-        exceptions=(),
+        citation=("Art. 5", "Art. 5.1.ba"),
+        exceptions=(
+            "Consent of the depicted person, meeting the Art. 5(1)(ba) "
+            "standard (freely-given, specific, informed, unambiguous and "
+            "explicit for that generation or manipulation).",
+            "Art. 5(1b): manipulation that does not increase the exposure of "
+            "any depicted intimate parts, nor alter the nature of any depicted "
+            "sexually explicit activities, is not 'manipulation' for point (ba).",
+            "Art. 5(1a)(a): placing on the market or putting into service is "
+            "prohibited only where that generation is the system's intended "
+            "purpose, OR where design/training/architecture/capabilities make "
+            "it a reasonably foreseeable and reproducible outcome without "
+            "significant technical modification AND the system lacks reasonable "
+            "and adequate safeguards to prevent and correct such misuse.",
+            "Art. 5(1a)(b): for deployers, use is prohibited only where the "
+            "deployer uses the system for the purpose of generating or "
+            "manipulating such material.",
+        ),
         effective_phase="phase_omnibus_2026_12_02",
-        keywords=("csam", "ai-generated csam", "ai csam", "nudification",
-                  "non-consensual intimate", "non consensual intimate",
-                  "intimate imagery"),
+        keywords=("nudification", "nudifier", "non-consensual intimate",
+                  "non consensual intimate", "intimate imagery", "ncii",
+                  "deepfake nude", "sexually explicit"),
+    ),
+    "csam_generation": Practice(
+        id="csam_generation",
+        sub_paragraph="5.1.bb",
+        short_name="Child sexual abuse material generation",
+        description=(
+            "AI systems that generate or manipulate material or performance "
+            "within the meaning of Article 2, points (c) and (e), of Directive "
+            "2011/93/EU (child sexual abuse material and pornographic "
+            "performance). Prohibits placing on the market, putting into "
+            "service, and use. Inserted by Regulation (EU) 2026/1744, "
+            "Art. 1(7)(a); applies from 2 December 2026."
+        ),
+        citation=("Art. 5", "Art. 5.1.bb"),
+        exceptions=(
+            "Point (bb) itself carves out the case where a 'without right' "
+            "defence applies under national law.",
+            "Art. 5(1a)(a): placing on the market or putting into service is "
+            "prohibited only where that generation is the system's intended "
+            "purpose, OR where design/training/architecture/capabilities make "
+            "it a reasonably foreseeable and reproducible outcome without "
+            "significant technical modification AND the system lacks reasonable "
+            "and adequate safeguards to prevent and correct such misuse.",
+            "Art. 5(1a)(b): for deployers, use is prohibited only where the "
+            "deployer uses the system for the purpose of generating or "
+            "manipulating such material.",
+        ),
+        effective_phase="phase_omnibus_2026_12_02",
+        keywords=("csam", "ai-generated csam", "ai csam",
+                  "child sexual abuse material", "child sexual abuse"),
     ),
 }
+
+# Backward compatibility alias for the preliminary pre-enactment identifier
+PRACTICE_REGISTRY["omnibus_csam_ncii"] = PRACTICE_REGISTRY["ncii_generation"]
 
 
 # ── Annex III categories (the 8 high-risk use cases) ─────────────────────
@@ -634,23 +738,25 @@ def category_for_keyword(keyword: str) -> AnnexIIICategory | None:
     return None
 
 
+_SUB_PARAGRAPH_CITATION = re.compile(r"^Art\. \d+\.\d+\.[A-Za-z0-9]+$")
+
+
 def all_articles_referenced() -> frozenset[str]:
     """Every Art./Annex referenced anywhere in the ontology.
 
-    Used by :mod:`tests.test_kb_consistency` to verify every reference
-    in the typed ontology resolves to a real entry in
-    :data:`app.data.article_existence.ARTICLE_EXISTENCE`.
+    Returns **article-level refs only** — ``"Art. 5"``, ``"Annex III"``.
+    Sub-paragraphs (e.g. ``"Art. 5.1.a"``, ``"Art. 5.1.ba"``) are filtered
+    out so only top-level statutory anchors are returned.
     """
     refs: set[str] = set()
     for practice in PRACTICE_REGISTRY.values():
-        refs.update(practice.citation)
+        refs.update(
+            ref for ref in practice.citation
+            if not _SUB_PARAGRAPH_CITATION.match(ref)
+        )
         if practice.related_high_risk_anchor:
             refs.add(practice.related_high_risk_anchor)
     for _category in ANNEX_III_REGISTRY.values():
-        # The Annex III registry doesn't carry citations on the dataclass
-        # because every category is implicitly Annex III + Art. 6.2 +
-        # Chapter III Section 2 — but we treat "Annex III" + "Art. 6" as
-        # the canonical anchor set.
         refs.update({"Annex III", "Art. 6"})
     for phase in PHASE_REGISTRY.values():
         refs.update(phase.articles)

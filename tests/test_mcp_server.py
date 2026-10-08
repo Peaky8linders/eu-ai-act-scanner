@@ -15,12 +15,16 @@ import pytest
 import scanner.kb as kb
 from scanner.mcp_server import (
     build_server,
+    tool_generate_dossier,
+    tool_generate_visual_graph,
     tool_get_article,
     tool_incident_corpus_stats,
     tool_incidents_for_article,
     tool_incidents_for_dimension,
     tool_incidents_for_threat,
     tool_list_dimensions,
+    tool_project_cross_framework,
+    tool_remediation_loop,
     tool_scan_project,
 )
 
@@ -190,6 +194,48 @@ def test_incident_corpus_stats_license() -> None:
 
 def test_incident_corpus_stats_json_serializable() -> None:
     _json_serializable(tool_incident_corpus_stats())
+
+
+# ---------------------------------------------------------------------------
+# Cross-framework, dossier, fix-loop, and visual graph tools
+# ---------------------------------------------------------------------------
+
+
+def test_tool_project_cross_framework() -> None:
+    result = tool_project_cross_framework(SAMPLE_PROJECT)
+    assert isinstance(result, dict)
+    assert "average_multi_framework_coverage_pct" in result
+    assert "frameworks" in result
+    assert len(result["frameworks"]) > 0
+    _json_serializable(result)
+
+
+def test_tool_generate_dossier(tmp_path: Path) -> None:
+    out = tmp_path / "test-dossier.json"
+    result = tool_generate_dossier(SAMPLE_PROJECT, output_path=str(out))
+    assert isinstance(result, dict)
+    assert "dossier_integrity_hash" in result
+    assert len(result["dossier_integrity_hash"]) == 64
+    assert out.is_file()
+    _json_serializable(result)
+
+
+def test_tool_remediation_loop() -> None:
+    result = tool_remediation_loop(SAMPLE_PROJECT, apply=False)
+    assert isinstance(result, dict)
+    assert "proposals" in result
+    assert "baseline_overall" in result
+    _json_serializable(result)
+
+
+def test_tool_generate_visual_graph(tmp_path: Path) -> None:
+    out = tmp_path / "test-graph.html"
+    result = tool_generate_visual_graph(SAMPLE_PROJECT, output_path=str(out))
+    assert isinstance(result, dict)
+    assert result["status"] == "success"
+    assert out.is_file()
+    assert "GRAPH_DATA" in out.read_text(encoding="utf-8")
+    _json_serializable(result)
 
 
 # ---------------------------------------------------------------------------

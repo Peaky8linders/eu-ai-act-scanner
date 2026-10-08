@@ -27,30 +27,34 @@ Map each category of obligation to its application date under Art. 113. Complian
 
 Art. 113 sets entry into force and staggered application of the regulation's provisions. The regulation was published in the Official Journal on **12 July 2024**, so entry into force was **1 August 2024** (twentieth day following publication). Application then proceeds on a staggered schedule.
 
-## Key dates
+## Key dates (Enacted under Regulation (EU) 2024/1689 & Digital Omnibus Regulation (EU) 2026/1744)
 
-| Date | What applies | Article |
+| Date | What applies | Article / Enactment |
 |---|---|---|
 | **1 Aug 2024** | Entry into force | Art. 113 |
 | **2 Feb 2025** | Chapters I (general provisions) and II (Art. 5 prohibited practices) | Art. 113(a) |
-| **2 Aug 2025** | Chapters III Sec 4 (notifying authorities, notified bodies), V (GPAI obligations — Art. 53-55), VII (governance), Chapter XII (penalties except Art. 101), Art. 78 (confidentiality) | Art. 113(b) |
-| **2 Aug 2026** | **Most of the regulation, including** Art. 6 high-risk classification, Art. 9-15 high-risk obligations, Art. 17 QMS, Art. 26-27 deployer obligations and FRIA, Art. 43 conformity assessment, Art. 50 transparency, Annex III | Art. 113 (default) |
-| **2 Aug 2027** | Art. 6(1) for AI systems that are safety components of products covered by Annex I Section A (product legislation with third-party conformity — machinery, toys, lifts, medical devices, etc.) | Art. 113(c) |
+| **2 Aug 2025** | Chapters III Sec 4 (notifying authorities, notified bodies), V (GPAI obligations — Art. 53-55), VII (governance), Chapter XII (penalties), Art. 78 (confidentiality) | Art. 113(b) |
+| **2 Aug 2026** | **Transparency obligations (Art. 50)**: Chatbot interaction disclosures (50(1)), synthetic media C2PA marking (50(2)), emotion notices (50(3)), deepfake labelling (50(4)). **IN FORCE.** | Chapter IV / Art. 113 |
+| **2 Dec 2026** | **New Prohibitions**: Art. 5(1)(ba) NCII and Art. 5(1)(bb) CSAM generation | Reg. 2026/1744 Art. 1(7) |
+| **2 Dec 2027** | **Annex III High-Risk Obligations**: Chapter III Sec 1, 2, 3 (Art. 9-15, 17, 26, 27 FRIA). _(Deferred from 2 Aug 2026 by Omnibus)._ | Reg. 2026/1744 Art. 1(40)(b) |
+| **2 Aug 2028** | **Annex I Safety-Component Products**: High-risk AI embedded in products covered by Annex I Section A (machinery, medical devices, toys). _(Deferred from 2 Aug 2027 by Omnibus)._ | Reg. 2026/1744 Art. 1(40)(b) |
 | **End 2030** | Art. 111(1) large-scale EU IT system AI systems placed on market before 2 Aug 2027 must achieve compliance by **31 Dec 2030** | Art. 111(1) |
 
 ### Quick summary by role
 
-**Providers of prohibited-category AI**: immediate stop since 2 Feb 2025.
+**Providers of prohibited-category AI**: immediate stop since 2 Feb 2025 (plus new NCII/CSAM ban applies 2 Dec 2026).
 
-**Providers of GPAI models**: Art. 53 and Art. 55 obligations applied from **2 Aug 2025**. However, GPAI models placed on the market before 2 Aug 2025 have until **2 Aug 2027** to achieve compliance per Art. 111(3).
+**Providers & Deployers of customer-facing AI / synthetic media**: Art. 50 transparency in force since **2 Aug 2026**.
 
-**Providers of high-risk AI under Annex III**: full stack of obligations from **2 Aug 2026**.
+**Providers of GPAI models**: Art. 53 and Art. 55 obligations applied from **2 Aug 2025**. Pre-existing GPAI models have until **2 Aug 2027** per Art. 111(3).
 
-**Providers of high-risk AI embedded in Annex I Section A products (Art. 6(1))**: from **2 Aug 2027** for new systems. Pre-existing systems: transitional regime per Art. 111(2).
+**Providers of high-risk AI under Annex III**: obligations deferred by Digital Omnibus to **2 Dec 2027**.
 
-**Deployers**: Art. 26 and Art. 27 (FRIA) from **2 Aug 2026**.
+**Providers of high-risk AI embedded in Annex I products (Art. 6(1))**: deferred by Digital Omnibus to **2 Aug 2028**.
 
-**National authorities**: notification and governance bodies must be in place from **2 Aug 2025**.
+**Deployers of high-risk AI**: Art. 26 and Art. 27 (FRIA) apply from **2 Dec 2027**.
+
+**National authorities**: notification and governance bodies in place since **2 Aug 2025**.
 
 ## Art. 111 — transitional provisions
 

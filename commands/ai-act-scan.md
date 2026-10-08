@@ -11,6 +11,11 @@ Run the EU AI Act compliance scanner on a local codebase and summarise the findi
 
 - `$1` (optional) — path to scan. Defaults to the current working directory.
 - `--article ARTN` — filter results to a single article (e.g. `art9`, `art15`, `art50`).
+- `--cross-framework`, `-x` — project findings onto NIST AI RMF, ISO 42001, GDPR, and OWASP.
+- `--graph [PATH]` — generate an interactive visual context graph browser (`context-graph.html`).
+- `--dossier [PATH]` — seal and export a cryptographic release dossier (`compliance-dossier.json`).
+- `--role ROLE` — scope evaluation to an explicit operator role (`provider`, `deployer`).
+- `--deep`, `--extensive` — run extensive semantic audit using your Claude Code / Codex subscription.
 
 ## Behaviour
 
@@ -32,6 +37,8 @@ Run the EU AI Act compliance scanner on a local codebase and summarise the findi
    - `components` — list of discovered components with `component_type`, `compliance_impact`, `compliance_dimensions`
    - `risk_indicators` — top 10 gap-severity findings
    - `recommendations` — prioritised remediation suggestions
+   - `cross_framework_summary` — multi-framework readiness across NIST, ISO, GDPR, OWASP
+   - `semantic_audit` — Claude Code / Codex semantic findings and cleared false positives
    - `file_findings` — per-file roll-up of findings/gaps/status
 3. **If `is_ai_system` is `false`**: do not present a compliance percentage.
    State that the project is not an AI system and is out of EU AI Act scope,
@@ -41,28 +48,29 @@ Run the EU AI Act compliance scanner on a local codebase and summarise the findi
    2. **Lowest-scoring dimensions** (bottom 3) with article references — use the `eu-ai-act-reference` skill if the user wants deeper article context
    3. **Top 3 risk indicators** verbatim from the result
    4. **Top 3 recommendations** verbatim
-   5. Offer to drill into a specific dimension, article, or file
+   5. **Interactive Context Graph**: Offer to generate or view `/ai-act-graph` to visually browse each node's gaps and recommended code patches!
+   6. **Cross-Framework Synergies**: Offer `/ai-act-cross-framework` for multi-standard compliance
 4. Never invent findings. If the scanner reports zero components, say so and suggest the project may not be an AI system or may use patterns the scanner does not yet recognise (and link to `CONTRIBUTING.md` for adding an analyzer).
 
-Note: the dedicated **`article_50_transparency`** analyzer now reports real
+Note: the dedicated **`article_50_transparency`** analyzer reports real
 findings for chatbot disclosure (Art. 50(1)), synthetic-content marking
 (50(2)), emotion/biometric exposure notices (50(3)) and deep-fake / AI-generated
 public-interest-text labelling (50(4)), under the `transparency` /
 `content_transparency` dimensions.
 
-## Mode: deterministic vs assisted (use your own Claude Code)
+## Mode: deterministic vs assisted (use your own Claude Code / Codex subscription)
 
 Read the active mode first: `python -m scanner.cli --settings`.
 
 - **deterministic** (default) — present the scanner's findings as-is. The scan is
   100% local static analysis; do not add findings the scanner did not report.
-- **assisted** — after presenting the deterministic report, use YOUR OWN
-  reasoning (you are the user's Claude Code — no API key or wrapper needed) to add
-  what the static pass cannot: read the flagged files, confirm or down-rank likely
-  false positives, spot obligations the regex missed, and ground any regulatory
-  claim with `/ai-act-ask`. Keep the deterministic scores as the objective
-  baseline and label your additions clearly as an AI semantic review — never
-  overwrite the scanner's numbers.
+- **assisted / deep** — use YOUR OWN Claude Code or Codex session (no paid API key
+  or separate subscription needed!) to add deep semantic analysis:
+  1. Inspect flagged source files and prompt templates directly.
+  2. Verify operational controls (e.g. human approval circuit breakers in agent tool calls).
+  3. Clear static false positives where custom implementations already satisfy requirements.
+  4. Generate context-aware code diffs and test cases that solve gaps cleanly.
+  Keep the deterministic scores as the objective baseline and label semantic additions clearly.
 
 ## Example
 

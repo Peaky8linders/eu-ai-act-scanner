@@ -36,9 +36,11 @@ import os
 import re
 import urllib.error
 import urllib.request
+from pathlib import Path
+from typing import Any
 
 import structlog
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 logger = structlog.get_logger(__name__)
 
@@ -351,3 +353,191 @@ def bridge_health(timeout: float = 4.0) -> dict:
     except Exception as exc:  # noqa: BLE001 — health probe must never raise
         logger.debug("llm_bridge_health_error", error=str(exc)[:120])
         return {"reachable": False, "status": None, "claude_max": False}
+
+
+# ─── Extensive Semantic Analysis (Subscription-Powered) ────────────────────
+
+
+class SemanticFinding(BaseModel):
+    """A semantically verified compliance gap or risk in audited code."""
+
+    id: str
+    dimension: str
+    article: str
+    file_path: str
+    line_number: int | None = None
+    severity: str = "high"  # critical | high | medium | low
+    title: str
+    description: str
+    evidence_excerpt: str = ""
+    remediation_advice: str = ""
+    mitigated: bool = False
+
+
+class SemanticAuditResult(BaseModel):
+    """Outcome of an extensive semantic compliance audit."""
+
+    project_name: str
+    mode: str = "assisted"
+    total_findings: int = 0
+    findings: list[SemanticFinding] = Field(default_factory=list)
+    cleared_false_positives: list[str] = Field(default_factory=list)
+    summary: str = ""
+    error: str | None = None
+
+
+def semantic_audit_project(
+    root: Path | str,
+    scan_result: Any,
+    sample_files: dict[str, str] | None = None,
+    max_files: int = 5,
+) -> SemanticAuditResult:
+    """Run an extensive semantic compliance audit on a project using Claude / Codex.
+
+    Leverages the user's active Claude Code or Codex subscription (via local wrapper
+    or bridge) to perform deep semantic code inspection that static regex cannot do:
+    - Verifies human oversight gates (Art. 14) are real and non-bypassable.
+    - Inspects Art. 50 disclosure messages and C2PA synthetic media marking.
+    - Detects prohibited practices (Art. 5(1)(a)-(h) and Reg 2026/1744 (ba)/(bb)).
+    - Audits multi-agent tool execution bounds and lethal trifecta risks.
+    - Identifies and eliminates static false positives where custom code already complies.
+    """
+    project_name = getattr(scan_result, "project_name", "Project")
+    if not is_enabled():
+        return SemanticAuditResult(
+            project_name=project_name,
+            summary="Deterministic static scan baseline. Enable assisted mode with /ai-act-settings to activate subscription-powered semantic audit.",
+            error="LLM bridge is disabled",
+        )
+
+    # Collect key files to audit
+    files_to_send: dict[str, str] = {}
+    if sample_files:
+        files_to_send = dict(list(sample_files.items())[:max_files])
+    else:
+        root_path = Path(root).resolve()
+        # Pick top files from findings or python/ts files
+        file_candidates: list[str] = []
+        file_findings = getattr(scan_result, "file_findings", [])
+        for ff in file_findings:
+            if getattr(ff, "status", "") in ("gap", "partial"):
+                file_candidates.append(ff.file_path)
+
+        for rel_path in file_candidates[:max_files]:
+            fp = root_path / rel_path
+            if fp.is_file():
+                try:
+                    content = fp.read_text(encoding="utf-8", errors="replace")
+                    if len(content) < 50_000:
+                        files_to_send[rel_path] = content
+                except OSError:
+                    continue
+
+    if not files_to_send:
+        return SemanticAuditResult(
+            project_name=project_name,
+            summary="No candidate source files found for semantic review.",
+        )
+
+    system_prompt = (
+        "You are an expert EU AI Act compliance auditor and AI safety engineer. "
+        "Analyze the provided source code for regulatory compliance under Regulation (EU) 2024/1689 "
+        "and Regulation (EU) 2026/1744 (Digital Omnibus on AI). "
+        "Evaluate specifically: \n"
+        "1. Article 14 Human Oversight: Are human intervention and kill-switch capabilities operational?\n"
+        "2. Article 50 Transparency: Are AI interaction disclosures and synthetic content markings real?\n"
+        "3. Article 5 Prohibited Practices: Are there manipulative patterns, biometric profiling, or NCII/CSAM generation?\n"
+        "4. Article 12 Logging: Are prompts, responses, and session trace IDs logged with audit retention?\n"
+        "Return a strictly valid JSON object with keys: \n"
+        "- 'summary': brief overview of the semantic findings\n"
+        "- 'cleared_false_positives': list of file paths where static gaps were false alarms\n"
+        "- 'findings': list of objects each with {'id', 'dimension', 'article', 'file_path', 'line_number', 'severity', 'title', 'description', 'evidence_excerpt', 'remediation_advice'}"
+    )
+
+    user_prompt = (
+        f"Project: {project_name}\n"
+        f"Scanned files to audit:\n\n"
+        + "\n\n".join(
+            f"--- File: {path} ---\n{content[:6000]}"
+            for path, content in files_to_send.items()
+        )
+    )
+
+    parsed_json, result = complete_json(system_prompt, user_prompt, max_tokens=2000)
+    if not parsed_json or result.error:
+        return SemanticAuditResult(
+            project_name=project_name,
+            summary="Semantic review could not complete cleanly.",
+            error=result.error or "JSON parse failed",
+        )
+
+    findings: list[SemanticFinding] = []
+    for f in parsed_json.get("findings", []):
+        if isinstance(f, dict):
+            findings.append(
+                SemanticFinding(
+                    id=str(f.get("id", f"sem-{len(findings)+1}")),
+                    dimension=str(f.get("dimension", "risk_mgmt")),
+                    article=str(f.get("article", "Art. 9")),
+                    file_path=str(f.get("file_path", "")),
+                    line_number=f.get("line_number"),
+                    severity=str(f.get("severity", "high")),
+                    title=str(f.get("title", "Semantic Compliance Finding")),
+                    description=str(f.get("description", "")),
+                    evidence_excerpt=str(f.get("evidence_excerpt", "")),
+                    remediation_advice=str(f.get("remediation_advice", "")),
+                )
+            )
+
+    return SemanticAuditResult(
+        project_name=project_name,
+        total_findings=len(findings),
+        findings=findings,
+        cleared_false_positives=parsed_json.get("cleared_false_positives", []),
+        summary=str(parsed_json.get("summary", "Extensive semantic audit complete.")),
+    )
+
+
+def semantic_draft_remediation(
+    dim_id: str,
+    gap_title: str,
+    file_path: str,
+    existing_code: str,
+    grounded_obligation: str = "",
+) -> dict:
+    """Use Claude or Codex to draft a context-aware remediation patch for a specific file.
+
+    Returns a dict with {'patch_code': str, 'explanation': str, 'test_code': str}.
+    """
+    if not is_enabled():
+        return {
+            "patch_code": "",
+            "explanation": "LLM bridge disabled.",
+            "test_code": "",
+        }
+
+    system_prompt = (
+        "You are an expert AI engineer remediating EU AI Act compliance gaps. "
+        "Given the existing code and an identified compliance gap, output a production-ready "
+        "patch that directly solves the gap without breaking existing functionality. "
+        "Return a strictly valid JSON object with keys: "
+        "- 'patch_code': the code to insert or replace\n"
+        "- 'explanation': why this satisfies the EU AI Act obligation\n"
+        "- 'test_code': a pytest test function verifying this compliance control"
+    )
+
+    user_prompt = (
+        f"Dimension: {dim_id}\n"
+        f"Gap Title: {gap_title}\n"
+        f"File Path: {file_path}\n"
+        f"Grounded Obligation:\n{grounded_obligation}\n\n"
+        f"Existing Code:\n{existing_code[:8000]}\n"
+    )
+
+    parsed_json, _ = complete_json(system_prompt, user_prompt, max_tokens=1500)
+    return parsed_json or {
+        "patch_code": "",
+        "explanation": "Could not generate patch.",
+        "test_code": "",
+    }
+

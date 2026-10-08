@@ -81,3 +81,9 @@ class ScanResult(BaseModel):
     # (provider first). Always contains at least one role — a codebase with no
     # detectable signal defaults to "deployer" (the most conservative role).
     inferred_roles: list[str] = Field(default_factory=list)
+    # Explicitly declared or active operator role (e.g. 'provider', 'deployer').
+    active_role: str | None = None
+    # Cross-framework readiness mapping (NIST AI RMF, ISO 42001, GDPR, OWASP).
+    cross_framework_summary: dict[str, float] = Field(default_factory=dict)
+    # Extensive semantic audit findings (subscription-powered via Claude Code / Codex).
+    semantic_audit: dict | None = None

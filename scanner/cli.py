@@ -70,6 +70,10 @@ def _format_markdown(result, top_gaps: int = 10) -> str:
         f"- **Overall compliance**: **{result.overall_compliance_pct}%**",
         f"- **Languages**: {', '.join(f'{k} ({v})' for k, v in list(result.languages.items())[:5]) or 'none detected'}",
         f"- **Inferred operator role(s)**: {', '.join(result.inferred_roles) or 'none detected'}",
+    ]
+    if getattr(result, "active_role", None):
+        lines.append(f"- **Active operator role**: **{result.active_role}**")
+    lines += [
         "",
         "## Compliance by dimension",
         "",
@@ -81,6 +85,38 @@ def _format_markdown(result, top_gaps: int = 10) -> str:
         label = dim.label if dim else dim_id
         article = dim.article if dim else "—"
         lines.append(f"| {label} | {article} | {score:.1f}% |")
+
+    if getattr(result, "cross_framework_summary", None):
+        lines += [
+            "",
+            "## Cross-framework readiness",
+            "",
+            "| Target Framework | Multi-Framework Coverage |",
+            "|---|---|",
+        ]
+        for fw_name, cov in sorted(result.cross_framework_summary.items(), key=lambda x: -x[1]):
+            lines.append(f"| **{fw_name}** | **{cov:.1f}%** |")
+
+    sem = getattr(result, "semantic_audit", None)
+    if sem and sem.get("findings"):
+        lines += [
+            "",
+            "## Semantic audit (Claude Code / Codex)",
+            "",
+            f"_{sem.get('summary', '')}_",
+            "",
+        ]
+        for f in sem.get("findings", [])[:top_gaps]:
+            sev = f.get("severity", "high").upper()
+            lines.append(f"- **[{sev}] {f.get('title')}** ({f.get('article')}) in `{f.get('file_path')}`")
+            if f.get("description"):
+                lines.append(f"  {f.get('description')}")
+            if f.get("remediation_advice"):
+                lines.append(f"  _Remediation:_ {f.get('remediation_advice')}")
+        if sem.get("cleared_false_positives"):
+            lines += ["", "### Cleared static false positives:"]
+            for fp in sem["cleared_false_positives"]:
+                lines.append(f"- `{fp}` (semantic analysis verified existing controls)")
 
     if result.risk_indicators:
         lines += ["", "## Risk indicators", ""]
@@ -276,6 +312,46 @@ def main(argv: list[str] | None = None) -> int:
         help="Override the mode for this invocation (affects --ask synthesis).",
     )
     parser.add_argument(
+        "--cross-framework", "-x",
+        action="store_true",
+        help="Project findings across NIST AI RMF, ISO 42001, GDPR, OWASP LLM/Agentic, SOC 2.",
+    )
+    parser.add_argument(
+        "--role",
+        choices=("provider", "deployer", "gpai_provider", "importer", "distributor"),
+        help="Explicitly evaluate codebase under a specific EU AI Act operator role.",
+    )
+    parser.add_argument(
+        "--deep", "--extensive",
+        dest="deep",
+        action="store_true",
+        help="Perform extensive semantic audit via Claude Code or Codex bridge.",
+    )
+    parser.add_argument(
+        "--dossier",
+        nargs="?",
+        const="compliance-dossier.json",
+        metavar="FILE",
+        help="Generate a cryptographic, tamper-evident compliance release dossier (default: compliance-dossier.json).",
+    )
+    parser.add_argument(
+        "--fix",
+        action="store_true",
+        help="Run the autonomous scan-fix remediation pipeline.",
+    )
+    parser.add_argument(
+        "--apply",
+        action="store_true",
+        help="Apply remediation patches to disk (dry-run preview by default).",
+    )
+    parser.add_argument(
+        "--graph",
+        nargs="?",
+        const="context-graph.html",
+        metavar="FILE",
+        help="Generate an interactive context graph visual with node-by-node gaps and recommended fixes (default: context-graph.html).",
+    )
+    parser.add_argument(
         "--version",
         action="version",
         version=f"%(prog)s {__version__}",
@@ -348,11 +424,71 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: path does not exist: {path}", file=sys.stderr)
         return 2
 
+    # Remediation pipeline execution
+    if args.fix:
+        from scanner.fix_loop import run_fix_loop
+        fix_res = run_fix_loop(path, apply=args.apply)
+        if args.json:
+            print(fix_res.model_dump_json(indent=2))
+        else:
+            lines = [
+                f"# EU AI Act Remediation — {fix_res.project_name}",
+                "",
+                f"- **Iterations**: {fix_res.iterations}",
+                f"- **Baseline overall**: {fix_res.baseline_overall:.1f}%",
+                f"- **Final overall**: {fix_res.final_overall:.1f}% (+{fix_res.overall_delta:.1f}%)",
+                f"- **Fixes applied**: {len(fix_res.applied)}",
+                f"- **Regressions avoided**: {len(fix_res.skipped_regressions)}",
+                "",
+                "## Proposals",
+                "",
+            ]
+            for p in fix_res.proposals:
+                lines.append(f"- **[{p.fix_kind.upper()}] {p.title}** (`{p.target_path}` for {p.dimension} / {p.article})")
+                lines.append(f"  {p.rationale}")
+            print("\n".join(lines))
+        return 0
+
     try:
-        result = scan_project(path, project_name=args.name)
+        result = scan_project(
+            path,
+            project_name=args.name,
+            role=args.role,
+            deep=args.deep,
+            cross_framework=args.cross_framework,
+        )
     except ValueError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
+
+    # Cryptographic dossier generation
+    if args.dossier:
+        from scanner.dossier import generate_dossier
+        dossier = generate_dossier(result, path)
+        dossier_path = dossier.export_json(args.dossier)
+        if not args.json and not args.markdown:
+            print(
+                f"Sealed cryptographic compliance dossier written to: {dossier_path} "
+                f"(Integrity SHA-256: {dossier.dossier_integrity_hash[:16]}...)"
+            )
+            return 0
+        else:
+            print(
+                f"Sealed cryptographic compliance dossier written to: {dossier_path} "
+                f"(Integrity SHA-256: {dossier.dossier_integrity_hash[:16]}...)",
+                file=sys.stderr,
+            )
+
+    # Interactive context graph visual generation
+    if args.graph:
+        from scanner.visual_graph import generate_visual_graph
+        graph_path = Path(args.graph)
+        generate_visual_graph(result, output_path=graph_path, root_path=path)
+        if not args.json and not args.markdown:
+            print(f"Interactive context graph visual written to: {graph_path}")
+            return 0
+        else:
+            print(f"Interactive context graph visual written to: {graph_path}", file=sys.stderr)
 
     if args.article:
         payload = _filter_by_article(result, args.article)
@@ -360,7 +496,20 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.markdown:
-        print(_format_markdown(result))
+        md = _format_markdown(result)
+        if args.cross_framework and result.is_ai_system:
+            from scanner.cross_framework import project_scan_to_frameworks
+            cross_proj = project_scan_to_frameworks(result)
+            md += "\n\n" + cross_proj.format_markdown()
+        print(md)
+        return 0
+
+    if args.cross_framework and result.is_ai_system:
+        from scanner.cross_framework import project_scan_to_frameworks
+        cross_proj = project_scan_to_frameworks(result)
+        out = result.model_dump()
+        out["cross_framework_projection"] = cross_proj.model_dump()
+        print(json.dumps(out, indent=2, default=str))
         return 0
 
     print(result.model_dump_json(indent=2))

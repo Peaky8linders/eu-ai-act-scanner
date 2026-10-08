@@ -11,8 +11,13 @@ Quick start:
     print(result.overall_compliance_pct)
 """
 
-__version__ = "0.8.0"
+__version__ = "0.9.0"
 
+from scanner.cross_framework import (
+    CrossFrameworkScanProjection,
+    project_scan_to_frameworks,
+)
+from scanner.dossier import ComplianceDossier, generate_dossier
 from scanner.fix_loop import FixLoopResult, FixProposal, run_fix_loop
 from scanner.incident_grounding import (
     incident_corpus_stats,
@@ -25,6 +30,7 @@ from scanner.llm_bridge import bridge_config, bridge_health
 from scanner.models import ArchitectureNode, DiscoveredComponent, FileFinding, ScanResult
 from scanner.obligations import RoleProfile, infer_role_profile, infer_roles
 from scanner.orchestrator import scan_project
+from scanner.visual_graph import build_graph_data, generate_visual_graph
 
 __all__ = [
     "__version__",
@@ -33,6 +39,15 @@ __all__ = [
     "DiscoveredComponent",
     "ArchitectureNode",
     "FileFinding",
+    # Cross-framework analysis (v0.9)
+    "project_scan_to_frameworks",
+    "CrossFrameworkScanProjection",
+    # Cryptographic compliance release dossier (v0.9)
+    "generate_dossier",
+    "ComplianceDossier",
+    # Interactive context graph visual (v0.9)
+    "generate_visual_graph",
+    "build_graph_data",
     # Incident grounding (v0.4)
     "incidents_for_dimension",
     "incidents_for_article",
