@@ -329,7 +329,7 @@ def scan_project(
             file_findings=file_findings,
             is_ai_system=is_ai_system,
         )
-        audit_res = semantic_audit_project(temp_res, root=root_path)
+        audit_res = semantic_audit_project(root_path, temp_res)
         semantic_audit_dict = audit_res.model_dump()
 
     return ScanResult(
