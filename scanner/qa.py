@@ -33,14 +33,19 @@ from pydantic import BaseModel, Field
 
 from scanner import grounding, llm_bridge
 from scanner.data.agentic_taxonomy import COMPOUND_RISK_TYPES, THREAT_CATEGORIES
-from scanner.data.official_eu_ai_act import OFFICIAL_ARTICLE_TEXT
+from scanner.data.official_eu_ai_act import (
+    OFFICIAL_ANNEX_TITLES,
+    OFFICIAL_ARTICLE_TEXT,
+    OFFICIAL_ARTICLE_TITLES,
+)
 from scanner.kb import ARTICLE_TO_DIMENSIONS, DIMENSIONS
 
 _TOKEN_RE = re.compile(r"[a-z0-9]+")
 _STOP = frozenset(
     "the a an and or of to in on for with by is are be that this it as at from "
     "must shall may can will should would which who whom what when where how why "
-    "into under over per any all its their our your his her they them we you i".split()
+    "into under over per any all its their our your his her they them we you i "
+    "do does did doing say says said about also between".split()
 )
 
 # Recognise an explicit article / annex reference in the question so a direct
@@ -103,9 +108,11 @@ def _build_corpus() -> list[_Doc]:
     # 1. Verbatim article / annex text (richest grounding).
     for key, text in OFFICIAL_ARTICLE_TEXT.items():
         ref = _article_key_to_canonical(key)
-        entry = merged.setdefault(ref, {"title": key, "verbatim": "", "paraphrase": ""})
+        sub_title = OFFICIAL_ARTICLE_TITLES.get(key) or OFFICIAL_ANNEX_TITLES.get(key)
+        full_title = f"{key} — {sub_title}" if sub_title else key
+        entry = merged.setdefault(ref, {"title": full_title, "verbatim": "", "paraphrase": ""})
         entry["verbatim"] = text
-        entry["title"] = key
+        entry["title"] = full_title
 
     # 2. Concise obligation paraphrases (focused, the guard's token pool).
     for ref, text in grounding.OBLIGATION_TEXT.items():
@@ -123,25 +130,25 @@ def _build_corpus() -> list[_Doc]:
         ))
 
     # 3. Compound-risk taxonomy + threat categories (agentic Q&A).
-    for entry in COMPOUND_RISK_TYPES:
+    for risk_entry in COMPOUND_RISK_TYPES:
         body = " ".join([
-            entry.get("summary", ""),
-            " ".join(entry.get("failure_modes", [])),
-            " ".join(entry.get("mitigation_pattern", [])),
+            risk_entry.get("summary", ""),
+            " ".join(risk_entry.get("failure_modes", [])),
+            " ".join(risk_entry.get("mitigation_pattern", [])),
         ]).strip()
-        label = entry.get("label", entry.get("id", "risk"))
+        label = risk_entry.get("label", risk_entry.get("id", "risk"))
         docs.append(_Doc(
             ref=f"Risk: {label}", title=f"Compound risk — {label}", body=body,
-            cite_refs=tuple(entry.get("article_refs", [])), kind="taxonomy",
-            tokens=_tokenize(f"{label} {body} " + " ".join(entry.get("article_refs", []))),
+            cite_refs=tuple(risk_entry.get("article_refs", [])), kind="taxonomy",
+            tokens=_tokenize(f"{label} {body} " + " ".join(risk_entry.get("article_refs", []))),
         ))
-    for entry in THREAT_CATEGORIES:
-        body = entry.get("description", "")
-        label = entry.get("label", entry.get("id", "threat"))
+    for threat_entry in THREAT_CATEGORIES:
+        body = threat_entry.get("description", "")
+        label = threat_entry.get("label", threat_entry.get("id", "threat"))
         docs.append(_Doc(
             ref=f"Threat: {label}", title=f"Threat category — {label}", body=body,
-            cite_refs=tuple(entry.get("article_refs", [])), kind="taxonomy",
-            tokens=_tokenize(f"{label} {body} " + " ".join(entry.get("article_refs", []))),
+            cite_refs=tuple(threat_entry.get("article_refs", [])), kind="taxonomy",
+            tokens=_tokenize(f"{label} {body} " + " ".join(threat_entry.get("article_refs", []))),
         ))
     return docs
 
@@ -153,19 +160,52 @@ def _corpus() -> list[_Doc]:
     return _CORPUS
 
 
-def _boosted_refs(question: str) -> set[str]:
-    """Canonical refs explicitly named in the question (heavy retrieval boost)."""
-    refs: set[str] = set()
+def _boosted_refs(question: str) -> dict[str, float]:
+    """Canonical refs explicitly named or mapped, with tiered boost weights."""
+    boosts: dict[str, float] = {}
     for m in _ARTICLE_Q_RE.finditer(question):
-        refs.add(f"Art. {int(m.group(1))}")
+        boosts[f"Art. {int(m.group(1))}"] = 200.0
     for m in _PARAGRAPH_Q_RE.finditer(question):
-        refs.add(f"Art. {int(m.group(1))}")
+        boosts[f"Art. {int(m.group(1))}"] = 200.0
     for m in _ANNEX_Q_RE.finditer(question):
         raw = m.group(1).upper()
         if raw.isdigit() and int(raw) in _ROMAN:
             raw = _ROMAN[int(raw)]
-        refs.add(f"Annex {raw}")
-    return refs
+        boosts[f"Annex {raw}"] = 200.0
+
+    q_lower = question.lower()
+    if re.search(r"\b(importers?)\b", q_lower):
+        boosts.setdefault("Art. 23", 100.0)
+        boosts.setdefault("Art. 3", 50.0)
+    if re.search(r"\b(distributors?)\b", q_lower):
+        boosts.setdefault("Art. 24", 100.0)
+        boosts.setdefault("Art. 3", 50.0)
+    if re.search(r"\b(deployers?)\b", q_lower):
+        boosts.setdefault("Art. 26", 100.0)
+        boosts.setdefault("Art. 27", 80.0)
+        boosts.setdefault("Art. 3", 50.0)
+    if re.search(r"\b(authori[sz]ed\s+representatives?)\b", q_lower):
+        boosts.setdefault("Art. 22", 100.0)
+        boosts.setdefault("Art. 54", 90.0)
+        boosts.setdefault("Art. 3", 50.0)
+    if re.search(r"\b(product\s+manufacturers?)\b", q_lower):
+        boosts.setdefault("Art. 25", 100.0)
+        boosts.setdefault("Art. 16", 90.0)
+        boosts.setdefault("Art. 3", 50.0)
+    if re.search(r"\b(gpai|general[\s-]purpose\s+ai)\b", q_lower):
+        boosts.setdefault("Art. 53", 100.0)
+        boosts.setdefault("Art. 51", 90.0)
+    if re.search(r"\b(prohibited|unacceptable\s+risk)\b", q_lower):
+        boosts.setdefault("Art. 5", 100.0)
+    if re.search(r"\b(deepfake|synthetic\s+media|c2pa)\b", q_lower):
+        boosts.setdefault("Art. 50", 100.0)
+    if re.search(r"\b(post[\s-]market\s+monitoring)\b", q_lower):
+        boosts.setdefault("Art. 72", 100.0)
+    if re.search(r"\b(serious\s+incidents?)\b", q_lower):
+        boosts.setdefault("Art. 73", 100.0)
+    if re.search(r"\b(market\s+surveillance)\b", q_lower):
+        boosts.setdefault("Art. 74", 100.0)
+    return boosts
 
 
 def _excerpt(doc: _Doc, limit: int = 360) -> str:
@@ -242,8 +282,7 @@ def answer_question(
     scored: list[tuple[_Doc, float]] = []
     for doc in _corpus():
         score = float(len(q_tokens & doc.tokens))
-        if doc.ref in boosted:
-            score += 100.0
+        score += boosted.get(doc.ref, 0.0)
         if score > 0:
             scored.append((doc, score))
 
