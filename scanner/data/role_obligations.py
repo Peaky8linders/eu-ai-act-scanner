@@ -102,7 +102,12 @@ ROLE_OBLIGATIONS: list[RoleObligation] = [
             "Art. 13",
             "Art. 14",
             "Art. 15",
+            "Art. 16",
             "Art. 17",
+            "Art. 18",
+            "Art. 19",
+            "Art. 20",
+            "Art. 21",
             "Art. 25(4)",
             "Art. 43",
             "Art. 47",
@@ -144,12 +149,14 @@ ROLE_OBLIGATIONS: list[RoleObligation] = [
             "of use in accordance with instructions, Art. 27 FRIA where high-risk "
             "public-sector + selected private-sector contexts apply, Art. 50 "
             "downstream transparency to affected persons, Art. 26(9) DPIA "
-            "input/output coordination, Art. 26(11) human oversight, Art. 26(7) "
-            "input data appropriateness, Art. 26(12) decision-record preservation."
+            "coordination, Art. 26(2) human-oversight assignment, Art. 26(4) "
+            "input data relevance, Art. 26(5) monitoring, Art. 26(6) log "
+            "retention, Art. 26(11) informing affected natural persons, "
+            "Art. 26(12) cooperation with authorities."
         ),
         "source": "Art. 3(4) + Art. 26 + Art. 27",
         "paper_lines": "1010-1014, 1738-1744",
-        "primary_articles": ["Art. 26", "Art. 27", "Art. 50", "Art. 72"],
+        "primary_articles": ["Art. 26", "Art. 27", "Art. 50"],
         "secondary_articles": ["Art. 4", "Art. 14", "Art. 13"],
         "kb_dimensions": [
             "ai_literacy",
@@ -172,13 +179,13 @@ ROLE_OBLIGATIONS: list[RoleObligation] = [
     {
         "id": ROLE_IMPORTER,
         "label": "Importer",
-        "art_3_definition": "Art. 3(7) — places on the EU market an AI system bearing the name or trademark of a non-EU provider.",
+        "art_3_definition": "Art. 3(6) — places on the EU market an AI system bearing the name or trademark of a non-EU provider.",
         "summary": (
             "Verifies provider conformity-assessment carried out, technical "
             "documentation exists, CE marking affixed, EU declaration of "
             "conformity drawn up; cooperates with market surveillance authorities."
         ),
-        "source": "Art. 3(7) + Art. 23",
+        "source": "Art. 3(6) + Art. 23",
         "paper_lines": "1010-1014",
         "primary_articles": ["Art. 23"],
         "secondary_articles": ["Art. 25", "Art. 47", "Art. 48"],
@@ -191,12 +198,12 @@ ROLE_OBLIGATIONS: list[RoleObligation] = [
     {
         "id": ROLE_DISTRIBUTOR,
         "label": "Distributor",
-        "art_3_definition": "Art. 3(8) — makes an AI system available on the EU market without affecting its properties (and is neither importer nor provider).",
+        "art_3_definition": "Art. 3(7) — makes an AI system available on the EU market without affecting its properties (and is neither importer nor provider).",
         "summary": (
             "Verifies CE marking + required documentation accompanies the system "
             "and storage/transport conditions don't compromise compliance."
         ),
-        "source": "Art. 3(8) + Art. 24",
+        "source": "Art. 3(7) + Art. 24",
         "paper_lines": "1010-1014",
         "primary_articles": ["Art. 24"],
         "secondary_articles": ["Art. 25"],
@@ -209,12 +216,12 @@ ROLE_OBLIGATIONS: list[RoleObligation] = [
     {
         "id": ROLE_PRODUCT_MANUFACTURER,
         "label": "Product Manufacturer",
-        "art_3_definition": "Art. 25(1) — integrates an AI system into a product placed on the market under the manufacturer's name or trademark; treated as provider.",
+        "art_3_definition": "Art. 25(3) — integrates an AI system into a product placed on the market under the manufacturer's name or trademark; treated as provider.",
         "summary": (
             "Inherits the full provider obligation set when integrating a "
             "high-risk AI system into a product."
         ),
-        "source": "Art. 25(1)",
+        "source": "Art. 25(3)",
         "paper_lines": "407-410, 1606-1611",
         "primary_articles": [
             "Art. 9",
@@ -224,6 +231,7 @@ ROLE_OBLIGATIONS: list[RoleObligation] = [
             "Art. 13",
             "Art. 14",
             "Art. 15",
+            "Art. 16",
             "Art. 17",
             "Art. 43",
             "Art. 47",
@@ -258,7 +266,7 @@ ROLE_OBLIGATIONS: list[RoleObligation] = [
         ),
         "source": "Art. 22",
         "paper_lines": "1011, 1082-1085",
-        "primary_articles": ["Art. 22"],
+        "primary_articles": ["Art. 22", "Art. 54"],
         "secondary_articles": ["Art. 47", "Art. 48", "Art. 74"],
         "kb_dimensions": ["tech_docs", "quality_management", "supply_chain"],
         "flips_provider_under": [],
@@ -280,7 +288,7 @@ ROLE_OBLIGATIONS: list[RoleObligation] = [
         "source": "Chapter V (Art. 51-56)",
         "paper_lines": "433-462, 2091-2094",
         "primary_articles": ["Art. 53", "Art. 56"],
-        "secondary_articles": ["Art. 51", "Art. 52", "Art. 95"],
+        "secondary_articles": ["Art. 51", "Art. 52", "Art. 54", "Art. 95"],
         "kb_dimensions": ["gpai", "tech_docs", "transparency"],
         "flips_provider_under": [
             ">1/3 original training compute fine-tuning crosses the threshold from deployer → provider (lines 455-457, 1621-1624).",
@@ -326,7 +334,7 @@ ROLE_OBLIGATIONS: list[RoleObligation] = [
         ),
         "source": "Art. 2(1)(c) + Art. 74 + MSR Reg. (EU) 2019/1020 Art. 4 + GDPR Art. 3(2)",
         "paper_lines": "1027-1075, 1196-1200, 2343-2389",
-        "primary_articles": ["Art. 22", "Art. 74"],
+        "primary_articles": ["Art. 22", "Art. 54", "Art. 74"],
         "secondary_articles": ["Art. 3", "Art. 47", "Art. 48"],
         "kb_dimensions": ["supply_chain", "quality_management", "tech_docs"],
         "flips_provider_under": [],

@@ -405,6 +405,59 @@ def obligations_for_finding(finding: Finding) -> dict:
     }
 
 
+def compute_role_scope(
+    roles: list[str],
+    compliance_scores: dict[str, float],
+    *,
+    explicit: bool,
+) -> dict:
+    """Map effective operator role(s) to the obligations and dimensions they owe.
+
+    A dimension is *owed* when it is listed in a role's registry ``kb_dimensions``
+    or any article that feeds it (via :func:`_dimension_to_articles`) is owed by
+    one of ``roles``. Dimensions with
+    no article mapping are conservatively treated as owed. The result is
+    informational unless ``explicit`` is True, in which case the caller may drop
+    ``out_of_scope_dimensions`` from its recommendations.
+
+    Pure and deterministic.
+    """
+    from scanner.data.role_obligations import (
+        applies_to_role,
+        articles_for_role,
+        get_role_obligation,
+    )
+
+    registry_dims: set[str] = set()
+    for role_id in roles:
+        entry = get_role_obligation(role_id)
+        if entry:
+            registry_dims.update(entry.get("kb_dimensions", []))
+    articles: list[str] = []
+    for role_id in roles:
+        for ref in articles_for_role(role_id):
+            if ref not in articles:
+                articles.append(ref)
+    dim_map = _dimension_to_articles()
+    owed: list[str] = []
+    out_of_scope: list[str] = []
+    for dim_id in compliance_scores:
+        dim_articles = dim_map.get(dim_id, ())
+        if not dim_articles or dim_id in registry_dims or any(
+            applies_to_role(ref, r) for ref in dim_articles for r in roles
+        ):
+            owed.append(dim_id)
+        else:
+            out_of_scope.append(dim_id)
+    return {
+        "roles": list(roles),
+        "source": "explicit" if explicit else "inferred",
+        "articles": sorted(articles, key=_article_sort_key),
+        "owed_dimensions": owed,
+        "out_of_scope_dimensions": out_of_scope,
+    }
+
+
 def enrich_findings(
     findings: list[Finding], ctx: AnalyzerContext
 ) -> list[Finding]:

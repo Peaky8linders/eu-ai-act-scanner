@@ -35,6 +35,7 @@ for _stream in (sys.stdout, sys.stderr):
 
 from scanner import __version__, scan_project  # noqa: E402
 from scanner.data.incident_corpus import get_incident  # noqa: E402
+from scanner.data.role_obligations import CANONICAL_ROLE_IDS  # noqa: E402
 from scanner.incident_grounding import (  # noqa: E402
     incidents_for_article,
     incidents_for_dimension,
@@ -73,6 +74,17 @@ def _format_markdown(result, top_gaps: int = 10) -> str:
     ]
     if getattr(result, "active_role", None):
         lines.append(f"- **Active operator role**: **{result.active_role}**")
+    scope = getattr(result, "role_scope", None)
+    if scope:
+        lines.append(
+            f"- **Role-scoped obligations ({scope['source']})**: "
+            + ", ".join(scope["articles"])
+        )
+        if scope["out_of_scope_dimensions"]:
+            lines.append(
+                "- **Dimensions owed only by other roles**: "
+                + ", ".join(scope["out_of_scope_dimensions"])
+            )
     lines += [
         "",
         "## Compliance by dimension",
@@ -318,7 +330,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--role",
-        choices=("provider", "deployer", "gpai_provider", "importer", "distributor"),
+        choices=CANONICAL_ROLE_IDS,
         help="Explicitly evaluate codebase under a specific EU AI Act operator role.",
     )
     parser.add_argument(

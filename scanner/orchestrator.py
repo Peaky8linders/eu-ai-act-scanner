@@ -80,13 +80,20 @@ def scan_project(
     Args:
         root: Path to the project root directory.
         project_name: Display name. Defaults to the directory name.
-        role: Explicit operator role ('provider', 'deployer', 'importer', 'distributor').
+        role: Explicit operator role (any id in scanner.data.role_obligations.CANONICAL_ROLE_IDS);
+            scopes recommendations to the dimensions that role owes.
         deep: Run extensive semantic audit using Claude Code or Codex.
         cross_framework: Project findings across NIST AI RMF, ISO 42001, GDPR, OWASP.
 
     Returns:
         ScanResult with architecture, compliance scores, findings, and cross-framework projections.
     """
+    if role is not None:
+        from scanner.data.role_obligations import CANONICAL_ROLE_IDS
+        if role not in CANONICAL_ROLE_IDS:
+            raise ValueError(
+                f"Unknown operator role {role!r}; expected one of {', '.join(CANONICAL_ROLE_IDS)}"
+            )
     root_path = Path(root).resolve()
     if not root_path.is_dir():
         raise ValueError(f"Not a directory: {root_path}")
@@ -269,8 +276,27 @@ def scan_project(
                 risk_indicators.append(f.title)
         risk_indicators = risk_indicators[:10]
 
+    # Role determination: an explicit role scopes obligations; otherwise the
+    # inferred role(s) are only reported (never used to hide gaps). The
+    # extraterritorial role is a modifier layered on the inferred core roles.
+    role_scope: dict = {}
+    if is_ai_system:
+        from scanner.data.role_obligations import is_extraterritorial_modifier
+        if role and not is_extraterritorial_modifier(role):
+            effective_roles = [role]
+        elif role:
+            effective_roles = list(dict.fromkeys([*inferred_roles, role]))
+        else:
+            effective_roles = list(inferred_roles)
+        role_scope = obligations.compute_role_scope(
+            effective_roles, compliance_scores, explicit=bool(role),
+        )
+    deferred_dims = set(role_scope.get("out_of_scope_dimensions", [])) if role else set()
+
     recommendations: list[str] = []
     for dim_id, score in sorted(compliance_scores.items(), key=lambda x: x[1]):
+        if dim_id in deferred_dims:
+            continue
         if score < 30:
             recommendations.append(
                 f"Critical gap in {dim_id}: strengthen evidence before deployment"
@@ -353,6 +379,7 @@ def scan_project(
         incident_grounding=incident_grounding_map,
         inferred_roles=inferred_roles,
         active_role=role,
+        role_scope=role_scope,
         cross_framework_summary=cross_framework_summary,
         semantic_audit=semantic_audit_dict,
     )
