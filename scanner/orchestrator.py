@@ -67,15 +67,25 @@ def _safe_read(path: Path) -> str | None:
         return None
 
 
-def scan_project(root: Path | str, project_name: str | None = None) -> ScanResult:
+def scan_project(
+    root: Path | str,
+    project_name: str | None = None,
+    *,
+    role: str | None = None,
+    deep: bool = False,
+    cross_framework: bool = False,
+) -> ScanResult:
     """Run the full EU AI Act scanner on a project directory.
 
     Args:
         root: Path to the project root directory.
         project_name: Display name. Defaults to the directory name.
+        role: Explicit operator role ('provider', 'deployer', 'importer', 'distributor').
+        deep: Run extensive semantic audit using Claude Code or Codex.
+        cross_framework: Project findings across NIST AI RMF, ISO 42001, GDPR, OWASP.
 
     Returns:
-        ScanResult with architecture, compliance scores, and findings.
+        ScanResult with architecture, compliance scores, findings, and cross-framework projections.
     """
     root_path = Path(root).resolve()
     if not root_path.is_dir():
@@ -295,6 +305,33 @@ def scan_project(root: Path | str, project_name: str | None = None) -> ScanResul
         overall_compliance=round(overall, 1),
     )
 
+    # Cross-framework readiness summary
+    cross_framework_summary: dict[str, float] = {}
+    if cross_framework and is_ai_system:
+        from scanner.cross_framework import project_scan_to_frameworks
+        temp_res = ScanResult(
+            project_name=name,
+            compliance_scores=compliance_scores,
+            is_ai_system=is_ai_system,
+        )
+        cross_proj = project_scan_to_frameworks(temp_res)
+        cross_framework_summary = {
+            fw.framework_label: fw.coverage_pct for fw in cross_proj.frameworks
+        }
+
+    # Semantic audit (Claude Code / Codex subscription or bridge)
+    semantic_audit_dict: dict | None = None
+    if deep:
+        from scanner.llm_bridge import semantic_audit_project
+        temp_res = ScanResult(
+            project_name=name,
+            compliance_scores=compliance_scores,
+            file_findings=file_findings,
+            is_ai_system=is_ai_system,
+        )
+        audit_res = semantic_audit_project(temp_res, root=root_path)
+        semantic_audit_dict = audit_res.model_dump()
+
     return ScanResult(
         project_name=name,
         scanner_version=__version__,
@@ -315,4 +352,7 @@ def scan_project(root: Path | str, project_name: str | None = None) -> ScanResul
         pre_filled_answers=pre_filled,
         incident_grounding=incident_grounding_map,
         inferred_roles=inferred_roles,
+        active_role=role,
+        cross_framework_summary=cross_framework_summary,
+        semantic_audit=semantic_audit_dict,
     )

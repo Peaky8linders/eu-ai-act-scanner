@@ -492,6 +492,73 @@ def _fix_configuration(root: Path) -> FixProposal:
     )
 
 
+def _fix_art50_transparency(root: Path) -> FixProposal:
+    """Article 50 transparency evidence — trips article_50_transparency."""
+    content = (
+        '"""EU AI Act Art. 50 Transparency & Content Authenticity.\n\n'
+        "Provides user disclosure notice (Art. 50(1)), synthetic content\n"
+        "marking & C2PA content credentials (Art. 50(2)), and emotion notice (Art. 50(3)).\n"
+        '"""\n\n'
+        "from __future__ import annotations\n\n"
+        'AI_DISCLOSURE_NOTICE = "You are chatting with an AI assistant."\n'
+        'AI_SYNTHETIC_MARKING = "AI-generated synthetic media."\n'
+        'EMOTION_NOTICE = "You are being analysed by an emotion recognition system."\n\n\n'
+        "def add_c2pa_watermark(data: bytes) -> bytes:\n"
+        '    """Add machine-readable C2PA provenance and watermark to synthetic content."""\n'
+        "    return data\n"
+    )
+    return FixProposal(
+        id="fix-art50-transparency",
+        dimension="content_transparency",
+        article="Art. 50",
+        title="Add AI transparency disclosure & C2PA content credentials",
+        rationale=(
+            "Article 50 requires clear disclosure to natural persons interacting with AI (50(1)), "
+            "machine-readable C2PA marking for synthetic media (50(2)), and notices for emotion recognition (50(3)). "
+            "In force since 2 August 2026."
+        ),
+        fix_kind="deterministic",
+        target_path=f"{_EVIDENCE_DIR}/transparency_disclosure.py",
+        content=content,
+        verification="article_50_transparency analyzer detects AI disclosure & C2PA watermark (positive).",
+        grounded_obligation=grounding.obligation_text("Art. 50"),
+    )
+
+
+def _fix_fria(root: Path) -> FixProposal:
+    """Fundamental Rights Impact Assessment — trips deployer_obligations."""
+    content = (
+        "# Fundamental Rights Impact Assessment (FRIA)\n\n"
+        "> EU AI Act Art. 27 deployer obligation for high-risk AI systems.\n"
+        "> Fill in every `<FILL IN: ...>` placeholder before relying on this assessment.\n\n"
+        "## 1. Deployment Context & Intended Purpose\n"
+        "<FILL IN: Describe the specific use-case and context of deployment>\n\n"
+        "## 2. Categories of Natural Persons Likely Affected\n"
+        "<FILL IN: Identify affected groups, including vulnerable populations>\n\n"
+        "## 3. Specific Fundamental Rights Risks\n"
+        "<FILL IN: Assess risks to human dignity, privacy, non-discrimination, and workers>\n\n"
+        "## 4. Human Oversight Plan\n"
+        "<FILL IN: Designate qualified individuals assigned to oversight per Art. 14>\n\n"
+        "## 5. Mitigation Measures & Review Cycle\n"
+        "<FILL IN: Document risk-mitigation measures and periodic review intervals>\n"
+    )
+    return FixProposal(
+        id="fix-fria",
+        dimension="deployer_obligations",
+        article="Art. 27",
+        title="Add FRIA_ASSESSMENT.md Fundamental Rights Impact Assessment",
+        rationale=(
+            "Art. 27 requires deployers of high-risk AI systems to perform and document a "
+            "Fundamental Rights Impact Assessment prior to deployment."
+        ),
+        fix_kind="deterministic",
+        target_path="FRIA_ASSESSMENT.md",
+        content=content,
+        verification="documentation analyzer detects FRIA assessment documentation (positive, deployer_obligations).",
+        grounded_obligation=grounding.obligation_text("Art. 27"),
+    )
+
+
 DETERMINISTIC_FIXERS: dict[str, Callable[[Path], FixProposal]] = {
     "logging": _fix_logging,
     "human_oversight": _fix_human_oversight,
@@ -501,6 +568,8 @@ DETERMINISTIC_FIXERS: dict[str, Callable[[Path], FixProposal]] = {
     "documentation": _fix_documentation,
     "fairness_testing": _fix_fairness_testing,
     "configuration": _fix_configuration,
+    "art50_transparency": _fix_art50_transparency,
+    "fria": _fix_fria,
 }
 
 # Maps a ranked KB dimension id to the fixer key that supplies its evidence,
@@ -510,8 +579,9 @@ DETERMINISTIC_FIXERS: dict[str, Callable[[Path], FixProposal]] = {
 _DIMENSION_TO_FIXER: dict[str, str] = {
     "risk_mgmt": "test_suite",
     "quality_management": "test_suite",
-    "transparency": "tech_docs",
-    "content_transparency": "tech_docs",
+    "transparency": "art50_transparency",
+    "content_transparency": "art50_transparency",
+    "deployer_obligations": "fria",
     "security": "configuration",
     "infra_mlops": "configuration",
     "decision_governance": "human_oversight",
