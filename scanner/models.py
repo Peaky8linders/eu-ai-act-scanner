@@ -83,6 +83,11 @@ class ScanResult(BaseModel):
     inferred_roles: list[str] = Field(default_factory=list)
     # Explicitly declared or active operator role (e.g. 'provider', 'deployer').
     active_role: str | None = None
+    # Role-scoped obligation mapping (see scanner.obligations.compute_role_scope):
+    # which articles / dimensions the effective role(s) owe, and which dimensions
+    # were deprioritised because they are owed only by other roles. Empty for
+    # out-of-scope (non-AI) projects.
+    role_scope: dict = Field(default_factory=dict)
     # Cross-framework readiness mapping (NIST AI RMF, ISO 42001, GDPR, OWASP).
     cross_framework_summary: dict[str, float] = Field(default_factory=dict)
     # Extensive semantic audit findings (subscription-powered via Claude Code / Codex).

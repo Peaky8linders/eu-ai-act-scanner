@@ -31,7 +31,7 @@ Art. 2 sets territorial scope. Art. 3 defines the roles. Each role has its own o
 - **Authorised representative** (Art. 3(5)) — natural or legal person in the Union mandated in writing by a non-Union provider to perform/carry out its obligations. Required for non-Union providers of high-risk AI under Art. 22.
 - **Importer** (Art. 3(6)) — natural or legal person in the Union placing on the market an AI system bearing the name/trademark of a natural or legal person established outside the Union. Obligations: Art. 23 (verification duties).
 - **Distributor** (Art. 3(7)) — natural or legal person in the supply chain, other than provider or importer, making an AI system available on the Union market. Obligations: Art. 24 (verification + cooperation).
-- **Product manufacturer** (Art. 3(8)) — manufacturer who places on the market or puts into service an AI system together with its product and under its name/trademark. Treated as a provider for the purposes of obligations, per Art. 25(3).
+- **Product manufacturer** (Art. 25(3); Art. 3(8) defines *operator*, not product manufacturer) — manufacturer who places on the market or puts into service an AI system together with its product and under its name/trademark. Treated as a provider for the purposes of obligations, per Art. 25(3).
 
 ## Decision tree
 
