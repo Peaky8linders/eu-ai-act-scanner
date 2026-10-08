@@ -8,6 +8,8 @@ README/model card quality assessment (EU_AI_ACT_SCANNER_LLM=true).
 
 from __future__ import annotations
 
+from typing import Literal
+
 from scanner.analyzers._base import (
     AnalyzerContext,
     AnalyzerResult,
@@ -174,7 +176,7 @@ def analyze_documentation(ctx: AnalyzerContext) -> AnalyzerResult:
                 content=readme_content,
             )
             if assessment.error is None:
-                impact = "positive" if assessment.score >= 0.6 else "gap"
+                impact: Literal["positive", "neutral", "gap"] = "positive" if assessment.score >= 0.6 else "gap"
                 findings.append(Finding(
                     id="doc-llm-readme-quality", category="documentation",
                     title=f"LLM README quality: {assessment.score:.0%}",

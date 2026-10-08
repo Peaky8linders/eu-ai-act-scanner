@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import statistics
 from collections.abc import Callable
+from typing import Any
 
 from scanner.analyzers._base import AnalyzerContext, AnalyzerResult, Finding
 from scanner.analyzers.adversarial_robustness import analyze_adversarial_robustness
@@ -84,7 +85,7 @@ ANALYZER_REGISTRY: dict[str, Callable[[AnalyzerContext], AnalyzerResult]] = {
 #   - temporal: long-running state drift outside conformity envelope
 _PROVIDER_DEPLOYER_MFR = (ROLE_PROVIDER, ROLE_PRODUCT_MANUFACTURER, ROLE_DEPLOYER)
 
-_DEFAULT_TAXONOMY_TAGS: dict[str, dict[str, object]] = {
+_DEFAULT_TAXONOMY_TAGS: dict[str, dict[str, Any]] = {
     "agent_inventory": {
         # Inventory gaps are attribution-class — without the
         # external-action inventory the regulatory perimeter cannot be
@@ -141,11 +142,11 @@ def _apply_default_taxonomy_tags(findings: list[Finding]) -> list[Finding]:
         if not defaults:
             continue
         if not f.compound_risk_type:
-            f.compound_risk_type = defaults["compound_risk_type"]  # type: ignore[assignment]
+            f.compound_risk_type = defaults["compound_risk_type"]
         if not f.threat_categories:
-            f.threat_categories = list(defaults["threat_categories"])  # type: ignore[arg-type]
+            f.threat_categories = list(defaults["threat_categories"])
         if not f.applicable_roles and f.compliance_impact == "gap":
-            f.applicable_roles = list(defaults["applicable_roles"])  # type: ignore[arg-type]
+            f.applicable_roles = list(defaults["applicable_roles"])
     return findings
 
 

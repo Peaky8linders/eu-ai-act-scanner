@@ -128,6 +128,15 @@ OBLIGATION_TEXT: dict[str, str] = {
         "exploiting vulnerabilities, including measures to address data poisoning, "
         "model poisoning, adversarial examples and model evasion."
     ),
+    "Art. 16": (
+        "Providers of high-risk AI systems must ensure their systems comply with "
+        "the requirements of Chapter III, Section 2, covering risk management, data "
+        "governance, technical documentation, logging, transparency, human oversight, "
+        "and cybersecurity. They must maintain a compliant quality management system, "
+        "undergo conformity assessment, draw up EU declarations, affix CE marking, and "
+        "register in the EU database. Providers must also conduct post-market monitoring "
+        "and immediately report serious incidents to competent authorities."
+    ),
     "Art. 17": (
         "Providers of high-risk AI systems must put in place a quality management "
         "system that ensures compliance with the Regulation, documented "
@@ -137,6 +146,32 @@ OBLIGATION_TEXT: dict[str, str] = {
         "and quality control, data management, risk management, post-market "
         "monitoring, incident reporting, record-keeping and an accountability "
         "framework."
+    ),
+    "Art. 22": (
+        "Prior to making a high-risk AI system available on the Union market, "
+        "providers established outside the Union must appoint an authorised "
+        "representative established in the Union by written mandate. The authorised "
+        "representative must be mandated to keep the EU declaration of conformity and "
+        "technical documentation at the disposal of authorities, provide information "
+        "upon request, cooperate with market surveillance authorities, and terminate "
+        "the mandate if the provider acts contrary to its obligations."
+    ),
+    "Art. 23": (
+        "Before placing a high-risk AI system on the Union market, importers must verify "
+        "that the provider has carried out the appropriate conformity assessment, drawn "
+        "up technical documentation, affixed the CE marking, accompanied the system with "
+        "the required declaration and instructions, and appointed an authorised "
+        "representative where applicable. Importers must ensure storage and transport "
+        "do not jeopardise compliance, keep documentation for 10 years, and inform "
+        "providers and authorities of any non-compliance or risk."
+    ),
+    "Art. 24": (
+        "Before making a high-risk AI system available on the market, distributors must "
+        "verify that it bears the required CE marking, is accompanied by the EU declaration "
+        "of conformity and instructions for use, and that the provider and importer have "
+        "complied with their obligations. Distributors must not make non-compliant "
+        "systems available, must ensure storage and transport do not jeopardise "
+        "compliance, and must cooperate with authorities on corrective measures."
     ),
     "Art. 25": (
         "Any distributor, importer, deployer or other third party is considered a "
@@ -216,6 +251,14 @@ OBLIGATION_TEXT: dict[str, str] = {
         "with Union copyright law, and publish a sufficiently detailed summary of "
         "the content used for training. In force since August 2025."
     ),
+    "Art. 54": (
+        "Prior to placing a general-purpose AI model on the Union market, providers "
+        "established outside the Union must appoint an authorised representative "
+        "established in the Union by written mandate. The authorised representative "
+        "must be mandated to keep documentation at the disposal of the AI Office and "
+        "competent authorities, provide necessary information and cooperation upon "
+        "request, and perform tasks specified in the mandate."
+    ),
     "Art. 55": (
         "In addition to the obligations on general-purpose AI model providers, "
         "providers of models with systemic risk must perform model evaluation "
@@ -234,6 +277,21 @@ OBLIGATION_TEXT: dict[str, str] = {
         "enabling the provider to evaluate continuous compliance with the "
         "requirements of Chapter III, Section 2, and must be based on a post-market "
         "monitoring plan."
+    ),
+    "Art. 73": (
+        "Providers of high-risk AI systems must report any serious incident to the "
+        "market surveillance authorities of the Member States where it occurred "
+        "immediately after establishing a causal link or reasonable likelihood, and "
+        "no later than 15 days after becoming aware of it (or 2 to 10 days in cases "
+        "of widespread infringement or death/serious harm). Providers must investigate "
+        "and take necessary corrective measures."
+    ),
+    "Art. 74": (
+        "Market surveillance authorities have the power to control AI systems placed "
+        "on the Union market in accordance with Regulation (EU) 2019/1020. They may "
+        "request access to technical documentation, data, and source code where "
+        "necessary to assess compliance, conduct testing in dedicated environments, "
+        "and order corrective action, withdrawal, or recall of non-compliant AI systems."
     ),
     "Art. 95": (
         "The AI Office and the Member States must encourage and facilitate the "

@@ -12,6 +12,7 @@ matches the zero-dep posture of sibling analyzers.
 from __future__ import annotations
 
 import re
+from typing import Literal
 
 from scanner.analyzers._base import (
     AnalyzerContext,
@@ -34,8 +35,8 @@ def _tf_files(ctx: AnalyzerContext) -> list[tuple[str, str]]:
 
 def _finding(
     *, id: str, title: str, description: str, file_path: str, confidence: float,
-    impact: str, dims: list[str], articles: list[str],
-    kb_q: list[str] | None = None, answer: str | None = None,
+    impact: Literal["positive", "neutral", "gap"], dims: list[str], articles: list[str],
+    kb_q: list[str] | None = None, answer: Literal["yes", "partial", "no"] | None = None,
 ) -> Finding:
     return Finding(
         id=id, category="terraform", title=title, description=description,

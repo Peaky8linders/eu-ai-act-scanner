@@ -12,6 +12,7 @@ Checks:
 from __future__ import annotations
 
 import re
+from typing import Literal
 
 import yaml
 
@@ -24,7 +25,8 @@ from scanner.analyzers._base import (
 
 def _finding(
     *, id: str, title: str, description: str, file_path: str, confidence: float,
-    impact: str, dims: list[str], articles: list[str], artifact: str,
+    impact: Literal["positive", "neutral", "gap"], dims: list[str], articles: list[str],
+    artifact: Literal["github_actions", "dockerfile", "compose"],
 ) -> Finding:
     return Finding(
         id=id, category="cicd_dockerfile", title=title, description=description,

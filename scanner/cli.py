@@ -110,21 +110,24 @@ def _format_markdown(result, top_gaps: int = 10) -> str:
             lines.append(f"| **{fw_name}** | **{cov:.1f}%** |")
 
     sem = getattr(result, "semantic_audit", None)
-    if sem and sem.get("findings"):
+    if sem:
         lines += [
             "",
             "## Semantic audit (Claude Code / Codex)",
             "",
             f"_{sem.get('summary', '')}_",
-            "",
         ]
-        for f in sem.get("findings", [])[:top_gaps]:
-            sev = f.get("severity", "high").upper()
-            lines.append(f"- **[{sev}] {f.get('title')}** ({f.get('article')}) in `{f.get('file_path')}`")
-            if f.get("description"):
-                lines.append(f"  {f.get('description')}")
-            if f.get("remediation_advice"):
-                lines.append(f"  _Remediation:_ {f.get('remediation_advice')}")
+        if sem.get("error"):
+            lines.append(f"- _Note_: {sem.get('error')}")
+        if sem.get("findings"):
+            lines.append("")
+            for f in sem.get("findings", [])[:top_gaps]:
+                sev = f.get("severity", "high").upper()
+                lines.append(f"- **[{sev}] {f.get('title')}** ({f.get('article')}) in `{f.get('file_path')}`")
+                if f.get("description"):
+                    lines.append(f"  {f.get('description')}")
+                if f.get("remediation_advice"):
+                    lines.append(f"  _Remediation:_ {f.get('remediation_advice')}")
         if sem.get("cleared_false_positives"):
             lines += ["", "### Cleared static false positives:"]
             for fp in sem["cleared_false_positives"]:

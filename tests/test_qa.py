@@ -54,3 +54,29 @@ def test_corpus_covers_article_50_and_taxonomy():
     refs = {d.ref for d in _corpus()}
     assert "Art. 50" in refs
     assert any(r.startswith(("Risk:", "Threat:")) for r in refs)
+
+
+def test_operator_role_questions_boost_appropriate_articles():
+    # Importer query must retrieve Art. 23 and Art. 3 at the top
+    r_imp = answer_question("Who is the importer under the AI Act and what must they verify?", use_llm=False)
+    imp_refs = [s.ref for s in r_imp.sources[:2]]
+    assert "Art. 23" in imp_refs
+    assert "Art. 3" in imp_refs
+
+    # Distributor query must retrieve Art. 24 and Art. 3
+    r_dist = answer_question("What are the distributor verification obligations?", use_llm=False)
+    dist_refs = [s.ref for s in r_dist.sources[:2]]
+    assert "Art. 24" in dist_refs
+
+    # Deployer query must retrieve Art. 26 and Art. 3
+    r_dep = answer_question("What duties apply to deployers of high-risk AI?", use_llm=False)
+    dep_refs = [s.ref for s in r_dep.sources[:2]]
+    assert "Art. 26" in dep_refs
+
+
+def test_sources_include_official_article_titles():
+    r = answer_question("What does Article 23 say about importers?", use_llm=False)
+    top_source = r.sources[0]
+    assert top_source.ref == "Art. 23"
+    assert "Obligations of importers" in top_source.title
+

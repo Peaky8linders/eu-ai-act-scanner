@@ -11,6 +11,8 @@ Covers:
 """
 from __future__ import annotations
 
+from typing import Literal
+
 import yaml
 
 from scanner.analyzers._base import (
@@ -67,7 +69,8 @@ def _is_k8s(doc: dict) -> bool:
 
 def _finding(
     *, id: str, title: str, description: str, file_path: str, confidence: float,
-    impact: str, dims: list[str], articles: list[str], artifact: str,
+    impact: Literal["positive", "neutral", "gap"], dims: list[str], articles: list[str],
+    artifact: Literal["cloudformation", "kubernetes"],
 ) -> Finding:
     return Finding(
         id=id, category="cloudformation_k8s", title=title,
