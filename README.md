@@ -124,7 +124,9 @@ Register with any MCP client via [`.mcp.json`](.mcp.json):
 { "mcpServers": { "eu-ai-act-scanner": { "command": "eu-ai-act-scan-mcp", "args": [] } } }
 ```
 
-Tools: `scan_project`, `list_dimensions`, `get_article`, `incidents_for_dimension`, `incidents_for_threat`, `incidents_for_article`, `incident_corpus_stats`, `project_cross_framework`, `generate_dossier`, `remediation_loop`, `generate_visual_graph`.
+Tools: `scan_project`, `list_dimensions`, `get_article`, `incidents_for_dimension`, `incidents_for_threat`, `incidents_for_article`, `incident_corpus_stats`, `agentic_taxonomy`, `project_cross_framework`, `generate_dossier`, `remediation_loop`, `generate_visual_graph`.
+
+`scan_project` also returns `agentic_recommendations`: the compound-risk taxonomy mitigations and evidence for the agentic risk axes the scan detected, each tagged `act_required` (with the EU AI Act provision) or `paper_suggested` (with the paper line). `agentic_taxonomy` browses that catalogue directly, optionally filtered to one risk axis.
 
 ---
 

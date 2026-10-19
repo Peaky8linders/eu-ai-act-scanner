@@ -166,6 +166,65 @@ def test_article_25_4_guidance_separates_legal_duty_from_paper_recommendation() 
     assert "presupposes an identified supplier" in discovery["description"]
 
 
+def test_every_taxonomy_recommendation_is_provenance_tagged() -> None:
+    """Every mitigation/evidence item must be machine-classifiable.
+
+    Prose can drift; the tag cannot. ``act_required`` must cite an Act article,
+    ``paper_suggested`` must cite the paper, and the legacy string lists must
+    be exactly the tagged structure flattened — never maintained separately.
+    """
+    from scanner.data.agentic_taxonomy import (
+        COMPOUND_RISK_TYPES,
+        SOURCE_LABELS,
+        RecommendationKind,
+        RecommendationSource,
+        all_recommendations,
+        recommendation_provenance_summary,
+    )
+
+    sources = {s.value for s in RecommendationSource}
+    kinds = {k.value for k in RecommendationKind}
+    for entry in COMPOUND_RISK_TYPES:
+        recs = entry["recommendations"]
+        assert recs, f"{entry['id']} carries no tagged recommendations"
+        for rec in recs:
+            assert rec["text"].strip(), rec
+            assert rec["source"] in sources, rec
+            assert rec["kind"] in kinds, rec
+            assert rec["ref"].strip(), rec
+            if rec["source"] == RecommendationSource.act_required.value:
+                assert rec["ref"].startswith("Art. "), rec
+            else:
+                assert rec["ref"].startswith("paper"), rec
+        assert entry["mitigation_pattern"] == [
+            r["text"] for r in recs if r["kind"] == RecommendationKind.mitigation.value
+        ]
+        assert entry["evidence_required"] == [
+            r["text"] for r in recs if r["kind"] == RecommendationKind.evidence.value
+        ]
+
+    flat = all_recommendations()
+    assert len(flat) == sum(len(e["recommendations"]) for e in COMPOUND_RISK_TYPES)
+    counts = recommendation_provenance_summary()
+    assert set(counts) == set(SOURCE_LABELS)
+    for source in RecommendationSource:
+        assert counts[source.value] == sum(1 for r in flat if r["source"] == source.value)
+    assert counts[RecommendationSource.act_required.value] > 0
+    assert counts[RecommendationSource.paper_suggested.value] > 0
+
+
+def test_attribution_duty_and_paper_extension_carry_opposite_tags() -> None:
+    """The Art. 25(4) duty and the catalogue-wide extension must not share a tag."""
+    from scanner.data.agentic_taxonomy import RecommendationSource, recommendations_for_risk
+
+    recs = recommendations_for_risk("attribution")
+    duty = next(r for r in recs if r["ref"] == "Art. 25(4)" and r["kind"] == "mitigation")
+    extension = next(r for r in recs if "extending that written record" in r["text"])
+    assert duty["source"] == RecommendationSource.act_required.value
+    assert extension["source"] == RecommendationSource.paper_suggested.value
+    assert extension["ref"].startswith("paper")
+
+
 def test_every_kb_dimension_has_a_crosswalk() -> None:
     from scanner.kb import DIMENSIONS
 

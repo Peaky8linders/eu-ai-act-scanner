@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added — structured recommendation provenance
+
+- Agentic taxonomy mitigations and evidence now live in a structured
+  `recommendations` field, each tagged `act_required` (with the EU AI Act
+  provision) or `paper_suggested` (with the paper line). The legacy
+  `mitigation_pattern` / `evidence_required` string lists are derived from it,
+  so the two views cannot drift.
+- `ScanResult.agentic_recommendations` carries those tagged items for the
+  compound-risk axes a scan detected. The markdown report splits them into
+  **Required by the AI Act** and **Suggested by the paper (not Act-required)**.
+- New read-only MCP tool `agentic_taxonomy` (optional `risk_id` filter) exposes
+  the same provenance with per-axis and total counts.
+- `TAXONOMY_VERSION` bumped to `2026.04.27.v2` for the schema change.
+
 ## [0.10.1] - 2026-10-19
 
 ### Changed — plugin + MCP only; no PyPI distribution

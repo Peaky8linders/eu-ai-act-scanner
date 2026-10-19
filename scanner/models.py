@@ -42,6 +42,22 @@ class FileFinding(BaseModel):
     status: str = "partial"  # compliant | partial | gap
 
 
+class TaggedRecommendation(BaseModel):
+    """A compound-risk recommendation carrying its provenance tag.
+
+    ``source`` is ``act_required`` (the item implements an EU AI Act duty and
+    ``ref`` cites the provision) or ``paper_suggested`` (the working paper
+    recommends it beyond the Act and ``ref`` cites the paper).
+    """
+
+    risk_id: str
+    risk_label: str = ""
+    kind: str = "mitigation"  # mitigation | evidence
+    source: str = "paper_suggested"  # act_required | paper_suggested
+    text: str
+    ref: str = ""
+
+
 class ScanResult(BaseModel):
     """Complete scan result."""
     project_name: str = "Project"
@@ -68,6 +84,10 @@ class ScanResult(BaseModel):
     overall_compliance_pct: float = 0.0
     risk_indicators: list[str] = Field(default_factory=list)
     recommendations: list[str] = Field(default_factory=list)
+    # Compound-risk taxonomy recommendations for the risk axes detected in
+    # this scan, each machine-tagged ``act_required`` or ``paper_suggested``.
+    # Resolve the taxonomy via scanner.data.agentic_taxonomy.
+    agentic_recommendations: list[TaggedRecommendation] = Field(default_factory=list)
     evidence_map: dict[str, list[str]] = Field(default_factory=dict)
     file_findings: list[FileFinding] = Field(default_factory=list)
     pre_filled_answers: dict[str, str] = Field(default_factory=dict)

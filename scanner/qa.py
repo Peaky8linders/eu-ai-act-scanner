@@ -32,7 +32,7 @@ import re
 from pydantic import BaseModel, Field
 
 from scanner import grounding
-from scanner.data.agentic_taxonomy import COMPOUND_RISK_TYPES, THREAT_CATEGORIES
+from scanner.data.agentic_taxonomy import COMPOUND_RISK_TYPES, SOURCE_LABELS, THREAT_CATEGORIES
 from scanner.data.official_eu_ai_act import (
     OFFICIAL_ANNEX_TITLES,
     OFFICIAL_ARTICLE_TEXT,
@@ -131,10 +131,16 @@ def _build_corpus() -> list[_Doc]:
 
     # 3. Compound-risk taxonomy + threat categories (agentic Q&A).
     for risk_entry in COMPOUND_RISK_TYPES:
+        # Carry the provenance tag into the corpus so a Q&A answer can say
+        # whether an item is an Act duty or paper guidance, not just what it is.
+        labelled_recs = [
+            f"{rec['text']} [{SOURCE_LABELS.get(rec['source'], rec['source'])}: {rec['ref']}]"
+            for rec in risk_entry.get("recommendations", [])
+        ]
         body = " ".join([
             risk_entry.get("summary", ""),
             " ".join(risk_entry.get("failure_modes", [])),
-            " ".join(risk_entry.get("mitigation_pattern", [])),
+            " ".join(labelled_recs),
         ]).strip()
         label = risk_entry.get("label", risk_entry.get("id", "risk"))
         docs.append(_Doc(
