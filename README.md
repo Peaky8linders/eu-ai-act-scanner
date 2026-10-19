@@ -57,7 +57,7 @@ Or the one-line Claude Code version:
 
 ## Why this scanner, not another checker
 
-- **Versioned cross-framework projection, not label soup.** A pinned crosswalk catalogue (`2026.10.v1`) maps each EU AI Act dimension to NIST AI RMF 1.0, ISO/IEC 42001:2023, OWASP LLM 2025, OWASP Agentic Top 10, GDPR, MITRE ATLAS, SOC 2, and CSA AICM — with per-control status, readiness %, and **"Satisfy Once, Comply Everywhere" levers** showing which single fix closes gaps across the most frameworks.
+- **Versioned cross-framework projection, not label soup.** A pinned crosswalk catalogue (`2026.10.v2`) maps **every** EU AI Act dimension and article to NIST AI RMF 1.0, ISO/IEC 42001:2023, OWASP LLM 2025, OWASP Agentic Top 10, GDPR, MITRE ATLAS, SOC 2, ISO 27002, NIST SP 800-53 and CSA AICM — with per-control status, readiness %, and **"Satisfy Once, Comply Everywhere" levers** showing which single fix closes gaps across the most frameworks. Control IDs are the published ones (no invented identifiers), and **every gap control names the real-world incidents that exploited its class**.
 - **Evidence-linked, calibrated findings.** Every finding carries file, article, confidence, and severity — and the scanner distinguishes code fact from inference. Scores are evidence measures, never compliance verdicts.
 - **Incident-grounded gaps.** Each gap links to documented real-world incidents (OWASP/MITRE/NIST IDs + mitigations) — evidence input for Art. 9 risk management and Art. 72 post-market monitoring.
 - **Role-aware obligations.** Deterministic provider / deployer / GPAI-provider inference scopes which articles *you* actually owe.
@@ -85,23 +85,38 @@ Findings aggregate into **23 compliance dimensions** (`scanner/kb.py`), auto-tag
 The scanner never calls an LLM headlessly. When you want more than deterministic scores:
 
 - **In Claude Code (assisted mode):** `python -m scanner.cli --set mode=assisted` — slash commands use your host session (your existing subscription, no API key) for semantic review, grounded Q&A, and applying fixes. The deterministic scores stay the objective baseline.
-- **Outside Claude Code:** run the **MCP server** (`pip install "eu-ai-act-scanner[mcp]"` + `eu-ai-act-scan-mcp`) from any MCP client — same engine, client's own model, no wrapper.
+- **Outside Claude Code:** run the **MCP server** (`eu-ai-act-scan-mcp`, installed from this repository — see [Install](#install)) from any MCP client — same engine, client's own model, no wrapper.
 
 ---
 
 ## Install
 
+**Claude Code plugin** — the commands and the 14 article-grounded skills:
+
 ```bash
-# Claude Code plugin
 /plugin install Peaky8linders/eu-ai-act-scanner
+```
 
-# Python library
-pip install eu-ai-act-scanner
+The plugin drives the local Python engine, so install the engine once from this
+repository:
 
-# MCP server
-pip install "eu-ai-act-scanner[mcp]"
+```bash
+git clone https://github.com/Peaky8linders/eu-ai-act-scanner
+cd eu-ai-act-scanner
+pip install -e ".[mcp]"
+```
+
+**MCP server** — same engine, any MCP client, the client's own model:
+
+```bash
 eu-ai-act-scan-mcp          # stdio transport
 ```
+
+> **There is no PyPI package.** `pip install eu-ai-act-scanner` installs an
+> unrelated third-party project that owns that name — always install from this
+> repository. The distribution published here is `eu-ai-act-scanner-plugin`,
+> and the console scripts are `eu-ai-act-scan`, `eu-ai-act-scan-mcp` and
+> `eu-ai-act-fix`.
 
 Register with any MCP client via [`.mcp.json`](.mcp.json):
 
@@ -109,7 +124,9 @@ Register with any MCP client via [`.mcp.json`](.mcp.json):
 { "mcpServers": { "eu-ai-act-scanner": { "command": "eu-ai-act-scan-mcp", "args": [] } } }
 ```
 
-Tools: `scan_project`, `list_dimensions`, `get_article`, `incidents_for_dimension`, `incidents_for_threat`, `incidents_for_article`, `incident_corpus_stats`, `project_cross_framework`, `generate_dossier`, `remediation_loop`, `generate_visual_graph`.
+Tools: `scan_project`, `list_dimensions`, `get_article`, `incidents_for_dimension`, `incidents_for_threat`, `incidents_for_article`, `incident_corpus_stats`, `agentic_taxonomy`, `project_cross_framework`, `generate_dossier`, `remediation_loop`, `generate_visual_graph`.
+
+`scan_project` also returns `agentic_recommendations`: the compound-risk taxonomy mitigations and evidence for the agentic risk axes the scan detected, each tagged `act_required` (with the EU AI Act provision) or `paper_suggested` (with the paper line). `agentic_taxonomy` browses that catalogue directly, optionally filtered to one risk axis.
 
 ---
 

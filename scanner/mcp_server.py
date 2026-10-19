@@ -23,8 +23,10 @@ Security posture (aligned with MCP spec 2025-11-25 + 2026 hardening guidance):
   export) are annotated destructive and default to read-only dry-run.
 * No network calls, no telemetry, no secrets in tool surfaces.
 
-Install the MCP extra:
-    pip install 'eu-ai-act-scanner[mcp]'
+Install the MCP extra from this repository (there is no PyPI package):
+
+    git clone https://github.com/Peaky8linders/eu-ai-act-scanner
+    cd eu-ai-act-scanner && pip install -e ".[mcp]"
 
 Run the server (stdio transport):
     eu-ai-act-scan-mcp
@@ -152,7 +154,10 @@ def tool_scan_project(
 
     Returns the full :class:`scanner.models.ScanResult` serialised as a dict,
     including per-dimension compliance scores, architecture graph, file
-    findings, and incident grounding links.
+    findings, and incident grounding links. ``agentic_recommendations`` holds
+    the compound-risk taxonomy mitigations/evidence for the risk axes the scan
+    detected, each tagged ``act_required`` (with the Act provision) or
+    ``paper_suggested`` (with the paper line).
 
     Check ``is_ai_system`` first: when ``False`` the codebase is out of EU AI
     Act scope (no AI/ML/agent signal), ``compliance_scores`` is empty, and
@@ -183,7 +188,9 @@ def tool_project_cross_framework(
 
     Maps to NIST AI RMF 1.0, ISO/IEC 42001:2023, OWASP LLM 2025, OWASP Agentic Top 10,
     GDPR, MITRE ATLAS, SOC 2, and CSA AICM. Identifies high-leverage 'Satisfy Once,
-    Comply Everywhere' remediation targets.
+    Comply Everywhere' remediation targets, and grounds every gap/partial control in
+    the documented incidents that exploited its class (``related_incidents`` on each
+    control, ``top_incidents`` on each lever — ids from the vendored incident corpus).
     """
     try:
         resolved = _validate_scan_path(path)
@@ -358,6 +365,55 @@ def tool_incident_corpus_stats() -> dict:
     return incident_corpus_stats()
 
 
+def tool_agentic_taxonomy(risk_id: str | None = None) -> dict:
+    """Browse agentic compound-risk guidance with machine-readable provenance.
+
+    Every mitigation and evidence item is tagged ``act_required`` (the item
+    implements an EU AI Act duty; ``ref`` cites the provision) or
+    ``paper_suggested`` (the working paper recommends it beyond the Act;
+    ``ref`` cites the paper). Pass *risk_id* (``cascading``, ``emergent``,
+    ``attribution`` or ``temporal``) to narrow the response; an unknown id
+    returns an ``error`` plus an empty list.
+    """
+    from scanner.data.agentic_taxonomy import COMPOUND_RISK_BY_ID, TAXONOMY_VERSION
+
+    key = _clean_str(risk_id, 64) if risk_id else ""
+    if key and key not in COMPOUND_RISK_BY_ID:
+        return {
+            "taxonomy_version": TAXONOMY_VERSION,
+            "compound_risks": [],
+            "error": (
+                f"unknown compound risk {key!r}; expected one of "
+                f"{sorted(COMPOUND_RISK_BY_ID)}"
+            ),
+        }
+    selected = (
+        [COMPOUND_RISK_BY_ID[key]] if key else list(COMPOUND_RISK_BY_ID.values())
+    )
+    recs = [rec for entry in selected for rec in entry.get("recommendations", [])]
+    return {
+        "taxonomy_version": TAXONOMY_VERSION,
+        "provenance_legend": {
+            "act_required": "EU AI Act duty implemented by the item; ref cites the provision",
+            "paper_suggested": "Working-paper recommendation beyond the Act; ref cites the paper",
+        },
+        "provenance_counts": {
+            "act_required": sum(1 for r in recs if r["source"] == "act_required"),
+            "paper_suggested": sum(1 for r in recs if r["source"] == "paper_suggested"),
+        },
+        "compound_risks": [
+            {
+                "id": entry["id"],
+                "label": entry.get("label", entry["id"]),
+                "summary": entry.get("summary", ""),
+                "article_refs": entry.get("article_refs", []),
+                "recommendations": entry.get("recommendations", []),
+            }
+            for entry in selected
+        ],
+    }
+
+
 # ---------------------------------------------------------------------------
 # MCP server wiring — lazy import so tests run without the mcp package
 # ---------------------------------------------------------------------------
@@ -388,7 +444,9 @@ def _load_server_class():
         return FastMCP
     except ImportError as exc:
         raise RuntimeError(
-            "MCP SDK not installed. Install with: pip install 'eu-ai-act-scanner[mcp]'"
+            "MCP SDK not installed. Install the engine from this repository: "
+            "pip install -e \".[mcp]\" (there is no PyPI package — the "
+            "`eu-ai-act-scanner` name on PyPI is an unrelated project)"
         ) from exc
 
 
@@ -396,9 +454,10 @@ def build_server():  # noqa: ANN201  (returns MCPServer/FastMCP — type only av
     """Construct and return a configured MCP server (``MCPServer`` / ``FastMCP``).
 
     Raises :exc:`RuntimeError` if the ``mcp`` optional dependency is not
-    installed.  Install it with::
+    installed.  Install it from this repository with::
 
-        pip install 'eu-ai-act-scanner[mcp]'
+        git clone https://github.com/Peaky8linders/eu-ai-act-scanner
+        cd eu-ai-act-scanner && pip install -e ".[mcp]"
 
     HTTP serving (Streamable HTTP) is left to the deployer: serve the app
     returned by ``mcp.http_app()`` behind TLS + authentication, bind
@@ -487,6 +546,15 @@ def build_server():  # noqa: ANN201  (returns MCPServer/FastMCP — type only av
         """
         return tool_incidents_for_article(article, limit)
 
+    def agentic_taxonomy_tool(risk_id: str | None = None) -> dict:
+        """Browse agentic compound-risk mitigations and evidence, with provenance.
+
+        Every item carries ``source`` (``act_required`` or ``paper_suggested``)
+        and ``ref`` (the Act provision or paper line). Pass *risk_id* to filter
+        to one compound-risk axis.
+        """
+        return tool_agentic_taxonomy(risk_id)
+
     def incident_corpus_stats_tool() -> dict:
         """Return a summary of the bundled GenAI incident corpus.
 
@@ -546,6 +614,7 @@ def build_server():  # noqa: ANN201  (returns MCPServer/FastMCP — type only av
     _register("incidents_for_threat", incidents_for_threat_tool, read_only=True)
     _register("incidents_for_article", incidents_for_article_tool, read_only=True)
     _register("incident_corpus_stats", incident_corpus_stats_tool, read_only=True)
+    _register("agentic_taxonomy", agentic_taxonomy_tool, read_only=True)
     _register("project_cross_framework", project_cross_framework_tool, read_only=True)
     _register("generate_dossier", generate_dossier_tool, read_only=False)
     _register("remediation_loop", remediation_loop_tool, read_only=False, destructive=True)

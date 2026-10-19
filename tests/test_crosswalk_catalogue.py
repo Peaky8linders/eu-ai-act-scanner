@@ -119,6 +119,112 @@ def test_atlas_entries_are_techniques_not_mitigations() -> None:
             assert cid.startswith("AML.T"), f"{owner} maps an ATLAS mitigation {cid!r}"
 
 
+def test_taxonomy_display_labels_match_published_titles() -> None:
+    """Labels are shown to auditors next to code findings, so a drifted or
+    invented title reads as a citation. Pinned against the published lists
+    (OWASP LLM Top 10 2025; MITRE ATLAS technique index)."""
+    from scanner.data.incident_crosswalk import MITRE_ATLAS_LABELS, OWASP_LLM_LABELS
+
+    assert OWASP_LLM_LABELS == {
+        "LLM01": "Prompt Injection",
+        "LLM02": "Sensitive Information Disclosure",
+        "LLM03": "Supply Chain",
+        "LLM04": "Data and Model Poisoning",
+        "LLM05": "Improper Output Handling",
+        "LLM06": "Excessive Agency",
+        "LLM07": "System Prompt Leakage",
+        "LLM08": "Vector and Embedding Weaknesses",
+        "LLM09": "Misinformation",
+        "LLM10": "Unbounded Consumption",
+    }
+    assert MITRE_ATLAS_LABELS["AML.T0010"] == "AI Supply Chain Compromise"
+    assert MITRE_ATLAS_LABELS["AML.T0020"] == "Poison Training Data"
+    assert MITRE_ATLAS_LABELS["AML.T0049"] == "Exploit Public-Facing Application"
+
+
+def test_article_25_4_guidance_separates_legal_duty_from_paper_recommendation() -> None:
+    """Art. 25(4) binds the provider of a high-risk system toward the suppliers of
+    AI systems/models/tools/services/components it integrates, with a FOSS carve-out
+    (GPAI models excluded). The taxonomy used to require agreements with "every
+    static tool supplier" — broader than the Act — while calling tool-supplier
+    cooperation merely encouraged. Wrong in opposite directions; pin the split."""
+    from scanner.data.agentic_taxonomy import AGENT_ARCHETYPES, COMPOUND_RISK_TYPES
+
+    attribution = next(r for r in COMPOUND_RISK_TYPES if r["id"] == "attribution")
+    text = " ".join(
+        attribution["failure_modes"]
+        + attribution["mitigation_pattern"]
+        + attribution["evidence_required"]
+    )
+    assert "every static tool supplier" not in text
+    assert "carved out" in text, "FOSS carve-out must be stated with the duty"
+    assert "paper recommends" in text, "paper-only guidance must be attributed"
+    assert "integrated" in text, "duty is limited to integrated components"
+
+    discovery = next(a for a in AGENT_ARCHETYPES if a["id"] == "dynamic_tool_discovery")
+    assert "Falls outside Art. 25(4)" not in discovery["description"]
+    assert "presupposes an identified supplier" in discovery["description"]
+
+
+def test_every_taxonomy_recommendation_is_provenance_tagged() -> None:
+    """Every mitigation/evidence item must be machine-classifiable.
+
+    Prose can drift; the tag cannot. ``act_required`` must cite an Act article,
+    ``paper_suggested`` must cite the paper, and the legacy string lists must
+    be exactly the tagged structure flattened — never maintained separately.
+    """
+    from scanner.data.agentic_taxonomy import (
+        COMPOUND_RISK_TYPES,
+        SOURCE_LABELS,
+        RecommendationKind,
+        RecommendationSource,
+        all_recommendations,
+        recommendation_provenance_summary,
+    )
+
+    sources = {s.value for s in RecommendationSource}
+    kinds = {k.value for k in RecommendationKind}
+    for entry in COMPOUND_RISK_TYPES:
+        recs = entry["recommendations"]
+        assert recs, f"{entry['id']} carries no tagged recommendations"
+        for rec in recs:
+            assert rec["text"].strip(), rec
+            assert rec["source"] in sources, rec
+            assert rec["kind"] in kinds, rec
+            assert rec["ref"].strip(), rec
+            if rec["source"] == RecommendationSource.act_required.value:
+                assert rec["ref"].startswith("Art. "), rec
+            else:
+                assert rec["ref"].startswith("paper"), rec
+        assert entry["mitigation_pattern"] == [
+            r["text"] for r in recs if r["kind"] == RecommendationKind.mitigation.value
+        ]
+        assert entry["evidence_required"] == [
+            r["text"] for r in recs if r["kind"] == RecommendationKind.evidence.value
+        ]
+
+    flat = all_recommendations()
+    assert len(flat) == sum(len(e["recommendations"]) for e in COMPOUND_RISK_TYPES)
+    counts = recommendation_provenance_summary()
+    assert set(counts) == set(SOURCE_LABELS)
+    for source in RecommendationSource:
+        assert counts[source.value] == sum(1 for r in flat if r["source"] == source.value)
+    assert counts[RecommendationSource.act_required.value] > 0
+    assert counts[RecommendationSource.paper_suggested.value] > 0
+
+
+def test_attribution_duty_and_paper_extension_carry_opposite_tags() -> None:
+    """The Art. 25(4) duty and the catalogue-wide extension must not share a tag."""
+    from scanner.data.agentic_taxonomy import RecommendationSource, recommendations_for_risk
+
+    recs = recommendations_for_risk("attribution")
+    duty = next(r for r in recs if r["ref"] == "Art. 25(4)" and r["kind"] == "mitigation")
+    extension = next(r for r in recs if "extending that written record" in r["text"])
+    assert duty["source"] == RecommendationSource.act_required.value
+    assert extension["source"] == RecommendationSource.paper_suggested.value
+    assert extension["ref"].startswith("paper")
+
+
 def test_every_kb_dimension_has_a_crosswalk() -> None:
     from scanner.kb import DIMENSIONS
 

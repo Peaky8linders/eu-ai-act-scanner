@@ -26,7 +26,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-CROSSWALK_VERSION = "2026.06.04.v1"
+CROSSWALK_VERSION = "2026.10.19.v2"
 
 
 # ─── Display labels (best-effort; unknown codes fall back to the raw code) ──
@@ -48,7 +48,7 @@ OWASP_LLM_LABELS: dict[str, str] = {
 
 # MITRE ATLAS technique titles — only the techniques we are confident about.
 MITRE_ATLAS_LABELS: dict[str, str] = {
-    "AML.T0010": "ML Supply Chain Compromise",
+    "AML.T0010": "AI Supply Chain Compromise",
     "AML.T0020": "Poison Training Data",
     "AML.T0024": "Exfiltration via ML Inference API",
     "AML.T0043": "Craft Adversarial Data",
@@ -269,6 +269,29 @@ DIMENSION_TO_SPEC: dict[str, MatchSpec] = {
         owasp_llm=frozenset({"LLM04"}),
         attack_vectors=frozenset({"jailbreak", "adversarial-input"}),
         owasp_asi_any=True,
+    ),
+    # ── Governance/process dimensions (added 2026-10-19) ────────────────
+    # These five KB dimensions had no target, so `incidents_for_dimension`
+    # returned [] and every cross-framework gap they projected was reported
+    # without grounding — the Art. 9 / 17 / 43 dimensions an auditor cares
+    # about most. Specs stay *specific* (a handful of tag combinations that
+    # exist in the vendored subset) rather than `owasp_asi_any` alone, which
+    # matches almost the whole corpus and would ground nothing meaningfully.
+    "risk_mgmt": MatchSpec(
+        attack_vectors=frozenset({"tool-abuse", "unsafe-advice"}),
+    ),
+    "quality_management": MatchSpec(
+        attack_vectors=frozenset({"info-disclosure", "auth-bypass"}),
+    ),
+    "conformity_assessment": MatchSpec(
+        attack_vectors=frozenset({"auth-bypass", "info-disclosure", "privacy-violation"}),
+    ),
+    "ai_literacy": MatchSpec(
+        owasp_llm=frozenset({"LLM09"}),
+        attack_vectors=frozenset({"phishing", "unsafe-advice"}),
+    ),
+    "voluntary_codes": MatchSpec(
+        attack_vectors=frozenset({"misinformation", "deepfake", "csam-generation"}),
     ),
 }
 

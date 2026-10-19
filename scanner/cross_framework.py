@@ -27,6 +27,7 @@ from scanner.data.frameworks import (
     FRAMEWORK_LABELS,
     normalize_framework_id,
 )
+from scanner.data.incident_corpus import INCIDENT_BY_ID
 from scanner.models import ScanResult
 
 
@@ -40,6 +41,13 @@ class FrameworkControlProjection(BaseModel):
     source_dimensions: list[str] = Field(default_factory=list, description="Contributing EU AI Act KB dimensions.")
     score: float = Field(0.0, description="Highest score among contributing EU AI Act dimensions (0-100).")
     gap_count: int = Field(0, description="Number of contributing dimensions scoring below 60%.")
+    # Documented incidents that exploited this control's gap class. Populated
+    # for every non-compliant control — a gap that names no incident is a
+    # normative claim; one that does is evidence (see scanner.incident_grounding).
+    related_incidents: list[str] = Field(
+        default_factory=list,
+        description="Corpus incident IDs for this gap class (empty when compliant).",
+    )
 
 
 class FrameworkProjectionSummary(BaseModel):
@@ -65,6 +73,9 @@ class SatisfyOnceLever(BaseModel):
     frameworks_helped: list[str]
     controls_closed_count: int
     impact_summary: str
+    top_incidents: list[str] = Field(
+        default_factory=list, description="Corpus incident IDs for this gap class.",
+    )
 
 
 class CrossFrameworkScanProjection(BaseModel):
@@ -118,6 +129,38 @@ class CrossFrameworkScanProjection(BaseModel):
                 lines.append(
                     f"- **{lever.dimension_label}** (`{lever.dimension_id}`): "
                     f"{lever.impact_summary}"
+                )
+                titles = [
+                    INCIDENT_BY_ID[i].title for i in lever.top_incidents if i in INCIDENT_BY_ID
+                ]
+                if titles:
+                    lines.append(f"  - _Grounding: {titles[0]}_ (incident corpus)")
+
+        grounded_controls = [c for c in self.controls if c.related_incidents]
+        if grounded_controls:
+            lines += [
+                "",
+                "## Gap controls, grounded in real-world incidents",
+                "",
+                "_Each control below is marked gap/partial by the projection and names "
+                "the documented incidents (vendored corpus) that exploited its class._",
+                "",
+                "| Framework | Control | Status | Documented incidents |",
+                "|---|---|---|---|",
+            ]
+            shown = grounded_controls[:15]
+            for ctrl in shown:
+                incidents = "; ".join(
+                    f"{INCIDENT_BY_ID[i].title} (`{i}`)"
+                    for i in ctrl.related_incidents
+                    if i in INCIDENT_BY_ID
+                )
+                lines.append(
+                    f"| {ctrl.framework_label} | `{ctrl.control_id}` | {ctrl.status} | {incidents} |"
+                )
+            if len(grounded_controls) > len(shown):
+                lines.append(
+                    f"| … | _+{len(grounded_controls) - len(shown)} more gap controls_ | | |"
                 )
 
         if self.unmapped_dimensions:
@@ -213,6 +256,42 @@ def project_scan_to_frameworks(
                     if dim_band != "compliant":
                         existing.gap_count += 1
 
+    # ── Real-world incident grounding ───────────────────────────────────
+    # Attach the documented incidents that exploited each non-compliant
+    # control's gap class, so the projection reports evidence rather than only
+    # a normative "you are missing X".
+    from scanner.incident_grounding import incidents_for_dimension
+
+    _incident_cache: dict[str, list[str]] = {}
+
+    def _incidents_for_dim(dim_id: str, limit: int = 3) -> list[str]:
+        if dim_id not in _incident_cache:
+            _incident_cache[dim_id] = [
+                inc.id for inc in incidents_for_dimension(dim_id, limit=limit)
+            ]
+        return _incident_cache[dim_id]
+
+    # Round-robin across the control's contributing dimensions rather than
+    # filling every slot from the first one: a control mapped from both
+    # `logging` and `data_gov` should cite a record-keeping incident *and* a
+    # data-governance one, not three from whichever dimension happens to match
+    # the most corpus entries.
+    _MAX_GROUNDING = 3
+    for ctrl in bucket.values():
+        if ctrl.status == "compliant":
+            continue
+        pools = [_incidents_for_dim(dim_id) for dim_id in ctrl.source_dimensions]
+        grounded: list[str] = []
+        for depth in range(_MAX_GROUNDING):
+            for pool in pools:
+                if depth < len(pool) and pool[depth] not in grounded:
+                    grounded.append(pool[depth])
+                if len(grounded) >= _MAX_GROUNDING:
+                    break
+            if len(grounded) >= _MAX_GROUNDING:
+                break
+        ctrl.related_incidents = grounded
+
     controls = sorted(
         bucket.values(),
         key=lambda c: (c.framework_id, c.status != "gap", -c.score, c.control_id),
@@ -283,6 +362,7 @@ def project_scan_to_frameworks(
                     frameworks_helped=fws,
                     controls_closed_count=len(hits),
                     impact_summary=summary,
+                    top_incidents=_incidents_for_dim(d, limit=1),
                 )
             )
 

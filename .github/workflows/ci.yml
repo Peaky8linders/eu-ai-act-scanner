@@ -38,6 +38,11 @@ jobs:
       - name: Test
         run: pytest -v
 
+      # Art. 15(3)-(4) gate: the scanner's own adversarial / prompt-injection
+      # detection and the incident grounding for injected-instruction threats.
+      - name: Adversarial / prompt-injection regression tests
+        run: pytest tests/test_adversarial.py tests/test_incident_grounding.py -q
+
       - name: Smoke-test CLI
         run: |
           eu-ai-act-scan tests/fixtures/sample_project --markdown

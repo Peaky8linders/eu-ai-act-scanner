@@ -143,6 +143,28 @@ def _format_markdown(result, top_gaps: int = 10) -> str:
         for r in result.recommendations[:top_gaps]:
             lines.append(f"- {r}")
 
+    tagged = getattr(result, "agentic_recommendations", None) or []
+    if tagged:
+        act = [r for r in tagged if r.source == "act_required"]
+        paper = [r for r in tagged if r.source == "paper_suggested"]
+        lines += [
+            "",
+            "## Agentic recommendation provenance",
+            "",
+            "_Compound-risk controls for the agentic risk axes detected in this "
+            "scan. **Act-required** items cite the provision they implement; "
+            "**paper-suggested** items are governance the working paper "
+            "recommends beyond the Act._",
+        ]
+        if act:
+            lines += ["", "### Required by the AI Act", ""]
+            for r in act[:top_gaps]:
+                lines.append(f"- **{r.risk_label}** — {r.text} _({r.ref})_")
+        if paper:
+            lines += ["", "### Suggested by the paper (not Act-required)", ""]
+            for r in paper[:top_gaps]:
+                lines.append(f"- **{r.risk_label}** — {r.text} _({r.ref})_")
+
     if result.incident_grounding:
         lines += [
             "",

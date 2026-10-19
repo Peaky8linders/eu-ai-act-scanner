@@ -51,3 +51,35 @@ def test_cross_framework_flag_emits_projection(capsys) -> None:
     assert projection["catalogue_version"]
     assert projection["total_frameworks_mapped"] == 11
     assert projection["unmapped_dimensions"] == []
+
+
+def _agentic_project(path) -> None:
+    """Minimal LangChain project that triggers the agent-aware analyzers."""
+    (path / "agent.py").write_text(
+        "from langchain.agents import AgentExecutor\n"
+        "from langchain_openai import ChatOpenAI\n",
+        encoding="utf-8",
+    )
+
+
+def test_markdown_separates_act_required_from_paper_suggested(tmp_path, capsys) -> None:
+    """A reader must be able to tell legal duties from paper guidance without
+    inspecting the taxonomy source."""
+    _agentic_project(tmp_path)
+    assert main([str(tmp_path), "--markdown"]) == 0
+    out = capsys.readouterr().out
+    assert "## Agentic recommendation provenance" in out
+    assert "### Required by the AI Act" in out
+    assert "### Suggested by the paper (not Act-required)" in out
+    assert "_(Art. " in out, "Act-required rows must cite the provision"
+    assert "_(paper" in out, "paper rows must cite the paper, not an article"
+
+
+def test_json_surfaces_tagged_agentic_recommendations(tmp_path, capsys) -> None:
+    _agentic_project(tmp_path)
+    assert main([str(tmp_path), "--json"]) == 0
+    payload = json.loads(capsys.readouterr().out)
+    recs = payload["agentic_recommendations"]
+    assert recs, "agentic fixture should populate the tagged field"
+    assert {r["source"] for r in recs} == {"act_required", "paper_suggested"}
+    assert all(r["ref"] and r["risk_id"] for r in recs)

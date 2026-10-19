@@ -11,6 +11,7 @@ from scanner.data.frameworks import (
     DIMENSION_CROSSWALK,
     FRAMEWORK_LABELS,
 )
+from scanner.incident_grounding import incidents_for_dimension
 from scanner.models import ScanResult
 
 
@@ -187,3 +188,99 @@ def test_cross_framework_markdown_rendering() -> None:
     assert "# Cross-Framework Compliance Projection — Test-Markdown" in md
     assert "| Framework | Coverage | Compliant | Partial | Gap |" in md
     assert "Evidence Harmonization & Reuse" in md
+
+
+# ---------------------------------------------------------------------------
+# Incident grounding: every gap control names the incidents that exploited it
+# ---------------------------------------------------------------------------
+
+
+def _weak_scan() -> ScanResult:
+    return ScanResult(
+        project_name="Test-Grounding",
+        is_ai_system=True,
+        compliance_scores={
+            "security": 10.0,
+            "human_oversight": 15.0,
+            "logging": 20.0,
+            "risk_mgmt": 25.0,
+            "data_gov": 30.0,
+            "transparency": 40.0,
+            "agent_inventory": 5.0,
+            "tool_governance": 12.0,
+        },
+    )
+
+
+def test_every_gap_control_names_real_incidents() -> None:
+    """An ungrounded gap is a normative claim; a grounded one is evidence."""
+    proj = project_scan_to_frameworks(_weak_scan())
+    gaps = [c for c in proj.controls if c.status in ("gap", "partial")]
+    assert gaps, "a low-scoring scan must project gap controls"
+    ungrounded = [c.control_id for c in gaps if not c.related_incidents]
+    assert ungrounded == [], f"gap controls without incident grounding: {ungrounded}"
+
+
+def test_compliant_controls_carry_no_incidents() -> None:
+    scan = ScanResult(
+        project_name="Test-Compliant",
+        is_ai_system=True,
+        compliance_scores={d: 95.0 for d in DIMENSION_CROSSWALK},
+    )
+    proj = project_scan_to_frameworks(scan)
+    assert proj.controls
+    offenders = [c.control_id for c in proj.controls if c.related_incidents]
+    assert offenders == []
+
+
+def test_grounded_incident_ids_exist_in_the_corpus() -> None:
+    from scanner.data.incident_corpus import INCIDENT_BY_ID
+
+    proj = project_scan_to_frameworks(_weak_scan())
+    referenced = {i for c in proj.controls for i in c.related_incidents}
+    assert referenced, "expected grounded controls"
+    assert referenced <= set(INCIDENT_BY_ID), f"unknown incident ids: {referenced - set(INCIDENT_BY_ID)}"
+
+
+def test_control_grounding_spans_its_contributing_dimensions() -> None:
+    """A control mapped from several weakened dimensions cites evidence from
+    more than one of them, so a broad dimension cannot crowd out the rest."""
+    proj = project_scan_to_frameworks(_weak_scan())
+    multi = [
+        c
+        for c in proj.controls
+        if c.status in ("gap", "partial") and len(c.source_dimensions) >= 3
+    ]
+    assert multi, "expected at least one control fed by three or more dimensions"
+    owners = {
+        dim: {
+            inc.id
+            for inc in incidents_for_dimension(dim, limit=3)
+        }
+        for c in multi
+        for dim in c.source_dimensions
+    }
+    bad = [
+        (c.framework_id, c.control_id)
+        for c in multi
+        if len({d for d in c.source_dimensions if owners[d] & set(c.related_incidents)}) < 2
+    ]
+    assert bad == [], f"grounding collapsed onto one dimension: {bad}"
+
+
+def test_markdown_lists_gap_controls_with_incident_titles() -> None:
+    from scanner.data.incident_corpus import INCIDENT_BY_ID
+
+    proj = project_scan_to_frameworks(_weak_scan())
+    md = proj.format_markdown()
+    assert "## Gap controls, grounded in real-world incidents" in md
+    incident_id = next(i for c in proj.controls for i in c.related_incidents)
+    assert f"(`{incident_id}`)" in md
+    assert INCIDENT_BY_ID[incident_id].title in md
+
+
+def test_satisfy_once_levers_carry_their_top_incident() -> None:
+    proj = project_scan_to_frameworks(_weak_scan())
+    assert proj.satisfy_once_levers
+    assert any(lever.top_incidents for lever in proj.satisfy_once_levers)
+    assert "_Grounding:" in proj.format_markdown()

@@ -27,6 +27,22 @@ truth; never inline literals in engine code).
 
 Citation line numbers refer to *AI Agents Under EU Law* (Working Paper,
 7 April 2026).
+
+Wording convention: a control or artefact the Regulation itself requires is
+stated with its article and nothing else. Guidance that comes from the paper
+rather than from the Act is marked "the paper recommends" / "the paper notes",
+and carries the paper line reference. The two are never merged into one claim:
+the Act requires written Art. 25(4) agreements only from the provider of a
+high-risk system toward suppliers of integrated AI systems, models, tools,
+services or components (FOSS tools carved out, GPAI models not), which is a
+narrower duty than the paper's suggested catalogue-wide governance.
+
+Structurally, every mitigation and evidence item carries a provenance tag:
+``act_required`` means the item states a control or artifact the Act requires
+and ``ref`` cites the provision; ``paper_suggested`` means the paper
+recommends it beyond the Act and ``ref`` cites the paper. The legacy
+``mitigation_pattern`` / ``evidence_required`` string lists are derived from
+the tagged ``recommendations`` field, never maintained by hand.
 """
 
 from __future__ import annotations
@@ -34,7 +50,10 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import TypedDict
 
-TAXONOMY_VERSION = "2026.04.27.v1"
+# Paper edition (2026.04.27) plus the taxonomy-content revision suffix. Bump
+# the suffix when the shipped structure or guidance changes, not when the
+# paper is re-read.
+TAXONOMY_VERSION = "2026.04.27.v2"
 
 
 class CompoundRiskType(StrEnum):
@@ -84,8 +103,58 @@ class AgentArchetype(StrEnum):
     continuously_learning = "continuously_learning"
 
 
+class RecommendationSource(StrEnum):
+    """Provenance of a taxonomy recommendation.
+
+    ``act_required`` — the Act imposes the control or artifact in substance;
+    ``ref`` cites the provision. ``paper_suggested`` — the working paper
+    recommends it beyond the Act; ``ref`` cites the paper.
+    """
+
+    act_required = "act_required"
+    paper_suggested = "paper_suggested"
+
+
+SOURCE_LABELS: dict[str, str] = {
+    RecommendationSource.act_required.value: "Act-required",
+    RecommendationSource.paper_suggested.value: "Paper-suggested",
+}
+
+
+class RecommendationKind(StrEnum):
+    """What the recommendation asks for: a control or an evidence artifact."""
+
+    mitigation = "mitigation"
+    evidence = "evidence"
+
+
+class Recommendation(TypedDict):
+    """One tagged mitigation or evidence item within a compound risk."""
+
+    text: str
+    kind: str
+    source: str
+    ref: str
+
+
+class TaggedRecommendation(TypedDict):
+    """A recommendation flattened out of its compound-risk entry."""
+
+    risk_id: str
+    risk_label: str
+    text: str
+    kind: str
+    source: str
+    ref: str
+
+
 class CompoundRiskEntry(TypedDict, total=False):
-    """One row in :data:`COMPOUND_RISK_TYPES`."""
+    """One row in :data:`COMPOUND_RISK_TYPES`.
+
+    ``recommendations`` is the single source of truth. ``mitigation_pattern``
+    and ``evidence_required`` are derived from it at import time for backward
+    compatibility with consumers that expect plain strings.
+    """
 
     id: str
     label: str
@@ -95,6 +164,7 @@ class CompoundRiskEntry(TypedDict, total=False):
     article_refs: list[str]
     kb_dimensions: list[str]
     failure_modes: list[str]
+    recommendations: list[Recommendation]
     mitigation_pattern: list[str]
     evidence_required: list[str]
     threat_categories: list[str]
@@ -123,10 +193,63 @@ class AgentArchetypeEntry(TypedDict, total=False):
     paper_lines: str
 
 
+def _act_required(
+    text: str,
+    ref: str,
+    *,
+    kind: str = RecommendationKind.mitigation.value,
+) -> Recommendation:
+    """Tag *text* as implementing an EU AI Act duty cited by *ref*."""
+    return {
+        "text": text,
+        "kind": kind,
+        "source": RecommendationSource.act_required.value,
+        "ref": ref,
+    }
+
+
+def _paper_suggested(
+    text: str,
+    ref: str,
+    *,
+    kind: str = RecommendationKind.mitigation.value,
+) -> Recommendation:
+    """Tag *text* as paper guidance beyond the Act, cited by *ref*."""
+    return {
+        "text": text,
+        "kind": kind,
+        "source": RecommendationSource.paper_suggested.value,
+        "ref": ref,
+    }
+
+
+def _derive_recommendation_lists(entry: CompoundRiskEntry) -> CompoundRiskEntry:
+    """Add the legacy flat string lists derived from ``recommendations``.
+
+    Kept for consumers that expect ``mitigation_pattern`` / ``evidence_required``
+    as strings. Deriving them here keeps the provenance-tagged structure the
+    only hand-maintained source, so the two views cannot drift.
+    """
+    recs = entry.get("recommendations", [])
+    return {
+        **entry,
+        "mitigation_pattern": [
+            rec["text"]
+            for rec in recs
+            if rec["kind"] == RecommendationKind.mitigation.value
+        ],
+        "evidence_required": [
+            rec["text"]
+            for rec in recs
+            if rec["kind"] == RecommendationKind.evidence.value
+        ],
+    }
+
+
 # ─── Compound-risk taxonomy (the four axes) ──────────────────────────────
 
 
-COMPOUND_RISK_TYPES: list[CompoundRiskEntry] = [
+_RAW_COMPOUND_RISK_TYPES: list[CompoundRiskEntry] = [
     {
         "id": CompoundRiskType.cascading.value,
         "label": "Cascading Risk",
@@ -143,17 +266,43 @@ COMPOUND_RISK_TYPES: list[CompoundRiskEntry] = [
             "Authority escalation through legitimately granted scopes — agent acts harmfully using only permitted privileges (line 740-741).",
             "RAG caching staleness delivered as current data — financial advisory loss (Table 5, lines 1331-1334).",
         ],
-        "mitigation_pattern": [
-            "API-level least-privilege per tool with per-action scope.",
-            "Dynamic privilege restriction based on input trust level.",
-            "Audit logging that distinguishes user-initiated vs AI-initiated actions.",
-            "Inter-agent enforcement at the communication layer, not via per-agent prompts (Schroeder de Witt; Ji et al. SEAgent — lines 721-726, 768-770).",
-        ],
-        "evidence_required": [
-            "Action-level audit log distinguishing user vs AI initiator.",
-            "Per-tool permission scope manifest.",
-            "Static dependency graph between sub-agents.",
-            "Reproducible test that an injection on tool A does not exfiltrate via tool B.",
+        "recommendations": [
+            _paper_suggested(
+                "API-level least-privilege per tool with per-action scope.",
+                "paper §10.4",
+            ),
+            _paper_suggested(
+                "Dynamic privilege restriction based on input trust level.",
+                "paper §10.4",
+            ),
+            _act_required(
+                "Audit logging that distinguishes user-initiated vs AI-initiated actions.",
+                "Art. 12(1)",
+            ),
+            _paper_suggested(
+                "Inter-agent enforcement at the communication layer, not via per-agent prompts (Schroeder de Witt; Ji et al. SEAgent — lines 721-726, 768-770).",
+                "paper lines 721-726, 768-770",
+            ),
+            _act_required(
+                "Action-level audit log distinguishing user vs AI initiator.",
+                "Art. 12(3)",
+                kind=RecommendationKind.evidence.value,
+            ),
+            _paper_suggested(
+                "Per-tool permission scope manifest.",
+                "paper §10.4",
+                kind=RecommendationKind.evidence.value,
+            ),
+            _paper_suggested(
+                "Static dependency graph between sub-agents.",
+                "paper §10.4",
+                kind=RecommendationKind.evidence.value,
+            ),
+            _act_required(
+                "Reproducible test that an injection on tool A does not exfiltrate via tool B.",
+                "Art. 15(4)",
+                kind=RecommendationKind.evidence.value,
+            ),
         ],
         "threat_categories": [
             ThreatCategory.prompt_injection.value,
@@ -184,15 +333,34 @@ COMPOUND_RISK_TYPES: list[CompoundRiskEntry] = [
             "Schroeder de Witt — cascading jailbreaks across agent boundaries, steganographic collusion channels (line 721-724).",
             "Cross-agent propagation of unsafe practices — one compromised agent teaches others to bypass safety (Shapira et al., line 818-821).",
         ],
-        "mitigation_pattern": [
-            "Treat the agent collective — not the individual agent — as the unit of risk analysis (Riedl, footnote 44, line 2189-2194).",
-            "Enforcement at the inter-agent communication layer (lines 725-726).",
-            "External constraints, not internal instructions (lines 791, 2113-2115).",
-        ],
-        "evidence_required": [
-            "Documented inter-agent message-passing schema with policy enforcement at the broker.",
-            "Ablation tests showing each sub-agent stays within bounds AND the orchestrator stays within bounds.",
-            "Cross-agent jailbreak red-team campaigns recorded in the post-market monitoring file (Art. 72).",
+        "recommendations": [
+            _paper_suggested(
+                "Treat the agent collective — not the individual agent — as the unit of risk analysis (Riedl, footnote 44, line 2189-2194).",
+                "paper lines 2189-2194",
+            ),
+            _paper_suggested(
+                "Enforcement at the inter-agent communication layer (lines 725-726).",
+                "paper lines 725-726",
+            ),
+            _paper_suggested(
+                "External constraints, not internal instructions (lines 791, 2113-2115).",
+                "paper lines 791, 2113-2115",
+            ),
+            _paper_suggested(
+                "Documented inter-agent message-passing schema with policy enforcement at the broker.",
+                "paper §10.4",
+                kind=RecommendationKind.evidence.value,
+            ),
+            _paper_suggested(
+                "Ablation tests showing each sub-agent stays within bounds AND the orchestrator stays within bounds.",
+                "paper §10.4",
+                kind=RecommendationKind.evidence.value,
+            ),
+            _paper_suggested(
+                "Cross-agent jailbreak red-team campaigns recorded in the post-market monitoring file (Art. 72).",
+                "paper §10.4; cf. Art. 72(1)",
+                kind=RecommendationKind.evidence.value,
+            ),
         ],
         "threat_categories": [
             ThreatCategory.multi_agent_protocol.value,
@@ -228,19 +396,49 @@ COMPOUND_RISK_TYPES: list[CompoundRiskEntry] = [
             "Orchestrator + 3 sub-agents: 'could constitute one system or four' depending on placement on market (lines 1599-1601).",
             "Multi-layer assembly chain — Article 25 substantial-modification + own-name triggers may apply at multiple layers simultaneously (footnote 33, lines 1606-1611).",
             "Dynamic tool discovery — agents select tools at runtime not part of original conformity assessment (lines 1881-1890).",
-            "Recital 88 only encourages tool-supplier cooperation; no binding obligation absent prior contracts (line 1886).",
+            "Runtime-discovered tools have no supplier to contract with, so an Art. 25(4) written agreement cannot be obtained for them; the paper notes that Recital 88 only encourages tool-supplier cooperation (line 1886).",
         ],
-        "mitigation_pattern": [
-            "Designated 'responsible person' in the EU per MSR Article 4 / AI Act Art. 74 (line 1064).",
-            "Written Article 25(4) agreements with every static tool supplier (lines 1881-1883).",
-            "Declared external-action inventory — Step 9 of the compliance sequence (line 1729).",
-            "Contractual + technical exclusion of high-risk deployments where the platform cannot predict use (line 357).",
-        ],
-        "evidence_required": [
-            "Article 25(4) agreements on file for the static tool catalogue.",
-            "Declared static tool catalogue with provider attestation.",
-            "Classification reasoning documented per system per Step 2 (lines 1626-1634).",
-            "EU declaration of conformity naming the responsible person.",
+        "recommendations": [
+            _act_required(
+                "Designated EU authorised representative where the provider is established outside the Union (Art. 22(1)); the paper frames this as a 'responsible person' in the EU per MSR Article 4 (line 1064).",
+                "Art. 22(1)",
+            ),
+            _act_required(
+                "Written Art. 25(4) agreements with the suppliers of AI systems, models, tools, services or components integrated into a high-risk system, covering information, capabilities, technical access and assistance. Publicly available FOSS tools, services and components are carved out; general-purpose AI models are not.",
+                "Art. 25(4)",
+            ),
+            _paper_suggested(
+                "The paper recommends extending that written record across the whole static tool catalogue (lines 1881-1883) — governance beyond the Act's supplier-only duty.",
+                "paper lines 1881-1883",
+            ),
+            _paper_suggested(
+                "Declared external-action inventory — Step 9 of the compliance sequence (line 1729).",
+                "paper line 1729",
+            ),
+            _paper_suggested(
+                "Contractual + technical exclusion of high-risk deployments where the platform cannot predict use (line 357).",
+                "paper line 357",
+            ),
+            _act_required(
+                "Art. 25(4) written agreements on file for each integrated third-party AI component.",
+                "Art. 25(4)",
+                kind=RecommendationKind.evidence.value,
+            ),
+            _paper_suggested(
+                "Declared static tool catalogue with provider attestation — the paper's broader recommendation, not an Act requirement (lines 1881-1883).",
+                "paper lines 1881-1883",
+                kind=RecommendationKind.evidence.value,
+            ),
+            _paper_suggested(
+                "Classification reasoning documented per system per Step 2 (lines 1626-1634).",
+                "paper lines 1626-1634",
+                kind=RecommendationKind.evidence.value,
+            ),
+            _act_required(
+                "EU declaration of conformity naming the responsible person.",
+                "Art. 47",
+                kind=RecommendationKind.evidence.value,
+            ),
         ],
         "threat_categories": [
             ThreatCategory.governance_autonomy.value,
@@ -281,25 +479,66 @@ COMPOUND_RISK_TYPES: list[CompoundRiskEntry] = [
             "Specification gaming + memory poisoning (Kim et al., line 936-938).",
             "Three drift manifestations — semantic, coordination, behavioural (Rath ASI, line 940-943).",
         ],
-        "mitigation_pattern": [
-            "Treat runtime state as versioned architecture (line 945-947).",
-            "Versioned snapshots of tool catalogue, memory state, policy bindings.",
-            "Continuous behavioural-metric monitoring against the conformity-assessment baseline.",
-            "Automated drift detection beyond defined thresholds.",
-            "Documented internal procedure for the Article 3(23) determination (lines 954-958).",
-        ],
-        "evidence_required": [
-            "Version IDs on every snapshot.",
-            "Baseline behavioural metrics filed with the conformity assessment.",
-            "Alerting + change-management ticket each time a drift threshold is crossed.",
-            "Article 3(23) determination memo per detected drift.",
-            "Article 73 serious-incident reports where applicable.",
+        "recommendations": [
+            _paper_suggested(
+                "Treat runtime state as versioned architecture (line 945-947).",
+                "paper lines 945-947",
+            ),
+            _paper_suggested(
+                "Versioned snapshots of tool catalogue, memory state, policy bindings.",
+                "paper lines 945-947",
+            ),
+            _act_required(
+                "Continuous behavioural-metric monitoring against the conformity-assessment baseline.",
+                "Art. 72(1); Art. 26(5)",
+            ),
+            _paper_suggested(
+                "Automated drift detection beyond defined thresholds.",
+                "paper §10.4",
+            ),
+            _act_required(
+                "Documented internal procedure for the Article 3(23) determination (lines 954-958).",
+                "Art. 3(23); Art. 43",
+            ),
+            _paper_suggested(
+                "Version IDs on every snapshot.",
+                "paper §10.4",
+                kind=RecommendationKind.evidence.value,
+            ),
+            _paper_suggested(
+                "Baseline behavioural metrics filed with the conformity assessment.",
+                "paper §10.4",
+                kind=RecommendationKind.evidence.value,
+            ),
+            _paper_suggested(
+                "Alerting + change-management ticket each time a drift threshold is crossed.",
+                "paper §10.4",
+                kind=RecommendationKind.evidence.value,
+            ),
+            _act_required(
+                "Article 3(23) determination memo per detected drift.",
+                "Art. 3(23); Art. 43",
+                kind=RecommendationKind.evidence.value,
+            ),
+            _act_required(
+                "Article 73 serious-incident reports where applicable.",
+                "Art. 73",
+                kind=RecommendationKind.evidence.value,
+            ),
         ],
         "threat_categories": [
             ThreatCategory.governance_autonomy.value,
             ThreatCategory.aepd_lethal_trifecta.value,
         ],
     },
+]
+
+
+# Public view: the same entries plus the legacy flat lists derived from the
+# tagged recommendations, so existing consumers keep working while the
+# machine-readable provenance lives on the structured field.
+COMPOUND_RISK_TYPES: list[CompoundRiskEntry] = [
+    _derive_recommendation_lists(entry) for entry in _RAW_COMPOUND_RISK_TYPES
 ]
 
 
@@ -487,7 +726,7 @@ AGENT_ARCHETYPES: list[AgentArchetypeEntry] = [
     {
         "id": AgentArchetype.dynamic_tool_discovery.value,
         "label": "Dynamic Tool Discovery",
-        "description": "Tools are selected at runtime — typically via MCP or registry lookups — and were not part of the original conformity assessment. Falls outside Art. 25(4) which presupposes pre-established contracts.",
+        "description": "Tools are selected at runtime — typically via MCP or registry lookups — and were not part of the original conformity assessment. Art. 25(4)'s written-agreement route presupposes an identified supplier, so runtime-discovered tools may fall outside it; control the integration point instead (Art. 9 risk management, Art. 15 robustness) (lines 1874-1890).",
         "typical_compound_risks": [
             CompoundRiskType.attribution.value,
             CompoundRiskType.temporal.value,
@@ -581,11 +820,57 @@ def threat_categories_for_compound_risk(risk_id: str) -> list[ThreatCategoryEntr
     ]
 
 
+def all_recommendations() -> list[TaggedRecommendation]:
+    """Flatten every mitigation/evidence item, tagged with its source risk.
+
+    Deterministic order: taxonomy entry order, then the order within the entry.
+    """
+    return [
+        {
+            "risk_id": entry["id"],
+            "risk_label": entry.get("label", entry["id"]),
+            "text": rec["text"],
+            "kind": rec["kind"],
+            "source": rec["source"],
+            "ref": rec["ref"],
+        }
+        for entry in COMPOUND_RISK_TYPES
+        for rec in entry.get("recommendations", [])
+    ]
+
+
+def recommendations_for_risk(risk_id: str) -> list[TaggedRecommendation]:
+    """Return the tagged recommendations for one compound-risk entry."""
+    return [rec for rec in all_recommendations() if rec["risk_id"] == risk_id]
+
+
+def recommendations_for_source(
+    source: RecommendationSource | str,
+) -> list[TaggedRecommendation]:
+    """Return every recommendation carrying *source* (``act_required`` or
+    ``paper_suggested``). Unknown values yield an empty list."""
+    value = source.value if isinstance(source, RecommendationSource) else str(source)
+    return [rec for rec in all_recommendations() if rec["source"] == value]
+
+
+def recommendation_provenance_summary() -> dict[str, int]:
+    """Count recommendations per provenance tag, keyed by source value."""
+    counts = {source.value: 0 for source in RecommendationSource}
+    for rec in all_recommendations():
+        counts[rec["source"]] += 1
+    return counts
+
+
 __all__ = [
     "TAXONOMY_VERSION",
+    "SOURCE_LABELS",
     "CompoundRiskType",
     "ThreatCategory",
     "AgentArchetype",
+    "RecommendationSource",
+    "RecommendationKind",
+    "Recommendation",
+    "TaggedRecommendation",
     "CompoundRiskEntry",
     "ThreatCategoryEntry",
     "AgentArchetypeEntry",
@@ -601,4 +886,8 @@ __all__ = [
     "compound_risks_for_kb_dimension",
     "compound_risks_for_article",
     "threat_categories_for_compound_risk",
+    "all_recommendations",
+    "recommendations_for_risk",
+    "recommendations_for_source",
+    "recommendation_provenance_summary",
 ]

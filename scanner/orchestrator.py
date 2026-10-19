@@ -26,6 +26,7 @@ from scanner.models import (
     DiscoveredComponent,
     FileFinding,
     ScanResult,
+    TaggedRecommendation,
 )
 
 logger = structlog.get_logger()
@@ -163,6 +164,19 @@ def scan_project(
     all_findings = []
     for ar in analyzer_results:
         all_findings.extend(ar.findings)
+
+    # Tag the taxonomy recommendations for the compound-risk axes this scan
+    # actually detected. Provenance is structural, not prose: every row says
+    # whether the Act requires it (with the article) or the paper suggests it
+    # (with the line reference). Empty when no axis is present.
+    from scanner.data.agentic_taxonomy import all_recommendations
+
+    detected_risks = {f.compound_risk_type for f in all_findings if f.compound_risk_type}
+    agentic_recommendations = [
+        TaggedRecommendation(**rec)
+        for rec in all_recommendations()
+        if rec["risk_id"] in detected_risks
+    ]
 
     components: list[DiscoveredComponent] = []
     seen_keys: set[tuple[str, str]] = set()
@@ -384,6 +398,7 @@ def scan_project(
         overall_compliance_pct=round(overall, 1),
         risk_indicators=risk_indicators,
         recommendations=recommendations,
+        agentic_recommendations=agentic_recommendations,
         evidence_map=evidence_map_clean,
         file_findings=file_findings,
         pre_filled_answers=pre_filled,

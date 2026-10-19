@@ -15,6 +15,7 @@ import pytest
 import scanner.kb as kb
 from scanner.mcp_server import (
     build_server,
+    tool_agentic_taxonomy,
     tool_generate_dossier,
     tool_generate_visual_graph,
     tool_get_article,
@@ -229,6 +230,11 @@ def test_tool_project_cross_framework() -> None:
     assert "average_multi_framework_coverage_pct" in result
     assert "frameworks" in result
     assert len(result["frameworks"]) > 0
+    # Incident grounding must survive the MCP boundary: a gap control that names
+    # real incidents is evidence, and the host model cannot recover it otherwise.
+    grounded = [c for c in result["controls"] if c["related_incidents"]]
+    assert grounded, "expected grounded gap controls in the MCP payload"
+    assert all(c["status"] != "compliant" for c in grounded)
     _json_serializable(result)
 
 
@@ -257,6 +263,57 @@ def test_tool_generate_visual_graph(tmp_path: Path) -> None:
     assert result["status"] == "success"
     assert out.is_file()
     assert "GRAPH_DATA" in out.read_text(encoding="utf-8")
+    _json_serializable(result)
+
+
+# ---------------------------------------------------------------------------
+# tool_agentic_taxonomy
+# ---------------------------------------------------------------------------
+
+
+def test_agentic_taxonomy_tags_every_recommendation() -> None:
+    result = tool_agentic_taxonomy()
+    assert result["taxonomy_version"]
+    assert len(result["compound_risks"]) == 4
+    recs = [r for risk in result["compound_risks"] for r in risk["recommendations"]]
+    assert recs
+    for rec in recs:
+        assert rec["source"] in {"act_required", "paper_suggested"}
+        assert rec["ref"]
+        assert rec["kind"] in {"mitigation", "evidence"}
+    counts = result["provenance_counts"]
+    assert counts["act_required"] + counts["paper_suggested"] == len(recs)
+    assert counts["act_required"] > 0 and counts["paper_suggested"] > 0
+    _json_serializable(result)
+
+
+def test_agentic_taxonomy_filters_to_one_axis() -> None:
+    result = tool_agentic_taxonomy("attribution")
+    assert "error" not in result
+    assert [risk["id"] for risk in result["compound_risks"]] == ["attribution"]
+    duty = next(
+        r for r in result["compound_risks"][0]["recommendations"]
+        if r["ref"] == "Art. 25(4)"
+    )
+    assert duty["source"] == "act_required"
+
+
+def test_agentic_taxonomy_unknown_axis_returns_error() -> None:
+    result = tool_agentic_taxonomy("not-a-risk")
+    assert "error" in result
+    assert result["compound_risks"] == []
+
+
+def test_scan_project_surfaces_tagged_agentic_recommendations(tmp_path: Path) -> None:
+    (tmp_path / "agent.py").write_text(
+        "from langchain.agents import AgentExecutor\n"
+        "from langchain_openai import ChatOpenAI\n",
+        encoding="utf-8",
+    )
+    result = tool_scan_project(str(tmp_path))
+    recs = result["agentic_recommendations"]
+    assert recs, "agentic fixture should trigger compound-risk recommendations"
+    assert {r["source"] for r in recs} == {"act_required", "paper_suggested"}
     _json_serializable(result)
 
 

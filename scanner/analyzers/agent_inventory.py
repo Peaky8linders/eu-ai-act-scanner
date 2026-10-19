@@ -128,7 +128,16 @@ _ACTION_VERB_SIGNALS: dict[str, list[str]] = {
     "send_email": [r"\bsmtplib\b", r"\.send_message\(", r"send_email", r"sendgrid\.send"],
     "write_file": [r"\bopen\s*\([^)]*[\"']w[\"']", r"\.write_text\(", r"\.write\("],
     "execute_code": [r"\bsubprocess\.run\b", r"\bexec\s*\(", r"\beval\s*\(", r"shell\s*=\s*True"],
-    "modify_db": [r"\.execute\([\"']INSERT\b", r"\.execute\([\"']UPDATE\b", r"\.execute\([\"']DELETE\b", r"\.delete\(", r"\.update\("],
+    # DB-shaped receivers only. Bare `.delete(` / `.update(` matched dicts and
+    # sets (`entry["dims"].update(...)`) and reported a phantom `modify_db`
+    # action class — a state-changing capability an auditor would look for.
+    "modify_db": [
+        r"\.execute\(\s*[\"'](INSERT|UPDATE|DELETE)\b",
+        r"\.delete_many\(|\.update_many\(|\.bulk_update\(|\bupsert\b",
+        r"\.objects\.[\w.()\"'\[\]]*\.(delete|update)\(",
+        r"\b(session|cursor|tx)\s*\.(delete|merge|update)\(",
+        r"\.(delete|update)\(\s*\w+\s*=",  # Django queryset .update(field=value)
+    ],
     "post_content": [r"\.post\([^)]*twitter|\.post\([^)]*facebook", r"\.create_tweet\(", r"slack_sdk.*chat_postMessage"],
     "authorize_payment": [r"\bstripe\.PaymentIntent\.create\b", r"\.charge\(", r"\bcreate_charge\b"],
     "infra_mutation": [r"\bboto3\.client\([\"']ec2[\"']\)", r"\.terminate_instances\(", r"kubectl\.apply\(", r"\bansible_runner\b"],
