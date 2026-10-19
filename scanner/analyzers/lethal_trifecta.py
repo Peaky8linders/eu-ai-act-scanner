@@ -32,6 +32,7 @@ from scanner.analyzers._base import (
     AnalyzerContext,
     AnalyzerResult,
     Finding,
+    is_test_path,
 )
 from scanner.data.agentic_taxonomy import CompoundRiskType, ThreatCategory
 from scanner.data.role_obligations import (
@@ -128,6 +129,13 @@ def analyze_lethal_trifecta(ctx: AnalyzerContext) -> AnalyzerResult:
     trifecta_paths: list[tuple[str, str, str, str]] = []
 
     for path, content in ctx.files.items():
+        # Test fixtures synthesise all three legs on purpose (that is how the
+        # detector itself is exercised), so they are not agent invocation paths:
+        # counting them as runtime evidence both credits a project for the
+        # fixture and dilutes the dimension scores the fixture lands on.
+        if is_test_path(path):
+            continue
+
         # Quick skip — most files won't have an LLM SDK or agent symbol.
         if not re.search(
             r"\b(agent|llm|openai|anthropic|claude|gpt|langchain|crewai|autogen|invoke|run|complete|chat)\b",

@@ -156,3 +156,11 @@ def test_lethal_trifecta_gate_moves_finding_to_positive() -> None:
     ids = _ids(result)
     assert "lt-trifecta-with-gate" in ids
     assert "lt-trifecta-violation" not in ids
+
+
+def test_lethal_trifecta_in_test_fixture_is_not_runtime_evidence() -> None:
+    """A test that builds a trifecta to exercise the detector is not an agent
+    invocation path. Counting it credited the project with oversight it does
+    not have (and lowered the score of the dimension the fixture landed on)."""
+    for path in ("tests/test_agent_flow.py", "src/agent_test.py", "tests/conftest.py"):
+        assert analyze_lethal_trifecta(_ctx({path: _TRIFECTA_FILE})).findings == []
