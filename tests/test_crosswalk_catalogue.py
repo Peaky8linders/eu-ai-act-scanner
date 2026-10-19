@@ -119,6 +119,29 @@ def test_atlas_entries_are_techniques_not_mitigations() -> None:
             assert cid.startswith("AML.T"), f"{owner} maps an ATLAS mitigation {cid!r}"
 
 
+def test_taxonomy_display_labels_match_published_titles() -> None:
+    """Labels are shown to auditors next to code findings, so a drifted or
+    invented title reads as a citation. Pinned against the published lists
+    (OWASP LLM Top 10 2025; MITRE ATLAS technique index)."""
+    from scanner.data.incident_crosswalk import MITRE_ATLAS_LABELS, OWASP_LLM_LABELS
+
+    assert OWASP_LLM_LABELS == {
+        "LLM01": "Prompt Injection",
+        "LLM02": "Sensitive Information Disclosure",
+        "LLM03": "Supply Chain",
+        "LLM04": "Data and Model Poisoning",
+        "LLM05": "Improper Output Handling",
+        "LLM06": "Excessive Agency",
+        "LLM07": "System Prompt Leakage",
+        "LLM08": "Vector and Embedding Weaknesses",
+        "LLM09": "Misinformation",
+        "LLM10": "Unbounded Consumption",
+    }
+    assert MITRE_ATLAS_LABELS["AML.T0010"] == "AI Supply Chain Compromise"
+    assert MITRE_ATLAS_LABELS["AML.T0020"] == "Poison Training Data"
+    assert MITRE_ATLAS_LABELS["AML.T0049"] == "Exploit Public-Facing Application"
+
+
 def test_every_kb_dimension_has_a_crosswalk() -> None:
     from scanner.kb import DIMENSIONS
 

@@ -3,15 +3,26 @@
 Step 9 of the compliance sequence (Nannini et al. 2026): after classifying the
 AI Act perimeter, map the **adjacent** EU instruments the system actually
 triggers. The `regulatory_perimeter` analyzer scans this repository and reports
-the triggered instruments below; this file is the operator's answer.
+the signals below; this file is the operator's answer.
 
 Reviewed: 2026-10-19 · Owner: maintainer ([@Peaky8linders](https://github.com/Peaky8linders)) · Re-review: on any new distribution channel, runtime capability or bundled dataset.
 
-## Triggered
+**Verdict: no adjacent instrument is triggered by the current distribution
+model.** The one live signal is the Cyber Resilience Act, and whether it binds
+turns on *how* the engine is supplied — not on the code having CLI entry
+points.
 
-| Instrument | Trigger in this repo | What it obliges | State |
+## Signals & verdicts
+
+| Instrument | Signal in this repo | Why it does / does not bind | If it binds |
 |---|---|---|---|
-| **Cyber Resilience Act** — Reg. (EU) 2024/2847 | `pyproject.toml` `[project.scripts]` ships three CLI entry points (`eu-ai-act-scan`, `eu-ai-act-scan-mcp`, `eu-ai-act-fix`) — a product with digital elements placed on the market | Vulnerability handling, security updates for the support period, SBOM/component transparency, coordinated disclosure, no known exploitable vulnerabilities at release; **incident/vulnerability reporting to ENISA since 11 Sept 2026**; full conformity from **11 Dec 2027** | Open-source, non-commercial distribution under Apache-2.0 — the CRA's open-source stewardship carve-outs apply, but *reporting* duties and "no known exploitable vulnerability" still bind. Tracked as an open action: dependency pinning + advisories in CI (`pip install -e ".[dev]"` pulls only pytest/ruff/mypy and the runtime set is small and vendored-offline) |
+| **Cyber Resilience Act** — Reg. (EU) 2024/2847 | `pyproject.toml` `[project.scripts]` ships three CLI entry points (`eu-ai-act-scan`, `eu-ai-act-scan-mcp`, `eu-ai-act-fix`); the MCP server opens a logical connection to its host — i.e. software with digital elements | In scope only if **made available on the market**, which the CRA ties to supply *in the course of commercial activity* — paid or free, but commercial. A non-commercial Apache-2.0 publication is not that, so **not triggered today** | If commercially supplied (or the maintainer becomes an open-source *steward* — systematic, sustained support of OSS for commercial use): vulnerability handling, security updates for the support period, SBOM/component transparency, coordinated disclosure, no known exploitable vulnerabilities at release, ENISA reporting from **11 Sept 2026**, full conformity from **11 Dec 2027** |
+| **AI Act itself** — Reg. (EU) 2024/1689 | Static analysis, no model, no inference, no output about persons (`model_typology` reports `none` for this repo) | Not an AI system under Art. 3(1). Provider/deployer duties under Arts. 16/26 attach to its **users** | If an integrator adds a model or generative component, the resulting system is theirs and this note no longer describes it |
+
+> **Art. 64(10)(b) is not a general open-source exemption.** It disapplies only
+> the *administrative fines* in Art. 64(3)–(9) for open-source software
+> **stewards**. The market-scope question above is what keeps this repository
+> out, not a carve-out for being open source.
 
 ## Assessed, not triggered
 
@@ -22,16 +33,27 @@ Reviewed: 2026-10-19 · Owner: maintainer ([@Peaky8linders](https://github.com/P
 | **NIS2** — Dir. (EU) 2022/2555 | The project is not an essential/important entity and runs no ICS/SCADA surface (no OPC-UA/Modbus). Downstream: an entity in scope of NIS2 that uses the scanner inherits its own obligations — the dossier artefacts support their Art. 21 evidence |
 | **MDR** — Reg. (EU) 2017/745 | Not a medical device; no FHIR/DICOM handling. The healthcare *category detection* in `agent_inventory` classifies the **scanned** project, not this one |
 | **PLD** — Dir. (EU) 2024/2853 | No cached-advice/recommendation output to end users — the tool emits code findings, not advice to consumers |
-| **AI Act itself** — Reg. (EU) 2024/1689 | The scanner is not an AI system under Art. 3(1): no inference, no model, no generated output about persons (`model_typology` reports `none` for this repo). It is a static-analysis tool that *reports on* AI systems, so provider/deployer duties under Arts. 16/26 attach to its users, not to it |
 
 ## Art. 25(4) — responsibilities along the value chain
 
-Under Art. 25(4) the provider of an AI system must obtain the cooperation of
-third-party suppliers it integrates, in writing. Applied here, since the
-scanner is a *component* its users may embed:
+Art. 25(4) requires the **provider of a high-risk AI system** and a third party
+supplying an **AI system, AI model, tools, services, components or processes**
+that are used or integrated into it to agree **in writing** on the information,
+capabilities, technical access and assistance the provider needs to comply. It
+is a supplier↔provider contractual duty, and it does **not** apply to third
+parties supplying publicly available tools, services, processes or components
+under a free-and-open-source licence — general-purpose AI models are excluded
+from that carve-out.
+
+It is *not* a deployer duty and *not* a cooperation duty toward the AI Office or
+market-surveillance authorities: those sit in **Art. 26(12)** (deployers
+cooperating with competent authorities) and **Art. 21** (providers answering a
+reasoned request for documentation).
+
+Applied here, since the scanner is a *component* its users may embed:
 
 - **Maintainer (this repo):** ships the engine, the incident corpus and the static rules; documents the engine's guarantees (offline, deterministic, no telemetry) and their limits in [README.md](README.md) and [agent-inventory.md](agent-inventory.md).
-- **Integrator / downstream provider:** anyone embedding the scanner in a product with its own AI system remains the provider for that system and must obtain this documentation in writing — the licence (Apache-2.0), the version pin and this file are the cooperation record.
+- **Integrator / downstream provider:** anyone embedding the scanner in a *high-risk* AI system remains that system's provider and should record in writing what it received here — the licence (Apache-2.0), the version pin and this file are the written record. For tooling like this the Art. 25(4) FOSS carve-out would normally apply, so treat it as good practice rather than an owed agreement.
 - **No role flip by integration alone:** using a static analyser does not make the maintainer the provider of the user's AI system (Art. 25(1) flips require putting a system on the market under one's own name, or a substantial modification). If an integrator **modifies the analyzers or the crosswalk catalogue**, the resulting behaviour is theirs, and this documentation no longer describes it.
 - **Vendored corpus:** incident data is CC-BY-4.0 (`emmanuelgjr/genai-incidents`), incorporated unmodified as a curated subset; attribution travels with it (see [scanner/data/incidents.json](scanner/data/incidents.json) `provenance`). Redistribution must keep that attribution — a condition of the upstream licence, relevant to Art. 53(1)(c)-style third-party-component duties.
 

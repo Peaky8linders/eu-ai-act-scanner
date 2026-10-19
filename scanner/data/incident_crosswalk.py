@@ -48,7 +48,7 @@ OWASP_LLM_LABELS: dict[str, str] = {
 
 # MITRE ATLAS technique titles — only the techniques we are confident about.
 MITRE_ATLAS_LABELS: dict[str, str] = {
-    "AML.T0010": "ML Supply Chain Compromise",
+    "AML.T0010": "AI Supply Chain Compromise",
     "AML.T0020": "Poison Training Data",
     "AML.T0024": "Exfiltration via ML Inference API",
     "AML.T0043": "Craft Adversarial Data",

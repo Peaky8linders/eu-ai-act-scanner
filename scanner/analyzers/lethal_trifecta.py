@@ -5,16 +5,23 @@ Detects code paths where an agent simultaneously combines all three of:
   (b) accessing sensitive data, and
   (c) taking autonomous state-changing action.
 
-…without a human-oversight gate. This is the *rule of 2* the Spanish DPA
-(AEPD) introduced on 18 February 2026 in its 71-page agentic-AI
-guidance (paper lines 1175-1183), aligning with Simon Willison's
-"lethal trifecta" framing and Meta's 31 October 2025 framework that
-replaces "external communication" with "changing state."
+…without a human-oversight gate. The Spanish DPA (AEPD) published agentic-AI
+data-protection guidance on 18 February 2026 (paper lines 1175-1183) that
+discusses a *rule of 2* over uncontrolled input, access to sensitive
+information and automatic actions. That is an adaptation, not the source: the
+Agents Rule of Two was published by Meta on 31 October 2025, inspired by
+Chromium's Rule of 2 and Simon Willison's "lethal trifecta", and its third
+property is *change state **or** communicate externally*. AEPD's "automatic
+actions" is its own narrower wording; the two heuristics agree on the shape,
+not the letter.
 
-The AEPD is the **first EU supervisory authority to treat the agentic
-architecture as the primary object of data-protection analysis**
-(paper line 1156). The detection grounds to Art. 14 (human oversight
-commensurateness) + GDPR Art. 5(1)(a)(b)(c) + the four-axis taxonomy
+The AEPD guidance is **one of the EU's first detailed, agentic-AI-specific
+data-protection documents** (paper line 1156) — not the first act of any
+supervisory authority, and not binding law. Accordingly, this detector is a
+risk signal, not a verdict: Art. 14 oversight duties attach to **high-risk** AI
+systems, and Art. 26(2) assigns the deployer's oversight to competent, trained
+staff with the authority and support to intervene. Findings ground to those
+articles conditionally + GDPR Art. 5(1)(a)(b)(c) + the four-axis taxonomy
 ``cascading`` axis (an attacker who controls one of the three legs
 cascades into the other two).
 
@@ -164,7 +171,8 @@ def analyze_lethal_trifecta(ctx: AnalyzerContext) -> AnalyzerResult:
                 description=(
                     "All three trifecta legs (untrusted input, sensitive data, autonomous "
                     "state-change) co-occur with an oversight gate (approval / threshold / "
-                    "kill-switch). AEPD rule-of-2 satisfied via human-in-the-loop."
+                    "kill-switch). Rule-of-2 satisfied via human-in-the-loop "
+                    "(AEPD agentic guidance, 18 Feb 2026)."
                 ),
                 file_path=path, confidence=0.7,
                 compliance_impact="positive",
@@ -188,9 +196,11 @@ def analyze_lethal_trifecta(ctx: AnalyzerContext) -> AnalyzerResult:
             description=(
                 "Agent path simultaneously processes untrusted input, accesses sensitive "
                 "data, AND takes an autonomous state-changing action — with no oversight "
-                "gate detected in the same scope. AEPD rule-of-2 (18 Feb 2026) requires "
-                "removing one of the three legs OR adding a human-in-the-loop gate. "
-                "Art. 14 oversight commensurateness + GDPR Art. 5(1)(a)(b)(c). "
+                "gate detected in the same scope. The AEPD's rule-of-2 heuristic "
+                "(agentic guidance, 18 Feb 2026) calls for removing one of the three "
+                "legs OR adding a human-in-the-loop gate. Risk signal, not a legal "
+                "verdict: Art. 14 applies to high-risk systems (Art. 26(2) for the "
+                "deployer's oversight staffing) + GDPR Art. 5(1)(a)(b)(c). "
                 f"Untrusted-input signal: `{a_line}` · Sensitive-data signal: `{b_line}` · "
                 f"Autonomous-action signal: `{c_line}`."
             ),
