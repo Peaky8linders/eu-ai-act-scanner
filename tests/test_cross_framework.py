@@ -11,6 +11,7 @@ from scanner.data.frameworks import (
     DIMENSION_CROSSWALK,
     FRAMEWORK_LABELS,
 )
+from scanner.incident_grounding import incidents_for_dimension
 from scanner.models import ScanResult
 
 
@@ -239,6 +240,32 @@ def test_grounded_incident_ids_exist_in_the_corpus() -> None:
     referenced = {i for c in proj.controls for i in c.related_incidents}
     assert referenced, "expected grounded controls"
     assert referenced <= set(INCIDENT_BY_ID), f"unknown incident ids: {referenced - set(INCIDENT_BY_ID)}"
+
+
+def test_control_grounding_spans_its_contributing_dimensions() -> None:
+    """A control mapped from several weakened dimensions cites evidence from
+    more than one of them, so a broad dimension cannot crowd out the rest."""
+    proj = project_scan_to_frameworks(_weak_scan())
+    multi = [
+        c
+        for c in proj.controls
+        if c.status in ("gap", "partial") and len(c.source_dimensions) >= 3
+    ]
+    assert multi, "expected at least one control fed by three or more dimensions"
+    owners = {
+        dim: {
+            inc.id
+            for inc in incidents_for_dimension(dim, limit=3)
+        }
+        for c in multi
+        for dim in c.source_dimensions
+    }
+    bad = [
+        (c.framework_id, c.control_id)
+        for c in multi
+        if len({d for d in c.source_dimensions if owners[d] & set(c.related_incidents)}) < 2
+    ]
+    assert bad == [], f"grounding collapsed onto one dimension: {bad}"
 
 
 def test_markdown_lists_gap_controls_with_incident_titles() -> None:

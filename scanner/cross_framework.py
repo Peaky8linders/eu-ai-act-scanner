@@ -271,18 +271,26 @@ def project_scan_to_frameworks(
             ]
         return _incident_cache[dim_id]
 
+    # Round-robin across the control's contributing dimensions rather than
+    # filling every slot from the first one: a control mapped from both
+    # `logging` and `data_gov` should cite a record-keeping incident *and* a
+    # data-governance one, not three from whichever dimension happens to match
+    # the most corpus entries.
+    _MAX_GROUNDING = 3
     for ctrl in bucket.values():
         if ctrl.status == "compliant":
             continue
-        grounded: dict[str, None] = {}
-        for dim_id in ctrl.source_dimensions:
-            for incident_id in _incidents_for_dim(dim_id):
-                grounded.setdefault(incident_id, None)
-                if len(grounded) >= 3:
+        pools = [_incidents_for_dim(dim_id) for dim_id in ctrl.source_dimensions]
+        grounded: list[str] = []
+        for depth in range(_MAX_GROUNDING):
+            for pool in pools:
+                if depth < len(pool) and pool[depth] not in grounded:
+                    grounded.append(pool[depth])
+                if len(grounded) >= _MAX_GROUNDING:
                     break
-            if len(grounded) >= 3:
+            if len(grounded) >= _MAX_GROUNDING:
                 break
-        ctrl.related_incidents = list(grounded)
+        ctrl.related_incidents = grounded
 
     controls = sorted(
         bucket.values(),
