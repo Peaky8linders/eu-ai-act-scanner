@@ -229,6 +229,11 @@ def test_tool_project_cross_framework() -> None:
     assert "average_multi_framework_coverage_pct" in result
     assert "frameworks" in result
     assert len(result["frameworks"]) > 0
+    # Incident grounding must survive the MCP boundary: a gap control that names
+    # real incidents is evidence, and the host model cannot recover it otherwise.
+    grounded = [c for c in result["controls"] if c["related_incidents"]]
+    assert grounded, "expected grounded gap controls in the MCP payload"
+    assert all(c["status"] != "compliant" for c in grounded)
     _json_serializable(result)
 
 

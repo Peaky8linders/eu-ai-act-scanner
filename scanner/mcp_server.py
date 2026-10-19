@@ -185,7 +185,9 @@ def tool_project_cross_framework(
 
     Maps to NIST AI RMF 1.0, ISO/IEC 42001:2023, OWASP LLM 2025, OWASP Agentic Top 10,
     GDPR, MITRE ATLAS, SOC 2, and CSA AICM. Identifies high-leverage 'Satisfy Once,
-    Comply Everywhere' remediation targets.
+    Comply Everywhere' remediation targets, and grounds every gap/partial control in
+    the documented incidents that exploited its class (``related_incidents`` on each
+    control, ``top_incidents`` on each lever — ids from the vendored incident corpus).
     """
     try:
         resolved = _validate_scan_path(path)
