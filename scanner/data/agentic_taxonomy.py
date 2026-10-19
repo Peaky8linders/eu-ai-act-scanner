@@ -498,7 +498,7 @@ _RAW_COMPOUND_RISK_TYPES: list[CompoundRiskEntry] = [
             ),
             _act_required(
                 "Documented internal procedure for the Article 3(23) determination (lines 954-958).",
-                "Art. 3(23); Art. 43",
+                "Art. 43",
             ),
             _paper_suggested(
                 "Version IDs on every snapshot.",
@@ -517,7 +517,7 @@ _RAW_COMPOUND_RISK_TYPES: list[CompoundRiskEntry] = [
             ),
             _act_required(
                 "Article 3(23) determination memo per detected drift.",
-                "Art. 3(23); Art. 43",
+                "Art. 43",
                 kind=RecommendationKind.evidence.value,
             ),
             _act_required(
