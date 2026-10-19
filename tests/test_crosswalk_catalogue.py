@@ -225,6 +225,57 @@ def test_attribution_duty_and_paper_extension_carry_opposite_tags() -> None:
     assert extension["ref"].startswith("paper")
 
 
+def test_act_required_citations_resolve_in_the_obligation_kb() -> None:
+    """An ``act_required`` tag is a legal claim, so every cited article must
+    have grounding text — otherwise the recommendation asserts a duty the
+    scanner cannot quote. Multi-citation refs (``Art. 72(1); Art. 26(5)``)
+    must resolve every part, not just the first.
+    """
+    from scanner import grounding
+    from scanner.data.agentic_taxonomy import RecommendationSource, all_recommendations
+
+    article_re = re.compile(r"^Art\.\s*\d")
+    unresolved = []
+    for rec in all_recommendations():
+        if rec["source"] != RecommendationSource.act_required.value:
+            continue
+        parts = [p.strip() for p in rec["ref"].split(";") if p.strip()]
+        assert parts, f"act_required item has no citation: {rec['text'][:80]}"
+        for part in parts:
+            assert article_re.match(part), (
+                f"act_required ref is not an article citation: {part!r} "
+                f"({rec['text'][:60]})"
+            )
+            # obligation_text() returns "" (not None) for unknown articles.
+            if not grounding.obligation_text(part).strip():
+                unresolved.append(f"{part} <- {rec['text'][:60]}")
+    assert unresolved == [], (
+        "act_required citations with no obligation text: " + "; ".join(unresolved)
+    )
+
+
+def test_paper_suggested_refs_never_cite_only_an_article() -> None:
+    """Paper guidance may cross-reference an article, but its provenance must
+    stay the paper. A ``paper_suggested`` ref whose only citation is an article
+    reads as a legal duty in any surface that renders the raw ref.
+    """
+    from scanner.data.agentic_taxonomy import RecommendationSource, all_recommendations
+
+    paper_anchor_re = re.compile(r"(?:§|lines?\b)")
+    offenders = []
+    for rec in all_recommendations():
+        if rec["source"] != RecommendationSource.paper_suggested.value:
+            continue
+        parts = [p.strip() for p in rec["ref"].split(";") if p.strip()]
+        paper_parts = [p for p in parts if p.lower().startswith("paper")]
+        if not paper_parts or not any(paper_anchor_re.search(p) for p in paper_parts):
+            offenders.append(f"{rec['ref']!r} <- {rec['text'][:60]}")
+    assert offenders == [], (
+        "paper_suggested refs citing only an article (no paper section/line): "
+        + "; ".join(offenders)
+    )
+
+
 def test_every_kb_dimension_has_a_crosswalk() -> None:
     from scanner.kb import DIMENSIONS
 
