@@ -4,13 +4,14 @@ Provides:
 - Pydantic models (Finding, AnalyzerResult, AnalyzerContext)
 - Regex/file helpers (search_files, has_file, etc.)
 - AST helpers (parse_python_imports, parse_python_functions, etc.)
-- Optional LLM helper (llm_assess) gated by EU_AI_ACT_SCANNER_LLM env var
+- Compatibility stub (llm_assess) — semantic review lives in the host Claude Code / MCP client
 """
 
 from __future__ import annotations
 
 import ast
 import re
+from pathlib import Path
 from typing import Literal
 
 import structlog
@@ -109,6 +110,121 @@ def has_file(ctx: AnalyzerContext, pattern: str) -> list[str]:
         logger.warning("has_file_bad_pattern", pattern=pattern[:50])
         return []
     return [p for p in ctx.file_list if compiled.search(p)]
+
+
+# Extensions treated as source/config code by search_code_files.
+_CODE_EXTENSIONS: frozenset[str] = frozenset({
+    ".py", ".js", ".ts", ".tsx", ".jsx", ".java", ".rs", ".go",
+    ".r", ".jl", ".rb", ".c", ".cpp", ".cs", ".swift", ".kt",
+    ".scala", ".sh", ".yaml", ".yml", ".toml", ".cfg", ".ini",
+    ".tf", ".hcl", ".dockerfile",
+})
+
+# Lines that define a detector rather than exhibit a pattern.
+_DETECTOR_DEF_RE = re.compile(r"_(PATTERNS?|SIGNALS?|REGEX)\s*[:=]")
+
+# Single-line string-literal spans (raw or not) — detector tables mention
+# patterns inside string literals (`(r"torch\\.load...", "torch.load ...")`)
+# while real operational calls live outside them. Masking literals before
+# matching stops table self-matches. Detectors that intentionally look *inside*
+# string content (e.g. `model = "gpt-4"` literals) must use search_files
+# directly instead of this helper.
+_STR_LITERAL_RE = re.compile(r"[rR]?(\"[^\"\n]*\"|'[^'\n]*')")
+
+# Triple-quoted spans — module/class docstrings are prose, not code. The
+# analyzer's own docstring ("emerging stacks (AG2, OpenDevin, MetaGPT)")
+# must not count as a runtime dependency. Blanked line-preservingly so
+# evidence snippets still align with original lines.
+_TRIPLE_QUOTED_RE = re.compile(r'"""[\s\S]*?"""|\'\'\'[\s\S]*?\'\'\'')
+
+
+def search_code_files(
+    ctx: AnalyzerContext,
+    pattern: str,
+    flags: int = re.IGNORECASE,
+    *,
+    mask_strings: bool = True,
+) -> list[tuple[str, str]]:
+    """Search code/config files for a regex pattern — prose- and self-match-free.
+
+    Same contract as :func:`search_files` (one ``(path, line)`` per file) but:
+
+    * only source/config extensions (``_CODE_EXTENSIONS``) — README/CHANGELOG/
+      vendored-JSON prose never counts as code evidence;
+    * full-line comments (``#``, ``//``) are skipped — a heuristic description
+      is not an implementation;
+    * detector-definition lines are skipped — a ``search_files(...)`` call or a
+      ``*_PATTERNS``/``*_SIGNALS``/``*_REGEX`` assignment inside an analyzer
+      is the detector describing itself, not target code exhibiting the pattern.
+    """
+    try:
+        compiled = re.compile(pattern, flags)
+    except re.error:
+        logger.warning("search_code_files_bad_pattern", pattern=pattern[:50])
+        return []
+    results = []
+    for path, content in ctx.files.items():
+        if Path(path).suffix.lower() not in _CODE_EXTENSIONS:
+            continue
+        masked = _TRIPLE_QUOTED_RE.sub(
+            lambda m: "\n" * m.group(0).count("\n"), content
+        )
+        for line, mline in zip(content.split("\n"), masked.split("\n"), strict=True):
+            stripped = mline.strip()
+            if not stripped:
+                continue
+            if stripped.startswith("#") or stripped.startswith("//"):
+                continue
+            if "search_files(" in mline:
+                continue
+            if _DETECTOR_DEF_RE.search(mline):
+                continue
+            # Patterns that themselves look inside string content (they contain
+            # a quote) match against the raw line — e.g. `model = "gpt-4"`
+            # literals. All other patterns match against the literal-masked
+            # line so detector-table strings never count as code evidence.
+            # Table self-match stays impossible either way: tables spell
+            # patterns with regex escapes (`\\s`), which never satisfy the
+            # live pattern adjacent to the quote.
+            if not mask_strings or '"' in pattern or "'" in pattern:
+                probe = mline
+            else:
+                probe = _STR_LITERAL_RE.sub(lambda m: " " * len(m.group(0)), mline)
+            if compiled.search(probe):
+                results.append((path, line.strip()[:200]))
+                break
+    return results
+
+
+# Test/fixture trees: synthetic code (test harnesses, sample projects, string
+# fixtures) describes a system, it does not run it. Using it as runtime
+# evidence inflates detections (a fixture importing torch made the scanner
+# classify itself as a classical-ML project) and raises phantom gaps.
+_TEST_PATH_RE = re.compile(
+    r"(^|/)(tests?|__tests__|specs?|fixtures?|testdata|test_data|examples?)(/|$)"
+    r"|(^|/)test_[^/]*\.py$"
+    r"|(^|/)(conftest|setup_tests)\.py$"
+    r"|_test\.py$"
+    r"|\.(test|spec)\.[cm]?[jt]sx?$",
+    re.IGNORECASE,
+)
+
+
+# Prompt assets are runtime artefacts even though they hold no SDK calls.
+_PROMPT_ASSET_RE = re.compile(
+    r"(^|/)(prompts?|prompt_templates?)/|\.(prompt|jinja2?|j2|mustache|tmpl)$",
+    re.IGNORECASE,
+)
+
+
+def is_test_path(path: str) -> bool:
+    """True for test/spec/fixture paths (synthetic code, not runtime evidence)."""
+    return bool(_TEST_PATH_RE.search(path or ""))
+
+
+def is_prompt_asset(path: str) -> bool:
+    """True for prompt/template asset paths (md, txt, jinja, ...)."""
+    return bool(_PROMPT_ASSET_RE.search(path or ""))
 
 
 def count_matches(ctx: AnalyzerContext, pattern: str) -> int:
@@ -318,32 +434,16 @@ class LLMAssessment(BaseModel):
 
 
 def llm_assess(prompt: str, content: str, max_input: int = _LLM_MAX_INPUT) -> LLMAssessment:
-    """Run optional LLM assessment on content.
+    """Compatibility stub — always defers to host Claude Code / MCP.
 
-    Only runs if EU_AI_ACT_SCANNER_LLM=true. Routes through the Claude Max
-    bridge (:mod:`scanner.llm_bridge`) so calls hit the local Claude-Code
-    subscription wrapper rather than a metered API key. The bridge applies the
-    ported multi-strategy JSON extraction and is fully graceful — a disabled
-    flag, missing SDK, or unreachable wrapper degrades to an ``error`` result
-    and never blocks the scan.
+    The Claude Max subscription wrapper was removed. Semantic assessment now
+    runs in the host Claude Code session (assisted mode, your existing
+    subscription) or an MCP client over the scanner tools. Kept so existing
+    analyzer call sites keep working without network calls.
     """
-    from scanner import llm_bridge
-
-    if not llm_bridge.is_enabled():
-        return LLMAssessment(error="LLM scanner disabled (EU_AI_ACT_SCANNER_LLM=false)")
-
-    parsed, result = llm_bridge.complete_json(
-        system=prompt, user=content[:max_input], max_tokens=500
+    return LLMAssessment(
+        error=(
+            "Semantic assessment lives in the host Claude Code session "
+            "(assisted mode) or an MCP client — no headless bridge."
+        )
     )
-    if result.error is not None:
-        return LLMAssessment(error=result.error)
-    if parsed is not None:
-        try:
-            return LLMAssessment(
-                score=min(max(float(parsed.get("score", 0.5)), 0.0), 1.0),
-                reasoning=str(parsed.get("reasoning", "")),
-                findings=list(parsed.get("findings", [])),
-            )
-        except (TypeError, ValueError):
-            pass
-    return LLMAssessment(score=0.5, reasoning=result.text[:200])

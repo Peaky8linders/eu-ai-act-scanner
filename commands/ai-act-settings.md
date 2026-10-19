@@ -41,6 +41,4 @@ View or change how much the scanner leans on your own Claude Code.
 
 - The deterministic scanner output is always the objective baseline; assisted
   mode augments it, never overwrites the scores.
-- The headless wrapper bridge (`EU_AI_ACT_SCANNER_LLM=…`, `--llm-status`) is a
-  separate path for running the CLI outside Claude Code; it is **not** required
-  for assisted mode.
+- Outside Claude Code, use the MCP server (`eu-ai-act-scan-mcp`) from any MCP client with its own model subscription — no wrapper or API key needed.

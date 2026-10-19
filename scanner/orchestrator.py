@@ -49,10 +49,16 @@ _SPECIAL_FILENAMES = {
     ".gitignore", ".dockerignore", ".env.example",
 }
 
-_EXCLUDED_PATH_PARTS = (
+# Directory names never descended into. Matched against individual path parts
+# (not substrings) so `dist` doesn't exclude `distributed.py` and `.git`
+# doesn't exclude `.gitignore`. Includes agent-workspace dirs (`.claude`,
+# `.freebuff`, `worktrees`) — a stale worktree holds a *copy* of the repo and
+# would otherwise double-count every finding against deleted code.
+_EXCLUDED_PATH_PARTS = frozenset({
     "__pycache__", "node_modules", ".git", ".venv", "venv", ".tox",
-    ".pytest_cache", ".mypy_cache", "dist", "build",
-)
+    ".pytest_cache", ".mypy_cache", ".ruff_cache", "dist", "build",
+    ".claude", ".freebuff", ".worktrees", "worktrees",
+})
 
 _MAX_FILE_BYTES = 2 * 1024 * 1024  # 2 MB — skip generated/bundled files
 
@@ -82,7 +88,9 @@ def scan_project(
         project_name: Display name. Defaults to the directory name.
         role: Explicit operator role (any id in scanner.data.role_obligations.CANONICAL_ROLE_IDS);
             scopes recommendations to the dimensions that role owes.
-        deep: Run extensive semantic audit using Claude Code or Codex.
+        deep: Deprecated, ignored. Semantic depth now comes from the host
+            Claude Code session (assisted mode, your existing subscription)
+            or any MCP client calling the scanner over MCP.
         cross_framework: Project findings across NIST AI RMF, ISO 42001, GDPR, OWASP.
 
     Returns:
@@ -110,8 +118,7 @@ def scan_project(
     for file_path in root_path.rglob("*"):
         if not file_path.is_file():
             continue
-        path_str = str(file_path)
-        if any(part in path_str for part in _EXCLUDED_PATH_PARTS):
+        if _EXCLUDED_PATH_PARTS & set(file_path.parts):
             continue
 
         total_files += 1
@@ -345,18 +352,22 @@ def scan_project(
             fw.framework_label: fw.coverage_pct for fw in cross_proj.frameworks
         }
 
-    # Semantic audit (Claude Code / Codex subscription or bridge)
+    # Semantic audit is intentionally NOT run headlessly here. When deep=True
+    # (legacy flag) record a pointer so callers know where semantic review
+    # lives: the host Claude Code session or an MCP client.
     semantic_audit_dict: dict | None = None
     if deep:
-        from scanner.llm_bridge import semantic_audit_project
-        temp_res = ScanResult(
-            project_name=name,
-            compliance_scores=compliance_scores,
-            file_findings=file_findings,
-            is_ai_system=is_ai_system,
-        )
-        audit_res = semantic_audit_project(root_path, temp_res)
-        semantic_audit_dict = audit_res.model_dump()
+        semantic_audit_dict = {
+            "summary": (
+                "Semantic review lives in your own Claude Code session "
+                "(assisted mode, `/ai-act-scan --deep` narrative) or any "
+                "MCP client over the `scan_project` tool — no separate "
+                "subscription wrapper required."
+            ),
+            "findings": [],
+            "cleared_false_positives": [],
+            "error": None,
+        }
 
     return ScanResult(
         project_name=name,

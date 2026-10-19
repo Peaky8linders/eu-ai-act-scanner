@@ -43,7 +43,8 @@ from scanner.analyzers._base import (
     AnalyzerResult,
     Finding,
     has_file,
-    search_files,
+    is_test_path,
+    search_code_files,
 )
 
 # ─── 1. Restrictive-language-as-control antipattern ──────────────────────
@@ -112,8 +113,14 @@ _OAUTH_SCOPE_PATTERNS: list[tuple[str, str, str]] = [
 
 
 def _files_with_pattern(ctx: AnalyzerContext, pattern: str) -> dict[str, str]:
-    """Return {file_path: matched_line} for files matching pattern."""
-    return {p: line for p, line in search_files(ctx, pattern)}
+    """Return {file_path: matched_line} for non-test files matching pattern.
+
+    Test harnesses and fixtures describe LLM code rather than run it; counting
+    them made the scanner flag its own fixtures as credential violations.
+    """
+    return {
+        p: line for p, line in search_code_files(ctx, pattern) if not is_test_path(p)
+    }
 
 
 def analyze_privilege_minimization(ctx: AnalyzerContext) -> AnalyzerResult:
@@ -124,8 +131,20 @@ def analyze_privilege_minimization(ctx: AnalyzerContext) -> AnalyzerResult:
     llm_files = set(_files_with_pattern(ctx, _LLM_SDK_HINTS))
 
     # ── 1. Restrictive-language-as-control antipattern ─────────────────
+    # NOTE: code files only, strings kept (mask_strings=False) — the signal
+    # *is* prompt-string content ("never disclose ..."). Markdown prose
+    # ("never invent findings" in a command doc) is not a shipped prompt.
+    # Two carve-outs keep it honest: this analyzer's own alternation table
+    # would self-match, and detector test corpora under tests/ deliberately
+    # embed constraint demos — neither is a shipped prompt relying on
+    # language as a control.
     for pattern in _PROMPT_CONSTRAINT_LANGUAGE:
-        for path, line in search_files(ctx, pattern):
+        for path, line in search_code_files(ctx, pattern, mask_strings=False):
+            lowered = path.replace("\\", "/").lower()
+            if "scanner/analyzers/" in lowered:
+                continue
+            if "/tests/" in lowered or lowered.startswith("tests/"):
+                continue
             evidence_files.add(path)
             findings.append(Finding(
                 id="pm-prompt-as-control", category="privilege_minimization",
@@ -146,7 +165,7 @@ def analyze_privilege_minimization(ctx: AnalyzerContext) -> AnalyzerResult:
 
     # ── 2. Open-ended exec from LLM output ──────────────────────────────
     for pattern in _OPEN_ENDED_EXEC:
-        for path, line in search_files(ctx, pattern):
+        for path, line in search_code_files(ctx, pattern):
             # Only count if the file also touches an LLM SDK or this is a known
             # agent module (otherwise it's just a normal subprocess call).
             if path in llm_files or "agent" in path.lower() or "tool" in path.lower():
@@ -203,10 +222,10 @@ def analyze_privilege_minimization(ctx: AnalyzerContext) -> AnalyzerResult:
     # ── 4. Audit-log writes without actor_kind distinction ──────────────
     audit_files: set[str] = set()
     for hint in _AUDIT_WRITE_HINTS:
-        for path, _ in search_files(ctx, hint):
+        for path, _ in search_code_files(ctx, hint):
             audit_files.add(path)
     has_actor_distinction = any(
-        search_files(ctx, hint) for hint in _ACTOR_DISTINCTION_HINTS
+        search_code_files(ctx, hint) for hint in _ACTOR_DISTINCTION_HINTS
     )
     if audit_files and not has_actor_distinction:
         first = sorted(audit_files)[0]
@@ -229,10 +248,18 @@ def analyze_privilege_minimization(ctx: AnalyzerContext) -> AnalyzerResult:
 
     # ── 5. OAuth scope overgrant ────────────────────────────────────────
     for scope_pattern, callsite_pattern, scope_label in _OAUTH_SCOPE_PATTERNS:
-        scope_hits = search_files(ctx, scope_pattern)
+        # Scope tokens live in strings/config by nature (URLs, quoted tokens),
+        # so scope detection keeps string content (code files only — no .md
+        # prose); call-site verification is fully precision-filtered.
+        # Table self-match is impossible: table spellings carry regex escapes
+        # adjacent to every literal.
+        scope_hits = [
+            h for h in search_code_files(ctx, scope_pattern, mask_strings=False)
+            if not is_test_path(h[0])
+        ]
         if not scope_hits:
             continue
-        callsite_hits = search_files(ctx, callsite_pattern)
+        callsite_hits = search_code_files(ctx, callsite_pattern)
         if not callsite_hits:
             evidence_files.add(scope_hits[0][0])
             findings.append(Finding(
@@ -260,7 +287,7 @@ def analyze_privilege_minimization(ctx: AnalyzerContext) -> AnalyzerResult:
         has_file(ctx, r"tool[s]?[-_]permissions?\.(yaml|yml|json)$")
         or has_file(ctx, r"agent[-_]?policy\.(yaml|yml|json)$")
     )
-    decorator_hits = search_files(ctx, r"@require[_-]?scope\b|@scope[_-]?required\b")
+    decorator_hits = search_code_files(ctx, r"@require[_-]?scope\b|@scope[_-]?required\b")
     if registry_files or decorator_hits:
         evidence_path = registry_files[0] if registry_files else decorator_hits[0][0]
         evidence_line = "" if registry_files else decorator_hits[0][1]

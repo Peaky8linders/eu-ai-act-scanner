@@ -16,11 +16,12 @@ Two orthogonal behaviour layers, resolved with precedence
   automatically rather than proposing-then-waiting. Off by default so a scan is
   never destructive without an explicit opt-in.
 
-The optional *headless* LLM bridge (:mod:`scanner.llm_bridge`, env
-``EU_AI_ACT_SCANNER_LLM``) is a separate path for running the CLI outside Claude
-Code against a local Claude-Code wrapper. It is surfaced here for diagnostics
-but is **not** required for ``assisted`` mode — inside Claude Code the host
-session already is the LLM.
+Semantic depth outside Claude Code comes from the **MCP server**
+(``eu-ai-act-scan-mcp``): any MCP-capable agent calls the same deterministic
+engine over the Model Context Protocol using its own model subscription — no
+API key and no local wrapper required. ``assisted`` mode inside Claude Code
+simply means the host session (your existing subscription) narrates and
+remediates over the deterministic baseline.
 
 Config file: ``.eu-ai-act-scanner.toml`` at the project root (checked in or
 git-ignored, your call), with an optional user-level fallback at
@@ -35,8 +36,6 @@ import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
-
-from scanner import llm_bridge
 
 Mode = Literal["deterministic", "assisted"]
 
@@ -70,7 +69,6 @@ class Settings:
             "mode": self.mode,
             "auto_apply": self.auto_apply,
             "source": self.source,
-            "llm_bridge": llm_bridge.bridge_config(),
         }
 
 

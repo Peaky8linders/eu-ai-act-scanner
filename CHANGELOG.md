@@ -5,6 +5,97 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.0] - 2026-10-19
+
+### Changed — precision layer, canonical cross-framework crosswalk, MCP 2.x
+
+Dogfooding the scanner on its own repository exposed two classes of wrong
+output: **false positives** (the scanner's own prose, detector tables and test
+fixtures counted as evidence) and **false assurance** (a cross-framework
+projection built on non-canonical control IDs, with some KB dimensions absent
+from the catalogue entirely). Both are now fixed and pinned by tests.
+
+**Precision layer (`scanner/analyzers/_base.py`)**
+
+- New `search_code_files()` — source/config extensions only; skips full-line
+  comments, detector-definition lines, and matches outside triple-quoted
+  docstrings/string literals. A README sentence or a `*_PATTERNS` table can no
+  longer be read as an implementation.
+- New `is_test_path()` / `is_prompt_asset()` — test, fixture, spec and example
+  trees are not runtime evidence (a fixture importing torch had made the
+  scanner classify *itself* as a classical-ML system); prompt assets still
+  count where prompts are the artefact.
+- `agent_cascade`: only **broad** handlers swallow failures — `except re.error:
+  continue` is deliberate control flow, not a masked agent failure.
+- `model_typology`: quote-free HuggingFace patterns (the analyzer's own
+  `r"\bAutoModelForCausalLM\b"` table no longer self-matches), system prompts
+  only counted in LLM-context files or prompt assets.
+- `runtime_drift` / `privilege_minimization` / `agent_inventory`: test fixtures
+  excluded from inline-prompt, OAuth-overgrant and credential checks;
+  deterministic evidence-file attribution (a set iteration had made the
+  reported file change between runs).
+- Net effect on the scanner's own repo: 10 gap findings → 4, all genuine
+  (no agent-inventory artefact, no Art. 25(4) adjacent-legislation note, no
+  adversarial-test CI gate; `permissions: contents: read` added to CI).
+
+**Cross-framework crosswalk (`scanner/data/frameworks.py`, catalogue `2026.10.v2`)**
+
+- Every one of the 23 KB dimensions and every KB article now projects onto a
+  framework — previously unmapped dimensions were invisible to the readiness
+  percentages, which read as false assurance.
+- Control IDs corrected to the published catalogues: NIST AI RMF subcategory
+  form (`MS-2.3`, `GV-1.4` — not `MEASURE-2.3`/`GOVERN-1.4`), NIST AI 600-1
+  suggested-action form (`GV-1.4-001`, `MS-2.7-001`, `MS-2.11-001` — not
+  `GAI-*`), CSA AICM v1.0 domains (`GRC-02`, `MDS-03`, `IAM-03`, `DSP-20`,
+  `AIS-08` — not `AIM-*`/`DGV-01`), MITRE ATLAS `AML.T0115` for the retired
+  `AML.T0019`, and a single GDPR vocabulary (`Art. 30(1)`).
+- MITRE ATLAS entries are documented as the techniques a control *mitigates*
+  (`AML.T####`); mitigation/technique mixing was removed.
+- `get_crosswalk_for_article()` accepts `art15`, `Art. 15`, `Article 15.4` and
+  `15` — the KB is keyed on `artNN`, so display spellings used to return an
+  empty crosswalk (CLI `--article` and MCP `get_article` now share the resolver).
+- New `tests/test_crosswalk_catalogue.py` pins the ID grammar of all 11
+  frameworks, rejects retired identifiers, and asserts full KB coverage.
+
+**MCP server (`scanner/mcp_server.py`)**
+
+- Supports both SDK generations: `mcp >= 2` (`MCPServer`) and `mcp 1.x`
+  (`FastMCP`) — a fresh install previously failed at `build_server()` because
+  the 2.0 rename was unhandled. 11 tools, version surfaced on both SDKs, and
+  the mcp test module now runs instead of skipping.
+
+**Removed**
+
+- `scanner/llm_bridge.py` (the Claude Max HTTP-wrapper bridge) and its tests.
+  The optional semantic paths run through the host agent — Claude Code via the
+  plugin, or any MCP client — so no local wrapper process, base URL or tunnel is
+  needed. Deterministic mode remains the default and stays 100% local.
+
+**Docs**
+
+- README rewritten around the three surfaces (plugin / library / MCP server)
+  and "your subscription, two paths"; analyzer tables moved to the skills.
+- `plugin.json` / `pyproject.toml` / `scanner.__version__` unified at **0.10.0**.
+
+## [0.9.0] - 2026-10-08
+
+### Added — Digital Omnibus, cross-framework projection, context graph, dossier
+
+- **Digital Omnibus (Regulation (EU) 2026/1744)** support: high-risk obligations
+  tracked against the deferred 2 Dec 2027 date while Art. 50 stays on
+  2 Aug 2026; timeline skill and countdown updated.
+- **Cross-framework projection** — `/ai-act-cross-framework` and
+  `eu-ai-act-scan --cross-framework` project a scan onto NIST AI RMF, ISO 42001,
+  OWASP LLM/Agentic, GDPR, MITRE ATLAS, SOC 2, ISO 27002, CSA AICM and NIST
+  SP 800-53, with "satisfy once, comply everywhere" levers (catalogue corrected
+  in 0.10.0).
+- **Context graph visualizer** — `/ai-act-graph` writes an interactive HTML
+  browser of the scanned architecture (`scanner/visual_graph.py`).
+- **Compliance release dossier** — `/ai-act-dossier` binds git commit, file
+  SHA-256 digests and statutory grounding into a tamper-evident artefact.
+- MCP server grew the matching tools; CLI gained `--cross-framework`, `--graph`,
+  `--dossier`.
+
 ## [0.8.0] - 2026-07-13
 
 ### Added — Article 50 transparency analyzer, grounded Q&A, and assisted mode

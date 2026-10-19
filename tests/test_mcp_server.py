@@ -111,11 +111,33 @@ def test_get_article_unknown_returns_error_and_empty_lists() -> None:
     assert "error" in result
     assert result["dimensions"] == []
     assert result["incidents"] == []
+    assert result["frameworks"] == {}
+
+
+def test_get_article_surfaces_cross_framework_controls() -> None:
+    result = tool_get_article("art15")
+    assert "error" not in result
+    fw = result["frameworks"]
+    assert "owasp_llm" in fw and len(fw["owasp_llm"]) > 0
+    assert "gdpr" in fw
+    assert "nist_ai_rmf" in fw
+    # No variant keys leak through
+    assert "owasp_llm_top10" not in fw and "owasp_llm_2025" not in fw
 
 
 def test_get_article_json_serializable() -> None:
     _json_serializable(tool_get_article("art15"))
     _json_serializable(tool_get_article("art999"))
+
+
+def test_get_article_accepts_display_and_user_facing_spellings() -> None:
+    """Callers pass 'Art. 15' / 'Article 15.4' too — those must not read as
+    an unknown article (the KB is keyed on artNN)."""
+    for spelling in ("Art. 15", "Article 15.4", "15"):
+        result = tool_get_article(spelling)
+        assert "error" not in result, spelling
+        assert result["article"] == "art15", spelling
+        assert result["frameworks"]["nist_ai_rmf"], spelling
 
 
 # ---------------------------------------------------------------------------

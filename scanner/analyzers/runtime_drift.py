@@ -47,6 +47,7 @@ from scanner.analyzers._base import (
     AnalyzerResult,
     Finding,
     has_file,
+    is_test_path,
     search_files,
 )
 
@@ -182,9 +183,13 @@ def analyze_runtime_drift(ctx: AnalyzerContext) -> AnalyzerResult:
         ))
 
     # ── 2. System-prompt versioning ─────────────────────────────────────
+    # Test fixtures and prompt-regression harnesses embed inline prompts by
+    # design; only shipped code counts as a versioning gap.
     inline_prompt_hits: list[tuple[str, str]] = []
     for pattern in _INLINE_SYSTEM_PROMPT:
-        inline_prompt_hits.extend(search_files(ctx, pattern))
+        inline_prompt_hits.extend(
+            (p, line) for p, line in search_files(ctx, pattern) if not is_test_path(p)
+        )
     versioned_prompt_files = []
     for hint in _VERSIONED_PROMPT_HINTS:
         versioned_prompt_files.extend(has_file(ctx, hint))

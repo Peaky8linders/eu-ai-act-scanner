@@ -48,6 +48,11 @@ _ERROR_PROPAGATION_PATTERNS = [
     r"\.get\(.*default|\.get\(.*None\)",
 ]
 
+# `except <types>:` — the captured expression decides whether a handler is
+# broad (swallowing) or narrow (deliberate). `except:` and
+# `except Exception:` are broad; `except re.error:` is not.
+_EXCEPT_CLAUSE_RE = re.compile(r"^except\b(?P<types>[^:]*):")
+
 
 def analyze_agent_cascade(ctx: AnalyzerContext) -> AnalyzerResult:
     findings: list[Finding] = []
@@ -169,14 +174,22 @@ def analyze_agent_cascade(ctx: AnalyzerContext) -> AnalyzerResult:
             lines = content.split("\n")
             for i, line in enumerate(lines):
                 stripped = line.strip()
-                if re.match(r"except.*:", stripped):
-                    # Check current line and next line for bare pass/continue/...
-                    if re.search(r"\b(pass|continue)\b", stripped):
-                        swallowed_in_agents.append((path, stripped))
-                        break
-                    elif i + 1 < len(lines) and re.match(r"\s*(pass|continue|\.\.\.)\s*$", lines[i + 1]):
-                        swallowed_in_agents.append((path, f"{stripped} → {lines[i+1].strip()}"))
-                        break
+                clause = _EXCEPT_CLAUSE_RE.match(stripped)
+                if not clause:
+                    continue
+                # A narrow handler (`except re.error: continue`) is deliberate
+                # control flow — a detector skipping an unparseable pattern is
+                # not a masked agent failure. Only broad handlers swallow.
+                types = (clause.group("types") or "").strip()
+                if types and "Exception" not in types and "BaseException" not in types:
+                    continue
+                # Check current line and next line for bare pass/continue/...
+                if re.search(r"\b(pass|continue)\b", stripped):
+                    swallowed_in_agents.append((path, stripped))
+                    break
+                elif i + 1 < len(lines) and re.match(r"\s*(pass|continue|\.\.\.)\s*$", lines[i + 1]):
+                    swallowed_in_agents.append((path, f"{stripped} → {lines[i+1].strip()}"))
+                    break
         if swallowed_in_agents:
             findings.append(Finding(
                 id="ac-silent-failure", category="agent_cascade",

@@ -16,7 +16,7 @@ from scanner.analyzers._base import (
     Finding,
     file_content,
     get_import_modules,
-    search_files,
+    search_code_files,
 )
 
 _FRAMEWORKS = {
@@ -88,12 +88,13 @@ def analyze_ai_frameworks(ctx: AnalyzerContext) -> AnalyzerResult:
                     ))
                     break
 
-    # Regex fallback for non-Python files (JS/TS/Java/etc.)
+    # Regex fallback for non-Python files (JS/TS/Java/etc.) — code files only,
+    # so README/CHANGELOG prose never counts as framework evidence.
     for name, patterns in _FRAMEWORKS.items():
         if name in ast_detected:
             continue
         for pat in patterns:
-            matches = search_files(ctx, pat)
+            matches = search_code_files(ctx, pat)
             # Only match non-Python files (Python already covered by AST)
             non_py = [(p, s) for p, s in matches if not p.endswith(".py")]
             if non_py:
@@ -144,9 +145,9 @@ def analyze_ai_frameworks(ctx: AnalyzerContext) -> AnalyzerResult:
                 kb_question_ids=["sp-1"], suggested_answer="yes",
             ))
 
-    # 3. Deprecated API usage
+    # 3. Deprecated API usage (code files only — never our own detector tables)
     for pat, desc in _DEPRECATED:
-        matches = search_files(ctx, pat)
+        matches = search_code_files(ctx, pat)
         if matches:
             findings.append(Finding(
                 id=f"af-deprecated-{desc[:20].replace(' ', '-').lower()}", category="ai_frameworks",
@@ -158,9 +159,10 @@ def analyze_ai_frameworks(ctx: AnalyzerContext) -> AnalyzerResult:
                 evidence_snippet=matches[0][1],
             ))
 
-    # 4. Safe vs unsafe model loading
+    # 4. Safe vs unsafe model loading (code files only — never our own
+    # pattern-definition strings)
     for pat, desc in _UNSAFE_LOAD:
-        matches = search_files(ctx, pat)
+        matches = search_code_files(ctx, pat)
         if matches:
             findings.append(Finding(
                 id=f"af-unsafe-{desc[:15].replace(' ', '-').lower()}", category="ai_frameworks",
@@ -173,7 +175,7 @@ def analyze_ai_frameworks(ctx: AnalyzerContext) -> AnalyzerResult:
             ))
 
     for pat, desc in _SAFE_LOAD:
-        matches = search_files(ctx, pat)
+        matches = search_code_files(ctx, pat)
         if matches:
             findings.append(Finding(
                 id=f"af-safe-{desc[:15].replace(' ', '-').lower()}", category="ai_frameworks",
@@ -197,7 +199,7 @@ def analyze_ai_frameworks(ctx: AnalyzerContext) -> AnalyzerResult:
         ))
 
     # 6. GPU/accelerator
-    gpu_matches = search_files(ctx, r"\bcuda\b|\bmps\b|\btpu\b|\.to\(['\"]cuda")
+    gpu_matches = search_code_files(ctx, r"\bcuda\b|\bmps\b|\btpu\b|\.to\(['\"]cuda")
     if gpu_matches:
         findings.append(Finding(
             id="af-gpu", category="ai_frameworks",
@@ -210,7 +212,7 @@ def analyze_ai_frameworks(ctx: AnalyzerContext) -> AnalyzerResult:
         ))
 
     # 7. ONNX export
-    onnx_matches = search_files(ctx, r"onnx\.export|torch\.onnx|onnxruntime")
+    onnx_matches = search_code_files(ctx, r"onnx\.export|torch\.onnx|onnxruntime")
     if onnx_matches:
         findings.append(Finding(
             id="af-onnx", category="ai_frameworks",

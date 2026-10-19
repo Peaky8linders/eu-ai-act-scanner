@@ -7,10 +7,11 @@ directory it:
 2. Ranks the actionable (gap / low-score) KB dimensions by
    ``low_score x article_weight`` with the command-md tie-break priority
    (:func:`rank_gaps`).
-3. For the top ``N`` ranked dimensions, builds a :class:`FixProposal` — a
-   deterministic fixer where one exists (:data:`DETERMINISTIC_FIXERS`),
-   otherwise an optional LLM-drafted proposal (:func:`llm_propose`, only when
-   :func:`scanner.llm_bridge.is_enabled`).
+3. For the top ``N`` ranked dimensions, builds a :class:`FixProposal` from a
+   deterministic fixer (:data:`DETERMINISTIC_FIXERS`). Dimensions without a
+deterministic fixer get no proposal here — design those with your own
+Claude Code session (assisted mode) or any MCP client over the grounded
+scan output.
 4. In ``--apply`` mode: writes each proposal's file(s) **under the scanned
    root**, rescans, and computes per-dimension + overall deltas. A
    **regression guard** reverts any fix that drops *any* dimension score below
@@ -41,7 +42,7 @@ from typing import Literal
 import structlog
 from pydantic import BaseModel, Field
 
-from scanner import grounding, llm_bridge
+from scanner import grounding
 from scanner.kb import get_dimension
 from scanner.models import ScanResult
 from scanner.orchestrator import scan_project
@@ -54,7 +55,6 @@ __all__ = [
     "FixLoopResult",
     "DETERMINISTIC_FIXERS",
     "rank_gaps",
-    "llm_propose",
     "run_fix_loop",
     "main",
 ]
@@ -86,7 +86,7 @@ class FixProposal(BaseModel):
     article: str
     title: str
     rationale: str
-    fix_kind: Literal["deterministic", "llm"]
+    fix_kind: Literal["deterministic", "assisted"]
     target_path: str
     content: str
     creates_file: bool = True
@@ -595,75 +595,6 @@ def _fixer_key_for_dimension(dim_id: str) -> str | None:
     return _DIMENSION_TO_FIXER.get(dim_id)
 
 
-# ── Optional LLM proposal ────────────────────────────────────────────────────
-
-
-def llm_propose(dim_id: str, root: Path) -> FixProposal | None:
-    """Draft a remediation proposal for a dimension via the LLM bridge.
-
-    Returns ``None`` immediately when the bridge is disabled
-    (:func:`scanner.llm_bridge.is_enabled`). Otherwise calls
-    :func:`scanner.llm_bridge.complete_json` with the dimension's authoritative
-    grounding (:func:`scanner.grounding.ground_prompt`) as system context, and
-    runs any returned prose through
-    :func:`scanner.grounding.filter_unsupported_sentences` so unsupported
-    sentences (hallucination risk) are dropped. Returns ``None`` on any failure
-    — the loop falls back to "no proposal" for the dimension.
-    """
-    if not llm_bridge.is_enabled():
-        return None
-
-    dim = get_dimension(dim_id)
-    if dim is None:
-        return None
-
-    system = grounding.ground_prompt(dim_id) or (
-        "You are an EU AI Act compliance remediation assistant."
-    )
-    article_refs = tuple(split_dimension_articles(dim.article))
-    user = (
-        f"Propose a single concrete remediation for the '{dim.label}' compliance "
-        f"dimension ({dim.article}). Respond ONLY with JSON: "
-        '{"title": "...", "rationale": "...", "target_path": "relative/path", '
-        '"content": "file content"}. '
-        "Use <FILL IN: ...> placeholders for any factual claim you cannot verify."
-    )
-
-    try:
-        parsed, result = llm_bridge.complete_json(system, user)
-    except Exception as exc:  # noqa: BLE001 — bridge is best-effort, never blocks
-        logger.debug("llm_propose_failed", dim_id=dim_id, error=str(exc)[:120])
-        return None
-
-    if result.error is not None or not isinstance(parsed, dict):
-        logger.debug("llm_propose_no_json", dim_id=dim_id, error=result.error)
-        return None
-
-    target_path = str(parsed.get("target_path") or "").strip()
-    content = str(parsed.get("content") or "")
-    if not target_path or not content:
-        return None
-
-    rationale = str(parsed.get("rationale") or "")
-    if rationale and article_refs:
-        rationale = grounding.filter_unsupported_sentences(rationale, article_refs)
-
-    title = str(parsed.get("title") or f"LLM remediation for {dim.label}")
-
-    return FixProposal(
-        id=f"fix-llm-{dim_id}",
-        dimension=dim_id,
-        article=dim.article,
-        title=title,
-        rationale=rationale or f"LLM-drafted remediation for {dim.label}.",
-        fix_kind="llm",
-        target_path=target_path,
-        content=content,
-        verification="Re-scan after applying to confirm the evidence is detected.",
-        grounded_obligation=_obligation_for(dim.article),
-    )
-
-
 # ── Apply / revert helpers ───────────────────────────────────────────────────
 
 
@@ -744,22 +675,12 @@ def _regressed_dimensions(
 # ── Main loop ────────────────────────────────────────────────────────────────
 
 
-def _build_proposal(
-    dim_id: str, root: Path, *, use_llm: bool
-) -> tuple[FixProposal | None, bool]:
-    """Build a proposal for a dimension. Returns ``(proposal, llm_used)``.
-
-    Deterministic fixer first (resolving the dimension to a fixer key); LLM
-    fallback only when no deterministic fixer applies AND ``use_llm`` is on AND
-    the bridge is enabled. ``llm_used`` is True only when an LLM call was made.
-    """
+def _build_proposal(dim_id: str, root: Path) -> FixProposal | None:
+    """Build a deterministic proposal for a dimension, or None."""
     fixer_key = _fixer_key_for_dimension(dim_id)
     if fixer_key is not None:
-        return DETERMINISTIC_FIXERS[fixer_key](root), False
-    if use_llm:
-        proposal = llm_propose(dim_id, root)
-        return proposal, proposal is not None
-    return None, False
+        return DETERMINISTIC_FIXERS[fixer_key](root)
+    return None
 
 
 def run_fix_loop(
@@ -770,6 +691,7 @@ def run_fix_loop(
     apply: bool = False,
     use_llm: bool | None = None,
     min_delta: float = 0.1,
+    **_ignored: object,
 ) -> FixLoopResult:
     """Run the autonomous scan -> fix -> rescan loop.
 
@@ -780,8 +702,10 @@ def run_fix_loop(
         apply: When False (default, SAFE) only collects proposals — nothing is
             written. When True, writes each proposal, rescans, and keeps it only
             if no dimension regressed (otherwise reverts).
-        use_llm: Force-enable/disable the LLM fallback. ``None`` (default) =
-            follow :func:`scanner.llm_bridge.is_enabled`.
+        use_llm: Deprecated, ignored. Semantic proposals beyond the
+            deterministic fixers belong in the host Claude Code session
+            (assisted mode) or an MCP client — kept only for backwards
+            compatibility.
         min_delta: Minimum overall improvement (in points) for the run to count
             an iteration as "made progress"; used only for the convergence
             signal, not as a revert threshold.
@@ -793,12 +717,6 @@ def run_fix_loop(
     root_path = Path(root).resolve()
     if not root_path.is_dir():
         raise ValueError(f"Not a directory: {root_path}")
-
-    if use_llm is None:
-        use_llm = llm_bridge.is_enabled()
-    elif use_llm and not llm_bridge.is_enabled():
-        # Caller asked for LLM but the bridge is off — honour the bridge.
-        use_llm = False
 
     baseline = scan_project(root_path)
 
@@ -845,9 +763,7 @@ def run_fix_loop(
         for dim_id, _score in ranked:
             if len(iteration_proposals) >= top_n:
                 break
-            proposal, used = _build_proposal(dim_id, root_path, use_llm=use_llm)
-            if used:
-                llm_used = True
+            proposal = _build_proposal(dim_id, root_path)
             if proposal is None:
                 continue
             if proposal.target_path in proposed_targets:
@@ -991,7 +907,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--apply", action="store_true", help="Write fixes (default: dry-run).")
     parser.add_argument("--top", type=int, default=3, help="Top N gaps to remediate per iteration.")
     parser.add_argument("--max-iter", type=int, default=5, help="Max loop iterations.")
-    parser.add_argument("--use-llm", action="store_true", help="Enable the LLM fallback fixer.")
+    parser.add_argument("--use-llm", action="store_true", help="Deprecated, ignored (kept for compatibility).")
     parser.add_argument("--json", action="store_true", help="Emit JSON instead of markdown.")
     args = parser.parse_args(argv)
 

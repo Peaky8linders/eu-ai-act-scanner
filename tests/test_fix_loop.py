@@ -17,7 +17,6 @@ from scanner.fix_loop import (
     DETERMINISTIC_FIXERS,
     FixLoopResult,
     FixProposal,
-    llm_propose,
     main,
     rank_gaps,
     run_fix_loop,
@@ -25,12 +24,6 @@ from scanner.fix_loop import (
 
 FIXTURE = Path(__file__).parent / "fixtures" / "sample_project"
 NON_AI_FIXTURE = Path(__file__).parent / "fixtures" / "non_ai_project"
-
-
-@pytest.fixture(autouse=True)
-def _disable_llm(monkeypatch):
-    """Force the LLM bridge OFF for every test — guarantees no network calls."""
-    monkeypatch.setattr("scanner.llm_bridge.is_enabled", lambda: False)
 
 
 @pytest.fixture
@@ -260,15 +253,8 @@ def test_accepted_fix_produces_detectable_evidence(project):
     assert applied_dims & improved
 
 
-# ─── LLM path (disabled) ──────────────────────────────────────────────────
-
-
-def test_llm_propose_returns_none_when_disabled(project):
-    assert llm_propose("logging", project) is None
-
-
-def test_use_llm_flag_ignored_when_bridge_disabled(project):
-    """--use-llm must not flip llm_used when the bridge is off (hermetic)."""
+def test_use_llm_flag_ignored_for_compatibility(project):
+    """use_llm is deprecated/ignored — loop stays deterministic, offline."""
     result = run_fix_loop(project, top_n=3, apply=False, use_llm=True)
     assert result.llm_used is False
 
