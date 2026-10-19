@@ -27,6 +27,15 @@ truth; never inline literals in engine code).
 
 Citation line numbers refer to *AI Agents Under EU Law* (Working Paper,
 7 April 2026).
+
+Wording convention: a control or artefact the Regulation itself requires is
+stated with its article and nothing else. Guidance that comes from the paper
+rather than from the Act is marked "the paper recommends" / "the paper notes",
+and carries the paper line reference. The two are never merged into one claim:
+the Act requires written Art. 25(4) agreements only from the provider of a
+high-risk system toward suppliers of integrated AI systems, models, tools,
+services or components (FOSS tools carved out, GPAI models not), which is a
+narrower duty than the paper's suggested catalogue-wide governance.
 """
 
 from __future__ import annotations
@@ -228,17 +237,18 @@ COMPOUND_RISK_TYPES: list[CompoundRiskEntry] = [
             "Orchestrator + 3 sub-agents: 'could constitute one system or four' depending on placement on market (lines 1599-1601).",
             "Multi-layer assembly chain — Article 25 substantial-modification + own-name triggers may apply at multiple layers simultaneously (footnote 33, lines 1606-1611).",
             "Dynamic tool discovery — agents select tools at runtime not part of original conformity assessment (lines 1881-1890).",
-            "Recital 88 only encourages tool-supplier cooperation; no binding obligation absent prior contracts (line 1886).",
+            "Runtime-discovered tools have no supplier to contract with, so an Art. 25(4) written agreement cannot be obtained for them; the paper notes that Recital 88 only encourages tool-supplier cooperation (line 1886).",
         ],
         "mitigation_pattern": [
             "Designated 'responsible person' in the EU per MSR Article 4 / AI Act Art. 74 (line 1064).",
-            "Written Article 25(4) agreements with every static tool supplier (lines 1881-1883).",
+            "Written Art. 25(4) agreements with the suppliers of AI systems, models, tools, services or components integrated into a high-risk system, covering information, capabilities, technical access and assistance. Publicly available FOSS tools, services and components are carved out; general-purpose AI models are not.",
+            "The paper recommends extending that written record across the whole static tool catalogue (lines 1881-1883) — governance beyond the Act's supplier-only duty.",
             "Declared external-action inventory — Step 9 of the compliance sequence (line 1729).",
             "Contractual + technical exclusion of high-risk deployments where the platform cannot predict use (line 357).",
         ],
         "evidence_required": [
-            "Article 25(4) agreements on file for the static tool catalogue.",
-            "Declared static tool catalogue with provider attestation.",
+            "Art. 25(4) written agreements on file for each integrated third-party AI component.",
+            "Declared static tool catalogue with provider attestation — the paper's broader recommendation, not an Act requirement (lines 1881-1883).",
             "Classification reasoning documented per system per Step 2 (lines 1626-1634).",
             "EU declaration of conformity naming the responsible person.",
         ],
@@ -487,7 +497,7 @@ AGENT_ARCHETYPES: list[AgentArchetypeEntry] = [
     {
         "id": AgentArchetype.dynamic_tool_discovery.value,
         "label": "Dynamic Tool Discovery",
-        "description": "Tools are selected at runtime — typically via MCP or registry lookups — and were not part of the original conformity assessment. Falls outside Art. 25(4) which presupposes pre-established contracts.",
+        "description": "Tools are selected at runtime — typically via MCP or registry lookups — and were not part of the original conformity assessment. Art. 25(4)'s written-agreement route presupposes an identified supplier, so runtime-discovered tools may fall outside it; control the integration point instead (Art. 9 risk management, Art. 15 robustness) (lines 1874-1890).",
         "typical_compound_risks": [
             CompoundRiskType.attribution.value,
             CompoundRiskType.temporal.value,

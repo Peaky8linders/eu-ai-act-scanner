@@ -180,7 +180,13 @@ OBLIGATION_TEXT: dict[str, str] = {
         "substantial modification to it, or modify its intended purpose so that it "
         "becomes high-risk. Where such a change occurs the original provider must "
         "cooperate closely and make available the information needed to fulfil the "
-        "obligations, in particular for conformity assessment."
+        "obligations, in particular for conformity assessment. Separately, the "
+        "provider of a high-risk system and any third party supplying an AI system, "
+        "model, tools, services or components that it integrates must agree in "
+        "writing on the information, capabilities, technical access and assistance "
+        "the provider needs in order to comply — an agreement that publicly "
+        "available free-and-open-source tools, services and components need not "
+        "enter, though general-purpose AI models cannot claim that carve-out."
     ),
     "Art. 26": (
         "Deployers of high-risk AI systems must take appropriate technical and "

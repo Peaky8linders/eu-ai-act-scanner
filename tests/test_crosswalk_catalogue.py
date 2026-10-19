@@ -142,6 +142,30 @@ def test_taxonomy_display_labels_match_published_titles() -> None:
     assert MITRE_ATLAS_LABELS["AML.T0049"] == "Exploit Public-Facing Application"
 
 
+def test_article_25_4_guidance_separates_legal_duty_from_paper_recommendation() -> None:
+    """Art. 25(4) binds the provider of a high-risk system toward the suppliers of
+    AI systems/models/tools/services/components it integrates, with a FOSS carve-out
+    (GPAI models excluded). The taxonomy used to require agreements with "every
+    static tool supplier" — broader than the Act — while calling tool-supplier
+    cooperation merely encouraged. Wrong in opposite directions; pin the split."""
+    from scanner.data.agentic_taxonomy import AGENT_ARCHETYPES, COMPOUND_RISK_TYPES
+
+    attribution = next(r for r in COMPOUND_RISK_TYPES if r["id"] == "attribution")
+    text = " ".join(
+        attribution["failure_modes"]
+        + attribution["mitigation_pattern"]
+        + attribution["evidence_required"]
+    )
+    assert "every static tool supplier" not in text
+    assert "carved out" in text, "FOSS carve-out must be stated with the duty"
+    assert "paper recommends" in text, "paper-only guidance must be attributed"
+    assert "integrated" in text, "duty is limited to integrated components"
+
+    discovery = next(a for a in AGENT_ARCHETYPES if a["id"] == "dynamic_tool_discovery")
+    assert "Falls outside Art. 25(4)" not in discovery["description"]
+    assert "presupposes an identified supplier" in discovery["description"]
+
+
 def test_every_kb_dimension_has_a_crosswalk() -> None:
     from scanner.kb import DIMENSIONS
 

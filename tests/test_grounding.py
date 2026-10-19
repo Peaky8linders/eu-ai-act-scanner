@@ -69,6 +69,18 @@ class TestObligationTextCoverage:
             assert key.startswith("Art. "), key
             assert key.removeprefix("Art. ").isdigit(), key
 
+    def test_art_25_states_the_written_supplier_agreement(self):
+        """Art. 25(4) is a written supplier-to-provider agreement (information,
+        capabilities, technical access, assistance) with a FOSS carve-out that
+        excludes GPAI models. Dropping it left the grounding block describing
+        only the Art. 25(1) role flip, so an answer about value-chain agreements
+        had no authoritative text to stand on."""
+        text = OBLIGATION_TEXT["Art. 25"]
+        assert "in writing" in text
+        assert "technical access" in text
+        assert "open-source" in text
+        assert "general-purpose AI models" in text
+
 
 class TestObligationTextLookup:
     def test_accepts_canonical_form(self):
