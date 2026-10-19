@@ -205,14 +205,23 @@ def _incidents_payload(key: str, limit: int = 5) -> dict:
 
 def _filter_by_article(result, article: str) -> dict:
     """Return a dict containing only findings/scores relevant to one article."""
-    dims = {d.id for d in dimensions_for_article(article)}
+    from scanner.data.frameworks import get_crosswalk_for_article
+    from scanner.refs import article_key
+
+    # Accept every spelling the CLI is likely to receive: art15, "Art. 15",
+    # "Article 15.4", 15 — the KB is keyed on artNN only.
+    key = article_key(article)
+    dims = {d.id for d in dimensions_for_article(key)} if key else set()
     if not dims:
         return {"error": f"Unknown article '{article}'. Try art9, art15, art50, etc."}
+
+    frameworks = get_crosswalk_for_article(article)
 
     return {
         "article": article,
         "is_ai_system": result.is_ai_system,
         "dimensions": sorted(dims),
+        "frameworks": {k: sorted(v) for k, v in frameworks.items()},
         "compliance_scores": {k: v for k, v in result.compliance_scores.items() if k in dims},
         "components": [
             c.model_dump()
@@ -284,21 +293,13 @@ def main(argv: list[str] | None = None) -> int:
         help="Max incidents to return for --incidents (default: 5).",
     )
     parser.add_argument(
-        "--llm-status",
-        action="store_true",
-        help=(
-            "Report the Claude Max LLM-bridge configuration and probe the "
-            "wrapper's /health endpoint. Does not scan a codebase."
-        ),
-    )
-    parser.add_argument(
         "--ask", "-q",
         metavar="QUESTION",
         help=(
             "Answer an EU AI Act question, grounded in the bundled knowledge base "
             "(verbatim statute text + obligation paraphrases + risk taxonomy). "
-            "Offline + deterministic by default; uses the LLM bridge / assisted "
-            "mode when available. Does not scan a codebase."
+            "Offline + deterministic. Semantic narration lives in your host "
+            "Claude Code session or MCP client. Does not scan a codebase."
         ),
     )
     parser.add_argument(
@@ -310,7 +311,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--settings",
         action="store_true",
-        help="Print the resolved scanner settings (mode, auto_apply, LLM bridge).",
+        help="Print the resolved scanner settings (mode, auto_apply).",
     )
     parser.add_argument(
         "--set",
@@ -324,7 +325,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--mode",
         choices=("deterministic", "assisted"),
-        help="Override the mode for this invocation (affects --ask synthesis).",
+        help="Override the mode for this invocation (accepted for compatibility).",
     )
     parser.add_argument(
         "--cross-framework", "-x",
@@ -340,7 +341,7 @@ def main(argv: list[str] | None = None) -> int:
         "--deep", "--extensive",
         dest="deep",
         action="store_true",
-        help="Perform extensive semantic audit via Claude Code or Codex bridge.",
+        help="Include a semantic-review pointer for your host Claude Code / MCP client.",
     )
     parser.add_argument(
         "--dossier",
@@ -411,22 +412,12 @@ def main(argv: list[str] | None = None) -> int:
         from scanner.qa import answer_question
         from scanner.settings import load_settings
 
-        mode = args.mode or load_settings().mode
-        use_llm = True if mode == "assisted" else None
-        qa_result = answer_question(args.ask, top_k=max(1, args.top_k), use_llm=use_llm)
+        qa_result = answer_question(args.ask, top_k=max(1, args.top_k))
         if args.json:
             print(qa_result.model_dump_json(indent=2))
         else:
             print(_format_qa(qa_result))
         return 0
-
-    # LLM-bridge diagnostics — config + live health probe, no codebase scan.
-    if args.llm_status:
-        from scanner.llm_bridge import bridge_config, bridge_health
-
-        payload = {"config": bridge_config(), "health": bridge_health()}
-        print(json.dumps(payload, indent=2, default=str))
-        return 0 if payload["health"]["reachable"] else 1
 
     # Incident lookup is a corpus query — no codebase scan required.
     if args.incidents:
@@ -464,6 +455,16 @@ def main(argv: list[str] | None = None) -> int:
             print("\n".join(lines))
         return 0
 
+    if args.deep:
+        # Kept as an accepted no-op so existing scripts keep working, but a
+        # silent flag is worse than a notice: say where semantic review went.
+        print(
+            "note: --deep is deprecated and ignored — semantic review runs in "
+            "your host Claude Code session (assisted mode) or any MCP client; "
+            "the scan itself is always the full deterministic pass.",
+            file=sys.stderr,
+        )
+
     try:
         result = scan_project(
             path,
@@ -476,34 +477,40 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 2
 
+    # Artefact writers (dossier, graph) are additive: passing both must write
+    # both. They suppress the default JSON dump only when no other output mode
+    # was requested (an early return used to silently drop the second one).
+    wrote_artefact = False
+
     # Cryptographic dossier generation
     if args.dossier:
         from scanner.dossier import generate_dossier
         dossier = generate_dossier(result, path)
         dossier_path = dossier.export_json(args.dossier)
-        if not args.json and not args.markdown:
-            print(
-                f"Sealed cryptographic compliance dossier written to: {dossier_path} "
-                f"(Integrity SHA-256: {dossier.dossier_integrity_hash[:16]}...)"
-            )
-            return 0
+        message = (
+            f"Sealed cryptographic compliance dossier written to: {dossier_path} "
+            f"(Integrity SHA-256: {dossier.dossier_integrity_hash[:16]}...)"
+        )
+        if args.json or args.markdown:
+            print(message, file=sys.stderr)
         else:
-            print(
-                f"Sealed cryptographic compliance dossier written to: {dossier_path} "
-                f"(Integrity SHA-256: {dossier.dossier_integrity_hash[:16]}...)",
-                file=sys.stderr,
-            )
+            print(message)
+        wrote_artefact = True
 
     # Interactive context graph visual generation
     if args.graph:
         from scanner.visual_graph import generate_visual_graph
         graph_path = Path(args.graph)
         generate_visual_graph(result, output_path=graph_path, root_path=path)
-        if not args.json and not args.markdown:
-            print(f"Interactive context graph visual written to: {graph_path}")
-            return 0
+        message = f"Interactive context graph visual written to: {graph_path}"
+        if args.json or args.markdown:
+            print(message, file=sys.stderr)
         else:
-            print(f"Interactive context graph visual written to: {graph_path}", file=sys.stderr)
+            print(message)
+        wrote_artefact = True
+
+    if wrote_artefact and not (args.json or args.markdown or args.article or args.cross_framework):
+        return 0
 
     if args.article:
         payload = _filter_by_article(result, args.article)

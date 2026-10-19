@@ -1,0 +1,166 @@
+"""Catalogue-integrity tests for the cross-framework crosswalk.
+
+The projection is only as trustworthy as its identifiers: a fabricated or
+non-canonical control ID (``MEASURE-2.3``, ``AIM-07``, ``GAI-8``) reads as a
+real mapping to anyone who does not have the standard open next to it, and a
+retired ID silently rots. These tests pin the ID grammar of every framework so
+a wrong ID fails CI instead of shipping.
+"""
+
+from __future__ import annotations
+
+import re
+
+import pytest
+
+from scanner.data.frameworks import (
+    ARTICLE_FRAMEWORK_CROSSWALK,
+    CANONICAL_FRAMEWORK_IDS,
+    DIMENSION_CROSSWALK,
+    FRAMEWORK_LABELS,
+    get_crosswalk_for_article,
+    normalize_framework_id,
+)
+from scanner.data.frameworks import CANONICAL_FRAMEWORK_IDS as _CANON
+
+# Canonical ID grammar per framework, verified against the published catalogues:
+#   NIST AI RMF 1.0      -> GV/MP/MS/MG-<category>.<subcategory>
+#   ISO/IEC 42001:2023   -> clause numbers / Annex A control numbers
+#   OWASP LLM 2025       -> LLM01:2025 .. LLM10:2025
+#   OWASP Agentic 2025   -> ASI01 .. ASI10
+#   MITRE ATLAS          -> AML.T#### techniques (threats mitigated, not controls)
+#   NIST AI 600-1        -> <function>-<cat>.<subcat>-<action#>
+#   CSA AICM v1.0        -> <domain>-<NN> over its 18 published domains
+#   GDPR                 -> Art. <n>[(p)][(x)]
+#   SOC 2                -> CC<n>.<n> / PI1.<n> / A1.<n> / C1.<n>
+#   ISO/IEC 27002:2022   -> <theme>.<control>
+#   NIST SP 800-53 r5    -> <FAMILY>-<n>
+ID_PATTERNS: dict[str, re.Pattern[str]] = {
+    "nist_ai_rmf": re.compile(r"^(GV|MP|MS|MG)-\d+\.\d+$"),
+    "iso_42001": re.compile(r"^(\d+\.\d+|A\.\d+\.\d+)$"),
+    "owasp_llm": re.compile(r"^LLM(0[1-9]|10):2025$"),
+    "owasp_agentic": re.compile(r"^ASI(0[1-9]|10)$"),
+    "mitre_atlas": re.compile(r"^AML\.T\d{4}$"),
+    "nist_ai_600_1": re.compile(r"^(GV|MP|MS|MG)-\d+\.\d+-\d{3}$"),
+    "csa_aicm": re.compile(
+        r"^(A&A|AIS|BCR|CCC|CEK|DCS|DSP|GRC|HRS|IAM|IPY|I&S|LOG|MDS|SEF|STA|TVM|UEM)-\d{2}$"
+    ),
+    "gdpr": re.compile(r"^Art\. \d+(\(\d+\))?(\([a-z]\))?$"),
+    "soc2": re.compile(r"^(CC\d\.\d|PI1\.\d|A1\.\d|C1\.\d)$"),
+    "iso_27002": re.compile(r"^\d{1,2}\.\d{1,2}$"),
+    "nist_sp_800_53": re.compile(r"^[A-Z]{2}-\d+$"),
+}
+
+# IDs that were removed/renamed upstream and must not come back.
+RETIRED_IDS = {
+    "AML.T0019",  # Publish Poisoned Datasets -> folded into AML.T0115
+    "MEASURE-2.3",  # long form; canonical is MS-2.3
+    "GOVERN-1.4",  # long form; canonical is GV-1.4
+}
+
+
+def _all_mappings() -> list[tuple[str, str, str]]:
+    rows: list[tuple[str, str, str]] = []
+    for dim, mapping in DIMENSION_CROSSWALK.items():
+        for fw, ids in mapping.items():
+            rows.extend((f"dimension:{dim}", fw, cid) for cid in ids)
+    for art, mapping in ARTICLE_FRAMEWORK_CROSSWALK.items():
+        for fw, ids in mapping.items():
+            rows.extend((f"article:{art}", fw, cid) for cid in ids)
+    return rows
+
+
+def test_id_grammar_has_a_pattern_for_every_canonical_framework() -> None:
+    assert set(ID_PATTERNS) == set(_CANON)
+
+
+def test_every_referenced_framework_is_canonical() -> None:
+    for owner, fw, _ in _all_mappings():
+        assert fw in CANONICAL_FRAMEWORK_IDS, f"{owner} uses non-canonical framework {fw!r}"
+        assert fw in FRAMEWORK_LABELS, f"{owner} framework {fw!r} has no label"
+
+
+def test_control_ids_match_published_grammar() -> None:
+    bad = [
+        (owner, fw, cid)
+        for owner, fw, cid in _all_mappings()
+        if not ID_PATTERNS[fw].match(cid)
+    ]
+    assert bad == [], f"non-canonical control IDs: {bad}"
+
+
+def test_no_retired_identifiers() -> None:
+    offenders = [
+        (owner, fw, cid)
+        for owner, fw, cid in _all_mappings()
+        if cid in RETIRED_IDS or cid.startswith("GAI-")
+    ]
+    assert offenders == [], f"retired IDs reintroduced: {offenders}"
+
+
+def test_no_duplicate_controls_within_a_framework_and_dimension() -> None:
+    for dim, mapping in DIMENSION_CROSSWALK.items():
+        for fw, ids in mapping.items():
+            assert len(ids) == len(set(ids)), f"{dim}/{fw} has duplicates: {ids}"
+
+
+def test_gdpr_uses_one_vocabulary() -> None:
+    """Dimension and article tables used two spellings ('30.1' vs 'Art. 30')."""
+    for owner, fw, cid in _all_mappings():
+        if fw != "gdpr":
+            continue
+        assert cid.startswith("Art. "), f"{owner} has bare GDPR ref {cid!r}"
+
+
+def test_atlas_entries_are_techniques_not_mitigations() -> None:
+    """Documented contract: ATLAS maps threats the control mitigates (AML.T)."""
+    for owner, fw, cid in _all_mappings():
+        if fw == "mitre_atlas":
+            assert cid.startswith("AML.T"), f"{owner} maps an ATLAS mitigation {cid!r}"
+
+
+def test_every_kb_dimension_has_a_crosswalk() -> None:
+    from scanner.kb import DIMENSIONS
+
+    assert sorted(set(DIMENSIONS) - set(DIMENSION_CROSSWALK)) == []
+
+
+def test_every_kb_article_has_a_crosswalk() -> None:
+    from scanner.kb import ARTICLE_TO_DIMENSIONS
+
+    missing = [a for a in ARTICLE_TO_DIMENSIONS if not get_crosswalk_for_article(a)]
+    assert missing == [], f"KB articles with no framework projection: {missing}"
+
+
+def test_crosswalk_articles_exist_in_the_kb_or_are_known_additions() -> None:
+    from scanner.kb import ARTICLE_TO_DIMENSIONS
+
+    allowed_extra = {"Art. 5", "Art. 6", "Art. 49"}
+    kb_keys = set(ARTICLE_TO_DIMENSIONS)
+    unknown = [
+        art
+        for art in ARTICLE_FRAMEWORK_CROSSWALK
+        if art not in allowed_extra
+        and "art" + art.split(" ", 1)[1] not in kb_keys
+    ]
+    assert unknown == [], f"crosswalk references articles outside the KB: {unknown}"
+
+
+@pytest.mark.parametrize("spelling", ["art15", "Art. 15", "Article 15", "15", "Art. 15(4)"])
+def test_article_lookup_accepts_every_spelling(spelling: str) -> None:
+    cw = get_crosswalk_for_article(spelling)
+    assert "nist_ai_rmf" in cw and "owasp_llm" in cw
+
+
+def test_unknown_article_returns_empty_mapping() -> None:
+    assert get_crosswalk_for_article("Art. 999") == {}
+    assert get_crosswalk_for_article("") == {}
+
+
+def test_variant_framework_ids_are_aliased() -> None:
+    for variant, canonical in (
+        ("owasp_llm_top10", "owasp_llm"),
+        ("owasp_llm_2025", "owasp_llm"),
+        ("owasp_agentic_top10", "owasp_agentic"),
+    ):
+        assert normalize_framework_id(variant) == canonical

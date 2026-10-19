@@ -3,7 +3,7 @@
 Maps to: tech_docs, transparency
 
 Uses AST for docstring coverage analysis and optional LLM for
-README/model card quality assessment (EU_AI_ACT_SCANNER_LLM=true).
+README/model card quality assessment (deterministic heuristics only).
 """
 
 from __future__ import annotations
@@ -160,7 +160,7 @@ def analyze_documentation(ctx: AnalyzerContext) -> AnalyzerResult:
             compliance_dimensions=["tech_docs"],
         ))
 
-    # 9. LLM-powered README quality assessment (optional, requires EU_AI_ACT_SCANNER_LLM=true)
+    # 9. Heuristic README quality assessment (deterministic; semantic depth via host Claude Code / MCP).
     if readme_files:
         readme_content = ctx.files.get(readme_files[0], "")
         if readme_content and len(readme_content) > 50:

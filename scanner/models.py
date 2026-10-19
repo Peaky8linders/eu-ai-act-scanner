@@ -90,5 +90,6 @@ class ScanResult(BaseModel):
     role_scope: dict = Field(default_factory=dict)
     # Cross-framework readiness mapping (NIST AI RMF, ISO 42001, GDPR, OWASP).
     cross_framework_summary: dict[str, float] = Field(default_factory=dict)
-    # Extensive semantic audit findings (subscription-powered via Claude Code / Codex).
+    # Semantic-review pointer (host Claude Code session / MCP client).
+    # Deterministic engine never synthesizes prose headlessly.
     semantic_audit: dict | None = None

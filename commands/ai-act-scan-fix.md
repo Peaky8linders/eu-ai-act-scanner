@@ -80,8 +80,8 @@ Check the mode + auto-apply flag: `python -m scanner.cli --settings`.
   to confirm the dimension score moved and nothing regressed.
 
 No API key or wrapper is needed for assisted mode — the command runs inside your
-Claude Code, so your session **is** the LLM. The `EU_AI_ACT_SCANNER_LLM` wrapper
-bridge is only for headless CLI use outside Claude Code.
+Claude Code (your existing subscription), so your session **is** the LLM. Outside
+Claude Code, use the MCP server (`eu-ai-act-scan-mcp`) from any MCP client.
 
 ## Safety notes
 

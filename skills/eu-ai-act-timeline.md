@@ -76,7 +76,7 @@ Art. 111 addresses systems already on the market. Read precisely — the transit
 
 ## Dependency graph — what must be ready before what
 
-Working backwards from a high-risk AI system going live after 2 Aug 2026:
+Working backwards from an Annex III high-risk AI system going live after 2 Dec 2027:
 
 ```
 Risk classification (Art. 6)                        ← before scope/budget decisions
@@ -110,12 +110,12 @@ Every step upstream blocks every step downstream. Starting at the conformity-ass
 
 | Excuse | Rebuttal |
 |---|---|
-| "The Act doesn't apply until 2026, so we have time." | Prohibitions (Art. 5) apply since 2 Feb 2025. GPAI obligations (Art. 53-55) since 2 Aug 2025. High-risk is 2 Aug 2026, but the preparation time dwarfs the runway. |
+| "The Act doesn't apply until 2026, so we have time." | Prohibitions (Art. 5) apply since 2 Feb 2025. GPAI obligations (Art. 53-55) since 2 Aug 2025. Transparency (Art. 50) since 2 Aug 2026. High-risk Annex III is 2 Dec 2027, but the preparation time dwarfs the runway. |
 | "We placed our system on the market before 2 Aug 2026, so we're grandfathered." | Art. 111(2) is narrow. You are out of scope only until you make significant changes in design. For most products in active development, significant changes occur within 12-24 months. Also, public-authority deployers must comply by 2 Aug 2030 regardless. |
-| "We'll wait for harmonised standards before we start." | Harmonised standards provide presumption of conformity. Their absence does not suspend obligations. Art. 9-15 apply by 2 Aug 2026 with or without harmonised standards — state-of-the-art engineering practice is the baseline. |
+| "We'll wait for harmonised standards before we start." | Harmonised standards provide presumption of conformity. Their absence does not suspend obligations. Art. 9-15 apply by 2 Dec 2027 (Annex III) with or without harmonised standards — state-of-the-art engineering practice is the baseline. |
 | "The AI Office hasn't published guidance on X, so we can't plan." | True of some areas (Art. 6(3) derogation, simplified SME form). Not a reason to delay the bulk of compliance work (RMS, data governance, documentation, logging, QMS) which has clear requirements in the text. |
 | "Our GPAI model is from before August 2025, so Art. 53 doesn't apply." | Art. 111(3) gives pre-existing GPAI providers until **2 Aug 2027** to achieve compliance. Not an exemption — a deferred deadline. |
-| "We're a deployer — providers carry the weight." | Deployers have their own obligations under Art. 26 (applicable 2 Aug 2026) and, in Annex III.5 domains, FRIA under Art. 27. Free-riding on provider compliance is not a legal position. |
+| "We're a deployer — providers carry the weight." | Deployers have their own obligations under Art. 26 and, in Annex III domains, FRIA under Art. 27 (both applicable 2 Dec 2027 for high-risk). Free-riding on provider compliance is not a legal position. |
 
 ## Cross-references
 

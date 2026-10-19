@@ -28,9 +28,10 @@ local "Lexy" retrieval-and-answer path.
    the cited articles do not support.
 3. **In `assisted` mode** (check `python -m scanner.cli --settings`), synthesise a
    fuller narrative answer yourself over the returned sources — you are the
-   user's Claude Code — but treat the retrieved statute text as ground truth and
-   cite every claim by article. For headless CLI use, `--mode assisted` routes
-   synthesis through the Claude Max wrapper and applies a citation guard.
+   user's Claude Code (your existing subscription) — but treat the retrieved
+   statute text as ground truth and cite every claim by article. For MCP
+   clients, synthesize over the same grounded sources with the client's own
+   model, keeping every citation.
 4. For code-specific questions ("does MY repo satisfy Art. 50?"), run
    `/ai-act-scan` first and combine its findings with the grounded answer.
 

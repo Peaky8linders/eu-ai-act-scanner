@@ -27,10 +27,11 @@ from scanner.analyzers._base import (
     AnalyzerContext,
     AnalyzerResult,
     Finding,
-    get_import_modules,
     has_file,
+    is_prompt_asset,
+    is_test_path,
     parse_python_imports,
-    search_files,
+    search_code_files,
 )
 
 logger = structlog.get_logger(__name__)
@@ -52,8 +53,10 @@ _LLM_MODULES = {
 _LLM_REGEX_PATTERNS = [
     (r"ChatCompletion|messages\.create\s*\(|client\.chat\.completions",
      "OpenAI/Anthropic chat API call"),
-    (r"AutoModelFor\w+|AutoTokenizer\.from_pretrained|pipeline\s*\(\s*['\"]",
-     "HuggingFace AutoModel / pipeline"),
+    # Quote-free so string masking applies: the scanner's own detector table
+    # (`r"\bAutoModelForCausalLM\b"`) is not an import.
+    (r"AutoModelFor\w+|AutoTokenizer\.from_pretrained", "HuggingFace AutoModel"),
+    (r"\bpipeline\s*\(", "HuggingFace pipeline"),
     (r"LLMChain|ConversationalRetrievalChain|RetrievalQA\b",
      "LangChain chain"),
     (r"llm_index|VectorStoreIndex|SimpleDirectoryReader",
@@ -112,33 +115,71 @@ _CML_FILE_PATTERNS = [
 ]
 
 
+def _runtime_modules(ctx: AnalyzerContext) -> set[str]:
+    """Top-level modules imported by non-test code only.
+
+    Test harnesses and fixtures describe a system rather than run it: the
+    repo's own ``tests/fixtures/sample_project`` importing torch must not make
+    the scanner classify itself as a classical-ML system.
+    """
+    return {
+        imp.module.split(".")[0]
+        for imp in parse_python_imports(ctx)
+        if not is_test_path(imp.file_path)
+    }
+
+
+def _system_prompt_files(ctx: AnalyzerContext, *, llm_context: set[str]) -> list[str]:
+    """Files that define a system prompt — never fixtures or generator templates.
+
+    ``llm_context`` holds files already showing LLM signals; a prompt only
+    counts there or in a dedicated prompt asset. This keeps ``fix_loop``'s
+    *generated-file* template (code that writes an AI-disclosure string into
+    the scanned project) from being read as the scanner's own system prompt.
+    """
+    hits: list[str] = []
+    for path, content in ctx.files.items():
+        if is_test_path(path):
+            continue
+        if path not in llm_context and not is_prompt_asset(path):
+            continue
+        if _SYSTEM_PROMPT_RE.search(content):
+            hits.append(path)
+    return hits
+
+
 def _detect_llm(ctx: AnalyzerContext) -> tuple[bool, list[tuple[str, str]]]:
     """Return (detected, [(file_path, evidence_line), ...])."""
     evidence: list[tuple[str, str]] = []
 
-    # AST-based import check
-    ast_modules = get_import_modules(ctx)
-    llm_mods_found = ast_modules & _LLM_MODULES
-    if llm_mods_found:
+    # AST-based import check (runtime code only)
+    ast_modules = _runtime_modules(ctx)
+    if ast_modules & _LLM_MODULES:
         for imp in parse_python_imports(ctx):
+            if is_test_path(imp.file_path):
+                continue
             if imp.module.split(".")[0] in _LLM_MODULES:
                 evidence.append((imp.file_path, f"import {imp.module}"))
                 break
 
-    # Regex patterns
+    # Regex patterns (code files only — comments and detector tables are not
+    # API calls; test fixtures are not runtime calls)
     for pat, _ in _LLM_REGEX_PATTERNS:
-        hits = search_files(ctx, pat)
+        hits = search_code_files(ctx, pat)
         for path, line in hits:
+            if is_test_path(path):
+                continue
             evidence.append((path, line))
             break  # one file per pattern
 
-    # System prompt heuristic across all file content
-    for path, content in ctx.files.items():
-        if _SYSTEM_PROMPT_RE.search(content):
-            match = _SYSTEM_PROMPT_RE.search(content)
-            snip = match.group(0)[:80].replace("\n", " ") if match else "system prompt"
-            evidence.append((path, snip))
-            break
+    # System prompt heuristic (LLM-context or prompt-asset files only)
+    llm_context = {path for path, _ in evidence}
+    prompt_files = _system_prompt_files(ctx, llm_context=llm_context)
+    if prompt_files:
+        path = prompt_files[0]
+        match = _SYSTEM_PROMPT_RE.search(ctx.files.get(path, ""))
+        snip = match.group(0)[:80].replace("\n", " ") if match else "system prompt"
+        evidence.append((path, snip))
 
     return bool(evidence), evidence
 
@@ -147,11 +188,13 @@ def _detect_classical_ml(ctx: AnalyzerContext, llm_modules: set[str]) -> tuple[b
     """Return (detected, [(file_path, evidence_line), ...])."""
     evidence: list[tuple[str, str]] = []
 
-    # AST module check — classical-only modules
-    ast_modules = get_import_modules(ctx)
+    # AST module check — classical-only modules (runtime code only)
+    ast_modules = _runtime_modules(ctx)
     cml_mods = ast_modules & _CML_MODULES
     if cml_mods:
         for imp in parse_python_imports(ctx):
+            if is_test_path(imp.file_path):
+                continue
             if imp.module.split(".")[0] in _CML_MODULES:
                 evidence.append((imp.file_path, f"import {imp.module}"))
                 break
@@ -160,20 +203,25 @@ def _detect_classical_ml(ctx: AnalyzerContext, llm_modules: set[str]) -> tuple[b
     pytorch_or_keras = ast_modules & _CML_TORCH_KERAS_WITHOUT_LLM
     if pytorch_or_keras and not (ast_modules & _LLM_MODULES):
         for imp in parse_python_imports(ctx):
+            if is_test_path(imp.file_path):
+                continue
             if imp.module.split(".")[0] in pytorch_or_keras:
                 evidence.append((imp.file_path, f"import {imp.module} (no LLM modules)"))
                 break
 
-    # Regex patterns
+    # Regex patterns (code files only — a `# .fit(` in a comment describing
+    # the heuristic is not a model-training call; fixtures are not runtime)
     for pat, _ in _CML_REGEX_PATTERNS:
-        hits = search_files(ctx, pat)
+        hits = search_code_files(ctx, pat)
         for path, line in hits:
+            if is_test_path(path):
+                continue
             evidence.append((path, line))
             break
 
     # Model artifact files
     for fpat in _CML_FILE_PATTERNS:
-        matched = has_file(ctx, fpat)
+        matched = [p for p in has_file(ctx, fpat) if not is_test_path(p)]
         if matched:
             evidence.append((matched[0], f"model artifact: {matched[0].split('/')[-1]}"))
 
@@ -183,7 +231,7 @@ def _detect_classical_ml(ctx: AnalyzerContext, llm_modules: set[str]) -> tuple[b
 def analyze_model_typology(ctx: AnalyzerContext) -> AnalyzerResult:  # noqa: C901
     findings: list[Finding] = []
 
-    ast_modules = get_import_modules(ctx)
+    ast_modules = _runtime_modules(ctx)
 
     llm_detected, llm_evidence = _detect_llm(ctx)
     cml_detected, cml_evidence = _detect_classical_ml(ctx, ast_modules & _LLM_MODULES)
@@ -237,10 +285,9 @@ def analyze_model_typology(ctx: AnalyzerContext) -> AnalyzerResult:  # noqa: C90
         ))
 
         # Check for system prompt (additional documentation requirement)
-        system_prompt_files = []
-        for path, content in ctx.files.items():
-            if _SYSTEM_PROMPT_RE.search(content):
-                system_prompt_files.append(path)
+        system_prompt_files = _system_prompt_files(
+            ctx, llm_context={p for p, _ in llm_evidence},
+        )
         if system_prompt_files:
             findings.append(Finding(
                 id="mt-llm-system-prompt",
@@ -259,8 +306,9 @@ def analyze_model_typology(ctx: AnalyzerContext) -> AnalyzerResult:  # noqa: C90
                 suggested_answer="partial",
             ))
 
-        # Positive: input validation alongside LLM
-        val_hits = search_files(ctx, _VALIDATION_RE.pattern)
+        # Positive: input validation alongside LLM (operational code only —
+        # never our own `_PROMPT_GUARD_PATTERNS` detector table)
+        val_hits = search_code_files(ctx, _VALIDATION_RE.pattern)
         if val_hits:
             findings.append(Finding(
                 id="mt-llm-input-validation",

@@ -12,12 +12,12 @@ retrieval + render path Lexy (the CodexAI RAG assistant) falls back to whenever
 no graph DB / LLM key is configured, so it runs with **no LLM and no network**
 by default — preserving the scanner's offline guarantee.
 
-When the LLM bridge is enabled (``EU_AI_ACT_SCANNER_LLM=true``) or the caller
-passes ``use_llm=True`` (``assisted`` mode with a reachable wrapper), the same
-retrieved grounding is handed to :func:`scanner.llm_bridge.complete` for prose
-synthesis, then run through :func:`scanner.grounding.filter_unsupported_sentences`
-so no sentence survives that its cited articles do not support. Any bridge
-failure degrades cleanly to the deterministic answer.
+Semantic prose synthesis is intentionally **not** done inside this module: the
+``assisted`` path is the host Claude Code session (your existing subscription)
+or any MCP-capable agent calling the scanner over MCP. Both consume the same
+deterministic grounding returned here — verbatim statute text plus the citation
+guard in :mod:`scanner.grounding` — so no sentence survives that its cited
+articles do not support.
 
 The richer typed ontology (:mod:`scanner.data.ontology`) is bundled alongside
 this module for the host Claude Code (``assisted`` mode) to traverse; the
@@ -31,7 +31,7 @@ import re
 
 from pydantic import BaseModel, Field
 
-from scanner import grounding, llm_bridge
+from scanner import grounding
 from scanner.data.agentic_taxonomy import COMPOUND_RISK_TYPES, THREAT_CATEGORIES
 from scanner.data.official_eu_ai_act import (
     OFFICIAL_ANNEX_TITLES,
@@ -82,7 +82,7 @@ class QASource(BaseModel):
 class QAResult(BaseModel):
     question: str
     answer: str
-    mode: str  # "deterministic" | "llm"
+    mode: str  # always "deterministic" — synthesis lives in the caller
     citations: list[str] = Field(default_factory=list)
     dimensions: list[str] = Field(default_factory=list)
     sources: list[QASource] = Field(default_factory=list)
@@ -241,24 +241,6 @@ def _render_deterministic(top: list[tuple[_Doc, float]], dimensions: list[str]) 
     return "\n".join(parts)
 
 
-def _answer_with_llm(question: str, top: list[tuple[_Doc, float]], refs: list[str]) -> str | None:
-    grounding_block = "\n\n".join(f"{doc.ref}: {_excerpt(doc, 700)}" for doc, _ in top)
-    system = (
-        "You are an EU AI Act compliance assistant. Answer the question using ONLY "
-        "the authoritative EU AI Act text provided below as ground truth. Cite the "
-        "articles you rely on as 'Art. N'. If the provided text does not cover the "
-        "question, say so plainly rather than inventing an obligation.\n\n"
-        f"AUTHORITATIVE TEXT:\n{grounding_block}"
-    )
-    result = llm_bridge.complete(system, question, max_tokens=700)
-    if result.error is not None or not result.text.strip():
-        return None
-    # Citation guard: drop any sentence unsupported by the cited article pool.
-    article_refs = tuple(r for r in refs if _art_number(r) is not None)
-    guarded = grounding.filter_unsupported_sentences(result.text.strip(), article_refs)
-    return guarded.strip() or None
-
-
 def answer_question(
     question: str,
     *,
@@ -267,10 +249,9 @@ def answer_question(
 ) -> QAResult:
     """Answer an EU AI Act question, grounded in the bundled corpus.
 
-    ``use_llm`` — ``None`` (default) auto-detects the LLM bridge
-    (:func:`scanner.llm_bridge.is_enabled`); ``True``/``False`` forces the path.
-    Falls back to the deterministic answer whenever the bridge is off,
-    unreachable, or returns nothing after the citation guard.
+    ``use_llm`` is accepted for backwards compatibility and ignored: synthesis
+    is the caller's job (host Claude Code session or MCP client). This function
+    always returns the deterministic grounded answer.
     """
     q = (question or "").strip()
     if not q:
@@ -307,13 +288,6 @@ def answer_question(
     article_refs = [r for r in refs if _art_number(r) is not None or r.lower().startswith("annex")]
     dimensions = _dimensions_for(refs)
     sources = [QASource(ref=d.ref, title=d.title, excerpt=_excerpt(d)) for d, _ in top]
-
-    want_llm = llm_bridge.is_enabled() if use_llm is None else use_llm
-    if want_llm:
-        llm_answer = _answer_with_llm(q, top, refs)
-        if llm_answer:
-            return QAResult(question=q, answer=llm_answer, mode="llm",
-                            citations=article_refs, dimensions=dimensions, sources=sources)
 
     return QAResult(
         question=q, answer=_render_deterministic(top, dimensions), mode="deterministic",

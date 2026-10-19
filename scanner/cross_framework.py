@@ -25,6 +25,7 @@ from scanner.data.frameworks import (
     CROSSWALK_CATALOGUE_VERSION,
     DIMENSION_CROSSWALK,
     FRAMEWORK_LABELS,
+    normalize_framework_id,
 )
 from scanner.models import ScanResult
 
@@ -78,6 +79,10 @@ class CrossFrameworkScanProjection(BaseModel):
     controls: list[FrameworkControlProjection] = Field(default_factory=list)
     satisfy_once_levers: list[SatisfyOnceLever] = Field(default_factory=list)
     evidence_reuse_opportunities: list[str] = Field(default_factory=list)
+    # Scored KB dimensions with no crosswalk entry. Non-empty means the
+    # coverage % does NOT see those dimensions — read it alongside the scan's
+    # own compliance_scores, never as a standalone verdict.
+    unmapped_dimensions: list[str] = Field(default_factory=list)
 
     def format_markdown(self) -> str:
         """Render a readable cross-framework compliance report."""
@@ -114,6 +119,19 @@ class CrossFrameworkScanProjection(BaseModel):
                     f"- **{lever.dimension_label}** (`{lever.dimension_id}`): "
                     f"{lever.impact_summary}"
                 )
+
+        if self.unmapped_dimensions:
+            lines += [
+                "",
+                "## Unmapped dimensions (not in coverage %)",
+                "",
+                "_These scored dimensions have no crosswalk entry (catalogue "
+                f"`{self.catalogue_version}`) and are invisible to the readiness "
+                "percentages above — check the scan's own scores for them._",
+                "",
+            ]
+            for dim_id in self.unmapped_dimensions:
+                lines.append(f"- `{dim_id}`")
 
         if self.evidence_reuse_opportunities:
             lines += [
@@ -152,6 +170,12 @@ def project_scan_to_frameworks(
     from scanner.kb import DIMENSIONS
 
     bucket: dict[tuple[str, str], FrameworkControlProjection] = {}
+    unmapped = sorted(
+        dim_id for dim_id in scan.compliance_scores
+        if dim_id not in DIMENSION_CROSSWALK
+    )
+
+    wanted = {normalize_framework_id(f) for f in target_framework_ids} if target_framework_ids else None
 
     for dim_id, score in scan.compliance_scores.items():
         crosswalk = DIMENSION_CROSSWALK.get(dim_id)
@@ -159,8 +183,9 @@ def project_scan_to_frameworks(
             continue
 
         dim_band = _band(score)
-        for fw_id, control_ids in crosswalk.items():
-            if target_framework_ids and fw_id not in target_framework_ids:
+        for raw_fw_id, control_ids in crosswalk.items():
+            fw_id = normalize_framework_id(raw_fw_id)
+            if wanted and fw_id not in wanted:
                 continue
 
             for ctrl_id in control_ids:
@@ -274,6 +299,7 @@ def project_scan_to_frameworks(
     return CrossFrameworkScanProjection(
         scan_id=scan.scan_id,
         project_name=scan.project_name,
+        unmapped_dimensions=unmapped,
         total_frameworks_mapped=len(framework_summaries),
         average_multi_framework_coverage_pct=avg_cov,
         frameworks=framework_summaries,

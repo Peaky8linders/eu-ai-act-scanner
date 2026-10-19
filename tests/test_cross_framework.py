@@ -20,8 +20,8 @@ def test_catalogue_version_and_frameworks_registered() -> None:
     assert "nist_ai_rmf" in FRAMEWORK_LABELS
     assert "iso_42001" in FRAMEWORK_LABELS
     assert "gdpr" in FRAMEWORK_LABELS
-    assert "owasp_llm_top10" in FRAMEWORK_LABELS
-    assert "owasp_agentic_top10" in FRAMEWORK_LABELS
+    assert "owasp_llm" in FRAMEWORK_LABELS
+    assert "owasp_agentic" in FRAMEWORK_LABELS
 
 
 def test_dimension_crosswalk_covers_key_dimensions() -> None:
@@ -111,6 +111,69 @@ def test_satisfy_once_levers_identified() -> None:
     first_lever = proj.satisfy_once_levers[0]
     assert first_lever.framework_count >= 2
     assert "Closing this gap directly satisfies" in first_lever.impact_summary
+
+
+def test_framework_ids_are_canonical_no_variant_keys() -> None:
+    """Variant IDs (owasp_llm_top10/owasp_llm_2025/owasp_agentic_top10) must not
+    appear as crosswalk keys — filtering silently dropped them (contract bug)."""
+    from scanner.data.frameworks import ARTICLE_FRAMEWORK_CROSSWALK
+
+    variants = {"owasp_llm_top10", "owasp_llm_2025", "owasp_agentic_top10"}
+    for dim_id, mapping in DIMENSION_CROSSWALK.items():
+        assert not (set(mapping) & variants), f"{dim_id} has variant keys"
+    for art, mapping in ARTICLE_FRAMEWORK_CROSSWALK.items():
+        assert not (set(mapping) & variants), f"{art} has variant keys"
+
+
+def test_alias_normalization_maps_variants_to_canonical() -> None:
+    from scanner.data.frameworks import normalize_framework_id
+
+    assert normalize_framework_id("owasp_llm_top10") == "owasp_llm"
+    assert normalize_framework_id("owasp_llm_2025") == "owasp_llm"
+    assert normalize_framework_id("owasp_agentic_top10") == "owasp_agentic"
+    assert normalize_framework_id("gdpr") == "gdpr"
+
+
+def test_target_filter_accepts_canonical_and_alias_ids() -> None:
+    scan = ScanResult(
+        project_name="Test-Filter",
+        is_ai_system=True,
+        compliance_scores={"risk_mgmt": 50.0, "security": 50.0},
+    )
+    for fwid in ("owasp_llm", "owasp_llm_top10", "owasp_llm_2025"):
+        proj = project_scan_to_frameworks(scan, target_framework_ids=[fwid])
+        assert len(proj.frameworks) == 1, fwid
+        assert proj.frameworks[0].framework_id == "owasp_llm", fwid
+        assert proj.frameworks[0].total_controls > 0, fwid
+
+
+def test_article_crosswalk_resolves() -> None:
+    from scanner.data.frameworks import get_crosswalk_for_article
+
+    cw = get_crosswalk_for_article("Art. 15")
+    assert "owasp_llm" in cw
+    assert "gdpr" in cw
+    assert "nist_ai_rmf" in cw
+
+
+def test_every_kb_dimension_maps_somewhere() -> None:
+    """No scored dimension may be invisible to the projection (false-assurance
+    guard: an unmapped 0%-dimension used to leave avg coverage at 100%)."""
+    from scanner.kb import DIMENSIONS
+
+    unmapped = [d for d in DIMENSIONS if d not in DIMENSION_CROSSWALK]
+    assert unmapped == [], f"unmapped dimensions: {unmapped}"
+
+
+def test_projection_reports_unmapped_dimensions() -> None:
+    scan = ScanResult(
+        project_name="Test-Unmapped",
+        is_ai_system=True,
+        compliance_scores={"risk_mgmt": 50.0, "__future_dim__": 10.0},
+    )
+    proj = project_scan_to_frameworks(scan)
+    assert "__future_dim__" in proj.unmapped_dimensions
+    assert "Unmapped dimensions" in proj.format_markdown()
 
 
 def test_cross_framework_markdown_rendering() -> None:

@@ -11,7 +11,7 @@ Quick start:
     print(result.overall_compliance_pct)
 """
 
-__version__ = "0.9.0"
+__version__ = "0.10.0"
 
 from scanner.cross_framework import (
     CrossFrameworkScanProjection,
@@ -26,7 +26,6 @@ from scanner.incident_grounding import (
     incidents_for_finding,
     incidents_for_threat,
 )
-from scanner.llm_bridge import bridge_config, bridge_health
 from scanner.models import ArchitectureNode, DiscoveredComponent, FileFinding, ScanResult
 from scanner.obligations import RoleProfile, infer_role_profile, infer_roles
 from scanner.orchestrator import scan_project
@@ -62,7 +61,4 @@ __all__ = [
     "run_fix_loop",
     "FixLoopResult",
     "FixProposal",
-    # Claude Max bridge (v0.6)
-    "bridge_config",
-    "bridge_health",
 ]

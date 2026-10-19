@@ -57,7 +57,7 @@ def test_invalid_mode_rejected(tmp_path):
 
 def test_to_dict_surfaces_no_secret(tmp_path):
     d = load_settings(project_root=tmp_path).to_dict()
-    assert "mode" in d and "llm_bridge" in d
-    # The bridge config surfaces only the key SOURCE, never the value.
-    assert "api_key" not in d["llm_bridge"]
-    assert d["llm_bridge"]["api_key_source"] in ("env", "default")
+    assert d["mode"] == "deterministic"
+    assert d["auto_apply"] is False
+    # No secrets, no bridge config — settings are mode + auto_apply only.
+    assert set(d) == {"mode", "auto_apply", "source"}

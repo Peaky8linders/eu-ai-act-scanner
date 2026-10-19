@@ -40,6 +40,8 @@ MILESTONES: list[Milestone] = [
     Milestone("Prohibited practices", date(2025, 2, 2), "Art. 5"),
     Milestone("GPAI model obligations", date(2025, 8, 2), "Art. 53 / 55"),
     Milestone("Transparency", date(2026, 8, 2), "Art. 50", headline=True),
+    # Digital Omnibus Regulation (EU) 2026/1744 Art. 1(7).
+    Milestone("New prohibitions (NCII/CSAM)", date(2026, 12, 2), "Art. 5(1)(ba)/(bb)"),
     Milestone("High-risk (Annex III)", date(2027, 12, 2), "Art. 9-15 / 17 / 27"),
 ]
 

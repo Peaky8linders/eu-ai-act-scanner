@@ -36,7 +36,7 @@ from scanner.analyzers._base import (
     AnalyzerResult,
     Finding,
     has_file,
-    search_files,
+    search_code_files,
 )
 
 # ─── Modern agent runtime signals ────────────────────────────────────────────
@@ -147,7 +147,9 @@ def analyze_agent_inventory(ctx: AnalyzerContext) -> AnalyzerResult:
     runtime_hits: dict[str, list[tuple[str, str]]] = {}
     runtime_autonomy: str = "none"
     for pattern, signal_name, autonomy_hint in _AGENT_RUNTIME_SIGNALS:
-        matches = search_files(ctx, pattern)
+        # Code files only: README/CHANGELOG prose naming frameworks
+        # ("crewai", "ag2", ...) is not a runtime dependency.
+        matches = search_code_files(ctx, pattern)
         if matches:
             runtime_hits.setdefault(signal_name, []).extend(matches)
             if _autonomy_rank(autonomy_hint) > _autonomy_rank(runtime_autonomy):
@@ -178,7 +180,7 @@ def analyze_agent_inventory(ctx: AnalyzerContext) -> AnalyzerResult:
     # ── 2. Per-category external-system inventory (Table 1) ─────────────
     category_hits: dict[str, list[tuple[str, str, str]]] = {}
     for pattern, category, label in _CATEGORY_SIGNALS:
-        matches = search_files(ctx, pattern)
+        matches = search_code_files(ctx, pattern)
         for path, line in matches:
             category_hits.setdefault(category, []).append((path, line, label))
 
@@ -209,7 +211,7 @@ def analyze_agent_inventory(ctx: AnalyzerContext) -> AnalyzerResult:
     action_hits: dict[str, list[tuple[str, str]]] = {}
     for verb, patterns in _ACTION_VERB_SIGNALS.items():
         for pattern in patterns:
-            matches = search_files(ctx, pattern)
+            matches = search_code_files(ctx, pattern)
             if matches:
                 action_hits.setdefault(verb, []).extend(matches)
 
@@ -266,7 +268,8 @@ def analyze_agent_inventory(ctx: AnalyzerContext) -> AnalyzerResult:
                 "is the regulatory map — without it the operator cannot answer the auditor's "
                 "Table 5 trigger questions. Add the artefact at the repo root."
             ),
-            file_path=next(iter(evidence_files), "(no file)"),
+            # Deterministic representative file (project-level gap when empty).
+            file_path=sorted(evidence_files)[0] if evidence_files else "",
             confidence=0.85,
             compliance_impact="gap",
             compliance_dimensions=["agent_inventory", "tech_docs"],

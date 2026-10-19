@@ -56,7 +56,7 @@ Especially welcome for the `skills/` content — those drive how Claude Code nar
 
 ## Guardrails
 
-- **No network calls in analyzers.** The scanner's privacy guarantee is that code never leaves the user's machine. Don't break that. LLM features live behind the `EU_AI_ACT_SCANNER_LLM` flag and are opt-in.
+- **No network calls in analyzers.** The scanner's privacy guarantee is that code never leaves the user's machine. Don't break that. Semantic depth lives in the host Claude Code session (assisted mode, your existing subscription) or an MCP client — never a headless wrapper.
 - **Don't invent regulation content.** If you're unsure of an article's exact requirement, cite the article number and describe what you observed, not what you remember or assume.
 - **Scores must be in [0, 100].** There's a regression test for this — a previous version of the scanner let negative scores through.
 - **Tests must pass.** `pytest` is the gate. If you're changing analyzer output intentionally, update the fixture assertions.

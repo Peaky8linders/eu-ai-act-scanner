@@ -15,7 +15,7 @@ Run the EU AI Act compliance scanner on a local codebase and summarise the findi
 - `--graph [PATH]` — generate an interactive visual context graph browser (`context-graph.html`).
 - `--dossier [PATH]` — seal and export a cryptographic release dossier (`compliance-dossier.json`).
 - `--role ROLE` — scope evaluation to an explicit operator role (`provider`, `deployer`).
-- `--deep`, `--extensive` — run extensive semantic audit using your Claude Code / Codex subscription.
+- `--deep`, `--extensive` — include a semantic-review pointer for your host Claude Code session / MCP client (deterministic scores stay the baseline).
 
 ## Behaviour
 

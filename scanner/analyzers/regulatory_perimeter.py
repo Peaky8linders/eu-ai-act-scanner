@@ -54,7 +54,7 @@ from scanner.analyzers._base import (
     AnalyzerResult,
     Finding,
     has_file,
-    search_files,
+    search_code_files,
 )
 
 # Each entry: (instrument key, label, regex signals, evidence-link
@@ -139,9 +139,11 @@ _PLD_SIGNALS = [
 
 
 def _match_any(ctx: AnalyzerContext, patterns: list[str]) -> list[tuple[str, str]]:
+    # Code/config files only: trigger words in CHANGELOG prose or in this
+    # analyzer's own signal tables are not product-surface evidence.
     out: list[tuple[str, str]] = []
     for pattern in patterns:
-        out.extend(search_files(ctx, pattern))
+        out.extend(search_code_files(ctx, pattern))
     return out
 
 
