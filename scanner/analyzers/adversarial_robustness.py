@@ -20,7 +20,7 @@ from scanner.analyzers._base import (
     AnalyzerResult,
     Finding,
     get_import_modules,
-    search_files,
+    search_code_files,
 )
 
 # ─── Adversarial testing frameworks ──────────────────────────────────
@@ -93,7 +93,7 @@ def analyze_adversarial_robustness(ctx: AnalyzerContext) -> AnalyzerResult:
                   "lightgbm", "transformers", "openai", "anthropic", "langchain",
                   "huggingface_hub", "diffusers", "jax", "flax", "paddlepaddle"}
     has_ai_project = bool(ai_modules & imported_modules) or bool(
-        search_files(ctx, r"import\s+(torch|tensorflow|keras|sklearn|openai|anthropic|langchain|transformers)")
+        search_code_files(ctx, r"import\s+(torch|tensorflow|keras|sklearn|openai|anthropic|langchain|transformers)")
     )
 
     # ── 1. Adversarial testing frameworks ─────────────────────────────
@@ -102,7 +102,7 @@ def analyze_adversarial_robustness(ctx: AnalyzerContext) -> AnalyzerResult:
         if module in imported_modules:
             detected_frameworks.append(description)
             # Find the import file
-            matches = search_files(ctx, rf"import\s+{module}|from\s+{module}")
+            matches = search_code_files(ctx, rf"import\s+{module}|from\s+{module}")
             file_path = matches[0][0] if matches else "unknown"
             evidence_files.add(file_path)
 
@@ -120,7 +120,7 @@ def analyze_adversarial_robustness(ctx: AnalyzerContext) -> AnalyzerResult:
         ))
     else:
         # Check for adversarial test patterns even without framework imports
-        adv_test_matches = search_files(ctx, r"adversar|robustness.*test|attack.*test|perturbat")
+        adv_test_matches = search_code_files(ctx, r"adversar|robustness.*test|attack.*test|perturbat")
         if adv_test_matches:
             evidence_files.add(adv_test_matches[0][0])
             findings.append(Finding(
@@ -151,12 +151,12 @@ def analyze_adversarial_robustness(ctx: AnalyzerContext) -> AnalyzerResult:
             ))
 
     # ── 2. Prompt injection guards (LLM-specific) ────────────────────
-    has_llm = bool(search_files(ctx, r"openai|anthropic|langchain|llama|transformers|huggingface"))
+    has_llm = bool(search_code_files(ctx, r"openai|anthropic|langchain|llama|transformers|huggingface"))
 
     if has_llm:
         guard_matches: list[tuple[str, str]] = []
         for pattern in _PROMPT_GUARD_PATTERNS:
-            guard_matches.extend(search_files(ctx, pattern))
+            guard_matches.extend(search_code_files(ctx, pattern))
 
         if guard_matches:
             evidence_files.add(guard_matches[0][0])
@@ -190,11 +190,11 @@ def analyze_adversarial_robustness(ctx: AnalyzerContext) -> AnalyzerResult:
     # ── 3. Input validation on model endpoints ───────────────────────
     input_val_matches: list[tuple[str, str]] = []
     for pattern in _INPUT_VALIDATION_PATTERNS:
-        input_val_matches.extend(search_files(ctx, pattern))
+        input_val_matches.extend(search_code_files(ctx, pattern))
 
     if input_val_matches:
         # Check specifically for model/inference endpoint validation
-        model_endpoint_files = search_files(ctx, r"predict|inference|generate|embed|classify|score")
+        model_endpoint_files = search_code_files(ctx, r"predict|inference|generate|embed|classify|score")
         model_files = {m[0] for m in model_endpoint_files}
         validated_model_files = model_files & {m[0] for m in input_val_matches}
 
@@ -238,7 +238,7 @@ def analyze_adversarial_robustness(ctx: AnalyzerContext) -> AnalyzerResult:
     # ── 4. Model hardening techniques ────────────────────────────────
     hardening_matches: list[tuple[str, str]] = []
     for pattern in _HARDENING_PATTERNS:
-        hardening_matches.extend(search_files(ctx, pattern))
+        hardening_matches.extend(search_code_files(ctx, pattern))
 
     if hardening_matches:
         evidence_files.add(hardening_matches[0][0])
@@ -257,7 +257,7 @@ def analyze_adversarial_robustness(ctx: AnalyzerContext) -> AnalyzerResult:
     # ── 5. Rate limiting / abuse prevention ──────────────────────────
     rate_matches: list[tuple[str, str]] = []
     for pattern in _RATE_LIMIT_PATTERNS:
-        rate_matches.extend(search_files(ctx, pattern))
+        rate_matches.extend(search_code_files(ctx, pattern))
 
     if rate_matches:
         evidence_files.add(rate_matches[0][0])
@@ -289,7 +289,7 @@ def analyze_adversarial_robustness(ctx: AnalyzerContext) -> AnalyzerResult:
     # ── 6. Output validation / post-processing ───────────────────────
     output_matches: list[tuple[str, str]] = []
     for pattern in _OUTPUT_VALIDATION_PATTERNS:
-        output_matches.extend(search_files(ctx, pattern))
+        output_matches.extend(search_code_files(ctx, pattern))
 
     if output_matches:
         evidence_files.add(output_matches[0][0])

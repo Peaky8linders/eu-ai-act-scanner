@@ -23,8 +23,10 @@ Security posture (aligned with MCP spec 2025-11-25 + 2026 hardening guidance):
   export) are annotated destructive and default to read-only dry-run.
 * No network calls, no telemetry, no secrets in tool surfaces.
 
-Install the MCP extra:
-    pip install 'eu-ai-act-scanner[mcp]'
+Install the MCP extra from this repository (there is no PyPI package):
+
+    git clone https://github.com/Peaky8linders/eu-ai-act-scanner
+    cd eu-ai-act-scanner && pip install -e ".[mcp]"
 
 Run the server (stdio transport):
     eu-ai-act-scan-mcp
@@ -388,7 +390,9 @@ def _load_server_class():
         return FastMCP
     except ImportError as exc:
         raise RuntimeError(
-            "MCP SDK not installed. Install with: pip install 'eu-ai-act-scanner[mcp]'"
+            "MCP SDK not installed. Install the engine from this repository: "
+            "pip install -e \".[mcp]\" (there is no PyPI package — the "
+            "`eu-ai-act-scanner` name on PyPI is an unrelated project)"
         ) from exc
 
 
@@ -396,9 +400,10 @@ def build_server():  # noqa: ANN201  (returns MCPServer/FastMCP — type only av
     """Construct and return a configured MCP server (``MCPServer`` / ``FastMCP``).
 
     Raises :exc:`RuntimeError` if the ``mcp`` optional dependency is not
-    installed.  Install it with::
+    installed.  Install it from this repository with::
 
-        pip install 'eu-ai-act-scanner[mcp]'
+        git clone https://github.com/Peaky8linders/eu-ai-act-scanner
+        cd eu-ai-act-scanner && pip install -e ".[mcp]"
 
     HTTP serving (Streamable HTTP) is left to the deployer: serve the app
     returned by ``mcp.http_app()`` behind TLS + authentication, bind

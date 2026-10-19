@@ -153,6 +153,10 @@ def search_code_files(
       vendored-JSON prose never counts as code evidence;
     * full-line comments (``#``, ``//``) are skipped — a heuristic description
       is not an implementation;
+    * trailing comments are stripped too (extension-aware: ``#`` for
+      Python/TOML/YAML/shell, ``//`` for JS/TS/C-family — never Python's ``//``
+      floor division or a ``://`` URL). A comment that documents a pattern next
+      to the detector table was matching as evidence.
     * detector-definition lines are skipped — a ``search_files(...)`` call or a
       ``*_PATTERNS``/``*_SIGNALS``/``*_REGEX`` assignment inside an analyzer
       is the detector describing itself, not target code exhibiting the pattern.
@@ -164,7 +168,8 @@ def search_code_files(
         return []
     results = []
     for path, content in ctx.files.items():
-        if Path(path).suffix.lower() not in _CODE_EXTENSIONS:
+        suffix = Path(path).suffix.lower()
+        if suffix not in _CODE_EXTENSIONS:
             continue
         masked = _TRIPLE_QUOTED_RE.sub(
             lambda m: "\n" * m.group(0).count("\n"), content
@@ -190,10 +195,47 @@ def search_code_files(
                 probe = mline
             else:
                 probe = _STR_LITERAL_RE.sub(lambda m: " " * len(m.group(0)), mline)
+            probe = _strip_trailing_comment(probe, suffix)
             if compiled.search(probe):
                 results.append((path, line.strip()[:200]))
                 break
     return results
+
+
+# Comment syntax per extension family. Only these two styles are handled; a
+# line-continuation comment (`/* */`) is not stripped because our detector
+# tables do not use it and stripping it could cut real code.
+_HASH_COMMENT_EXTENSIONS = frozenset({
+    ".py", ".rb", ".sh", ".toml", ".yaml", ".yml", ".cfg", ".ini",
+    ".tf", ".hcl", ".dockerfile", ".r", ".jl", ".pl", ".ps1",
+})
+_SLASH_COMMENT_EXTENSIONS = frozenset({
+    ".js", ".jsx", ".ts", ".tsx", ".java", ".rs", ".go", ".c", ".cpp",
+    ".h", ".cs", ".swift", ".kt", ".scala",
+})
+_HASH_COMMENT_RE = re.compile(r"(?:^|(?<=\s))#")
+
+
+# `//` that is not `://` and not Python's floor-division operator (Python never
+# reaches this branch — it is not in _SLASH_COMMENT_EXTENSIONS).
+_SLASH_COMMENT_RE = re.compile(r"(?<!:)//")
+
+
+def _strip_trailing_comment(line: str, suffix: str) -> str:
+    """Drop a line's trailing comment, honouring the file's comment syntax.
+
+    Called after string literals are masked, so a ``#`` or ``//`` that survives
+    is (almost always) a real comment marker rather than text inside a string.
+    """
+    if suffix in _HASH_COMMENT_EXTENSIONS:
+        marker = _HASH_COMMENT_RE.search(line)
+        if marker:
+            return line[: marker.start()]
+    elif suffix in _SLASH_COMMENT_EXTENSIONS:
+        marker = _SLASH_COMMENT_RE.search(line)
+        if marker:
+            return line[: marker.start()]
+    return line
 
 
 # Test/fixture trees: synthetic code (test harnesses, sample projects, string

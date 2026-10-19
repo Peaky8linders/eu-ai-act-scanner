@@ -5,6 +5,67 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.1] - 2026-10-19
+
+### Changed — plugin + MCP only; no PyPI distribution
+
+The scanner ships as a **Claude Code plugin** and an **MCP server**. It was
+never published to PyPI, and the `eu-ai-act-scanner` name there belongs to an
+unrelated third-party project — so `pip install eu-ai-act-scanner` fetched
+someone else's package.
+
+- Distribution renamed to **`eu-ai-act-scanner-plugin`** so a local
+  `pip install -e .` can never shadow or uninstall the same-named PyPI project;
+  console scripts (`eu-ai-act-scan`, `eu-ai-act-scan-mcp`, `eu-ai-act-fix`)
+  are unchanged.
+- README install section rewritten around the two supported surfaces, with an
+  explicit "there is no PyPI package" warning; the MCP server's own
+  install/diagnostic messages and `plugin.json` install hint point at this
+  repository instead of a PyPI spec.
+- Repo now carries the two operator artefacts its own scanners ask for:
+  `agent-inventory.md` (external actions, data flows, connected systems,
+  affected persons) and `adjacent-legislation.md` (CRA trigger, Art. 25(4)
+  provider/deployer split).
+- New adversarial/prompt-injection regression suite (`tests/test_adversarial.py`,
+  9 positive/negative-control cases) with a dedicated CI gate.
+- **Self-scan: 4 gap findings → 0**, overall compliance 70.2% → 79.6%, with the
+  two new artefacts and the CI gate as the closing evidence.
+
+### Added — every cross-framework gap is now grounded in real incidents
+
+- `FrameworkControlProjection.related_incidents` — every control the projection
+  marks gap/partial names the documented incidents (vendored corpus) that
+  exploited its class; compliant controls stay empty. `SatisfyOnceLever` gains
+  `top_incidents` for its dimension.
+- The cross-framework markdown gains a **"Gap controls, grounded in real-world
+  incidents"** table (framework · control · status · incidents) and a grounding
+  line under each satisfy-once lever — an ungrounded gap was a normative claim,
+  now it cites evidence.
+- The incident crosswalk covers **all 23 KB dimensions** (previously 18):
+  `risk_mgmt`, `quality_management`, `conformity_assessment`, `ai_literacy` and
+  `voluntary_codes` had no target, so the Art. 9/17/43 dimensions an auditor
+  cares about most projected gaps with no grounding at all. Specs stay specific
+  (5–25 corpus incidents each) instead of matching the whole corpus.
+- `CROSSWALK_VERSION` → `2026.10.19.v2`.
+
+### Fixed — four more false positives found by the dogfood run
+
+- `search_code_files()` strips **trailing comments**, extension-aware (`#` for
+  Python/TOML/YAML/shell, `//` for JS/C-family — never Python floor division or
+  a `://` URL). A comment sitting next to a detector-table line was matching as
+  evidence.
+- `agent_inventory` `modify_db` patterns are DB-shaped (`.objects.…​.update(`,
+  `session.delete(`, `_many(`, `upsert`, SQL `INSERT/UPDATE/DELETE`): bare
+  `.update(`/`.delete(` matched **dicts and sets**, inventing a state-changing
+  capability. This repo went from a phantom `modify_db` to its true action set
+  (`write_file`, `execute_code`).
+- `adversarial_robustness` scans code (not prose): a README that *mentions*
+  prompt injection is not an injection guard, and the analyzer's own pattern
+  table is no longer its own evidence.
+- `cicd_dockerfile` demands an adversarial CI gate only from workflows that
+  actually run code checks — a scheduled docs-refresh job has no test step to
+  harden.
+
 ## [0.10.0] - 2026-10-19
 
 ### Changed — precision layer, canonical cross-framework crosswalk, MCP 2.x

@@ -53,6 +53,15 @@ def _analyze_gh_actions(path: str, content: str) -> list[Finding]:
             step_texts.append(str(step.get("name", "")))
     blob = "\n".join(step_texts).lower()
 
+    # Only a workflow that actually exercises the code owes an adversarial
+    # gate. A scheduled docs/ops job (README refresh, release notes) has no
+    # test step to harden, so demanding one is noise, not evidence.
+    runs_code_checks = bool(re.search(
+        r"pytest|unittest|npm (run )?test|yarn test|pnpm test|go test|cargo test"
+        r"|tox|nox|make (test|check|ci|build)|mvn |gradle |dotnet test|rspec",
+        blob,
+    ))
+
     if re.search(r"adversarial|red[\s_-]?team|pyrit|prompt[\s_-]?injection", blob):
         findings.append(_finding(
             id="gha-adversarial-present", title="Adversarial test suite in CI",
@@ -61,7 +70,7 @@ def _analyze_gh_actions(path: str, content: str) -> list[Finding]:
             dims=["quality_management", "security"],
             articles=["Art. 15(4)"], artifact="github_actions",
         ))
-    else:
+    elif runs_code_checks:
         findings.append(_finding(
             id="gha-adversarial-missing", title="No adversarial test step detected",
             description="Art. 15 robustness recommends adversarial testing in CI.",
