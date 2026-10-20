@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added — docs guard against PyPI install instructions
+
+- `tests/test_docs_install.py` scans every tracked file and fails when a doc
+  tells users to install the engine from PyPI, unless the mention sits next to
+  the explicit warning that the PyPI name belongs to an unrelated project. The
+  two historical changelog entries corrected in `af7c7e8` are the regression it
+  pins: they had been instructing users to install someone else's package.
+
 ## [0.11.2] - 2026-10-20
 
 ### Fixed — the generated context graph is now actually offline
