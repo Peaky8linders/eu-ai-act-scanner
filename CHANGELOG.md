@@ -21,6 +21,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the same provenance with per-axis and total counts.
 - `TAXONOMY_VERSION` bumped to `2026.04.27.v2` for the schema change.
 
+### Added — crosswalk articles resolve to obligation text
+
+- Every EU AI Act article in the cross-framework crosswalk now has a
+  `grounding.OBLIGATION_TEXT` paraphrase. `Art. 5`, `Art. 6` and `Art. 49` are
+  crosswalk-only (no KB dimension) and were missing, so the projection cited
+  those articles with no provision to quote behind them.
+- The catalogue suite now fails when a crosswalk article has no resolving
+  obligation text, mirroring the `act_required` citation check for the agentic
+  taxonomy. A companion guard keeps the Act table article-level so a GDPR
+  paragraph ref cannot be satisfied by an Act article of the same number.
+- Those three paraphrases were then checked against the verbatim EUR-Lex text and
+  corrected where they were materially incomplete: Art. 5 keeps the
+  informed-decision clause, both social-scoring limbs, the personality-trait
+  profiling limb and the CCTV source; Art. 6(3) is stated as the conjunctive
+  test it is; Art. 49 names only the deployers the article binds and keeps the
+  Annex III point 2 exception. `tests/test_grounding.py` pins each element.
+
 ## [0.10.1] - 2026-10-19
 
 ### Changed — plugin + MCP only; no PyPI distribution

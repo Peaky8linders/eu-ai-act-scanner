@@ -303,6 +303,37 @@ def test_crosswalk_articles_exist_in_the_kb_or_are_known_additions() -> None:
     assert unknown == [], f"crosswalk references articles outside the KB: {unknown}"
 
 
+def test_every_crosswalk_article_resolves_to_obligation_text() -> None:
+    """An article key in the crosswalk is a legal claim the projection renders
+    beside foreign controls, so each one must have authoritative obligation
+    text to quote. ``Art. 5``/``Art. 6``/``Art. 49`` only appear here — never as
+    KB dimensions — and went unquoted until this check existed.
+    """
+    from scanner import grounding
+
+    # obligation_text() returns "" (not None) for an article with no entry.
+    unresolved = [
+        art
+        for art in ARTICLE_FRAMEWORK_CROSSWALK
+        if not grounding.obligation_text(art).strip()
+    ]
+    assert unresolved == [], (
+        "crosswalk articles with no obligation text: " + ", ".join(unresolved)
+    )
+
+
+def test_crosswalk_article_keys_are_article_level_act_refs() -> None:
+    """The Act table must stay article-level.
+
+    GDPR controls in this catalogue share the ``Art. N`` surface vocabulary, so
+    a paragraph ref such as ``Art. 5(2)`` (GDPR accountability) would resolve
+    against Act Art. 5 (prohibited practices) and satisfy the resolution check
+    above with the wrong obligation entirely.
+    """
+    bad = [a for a in ARTICLE_FRAMEWORK_CROSSWALK if not re.fullmatch(r"Art\. \d+", a)]
+    assert bad == [], f"non-article-level refs in the Act crosswalk: {bad}"
+
+
 @pytest.mark.parametrize("spelling", ["art15", "Art. 15", "Article 15", "15", "Art. 15(4)"])
 def test_article_lookup_accepts_every_spelling(spelling: str) -> None:
     cw = get_crosswalk_for_article(spelling)
