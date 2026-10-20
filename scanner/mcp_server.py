@@ -12,10 +12,15 @@ can be served over Streamable HTTP behind your own authenticated proxy; see
 Security posture (aligned with MCP spec 2025-11-25 + 2026 hardening guidance):
 
 * stdio: stdout carries **only** MCP messages — all logs go to stderr.
-* All ``path`` inputs must resolve to an existing directory; symlinks resolved.
-* All ``output_path`` writes are confined under the process cwd (no ``..``
-  escapes, no absolute writes outside cwd) and require an allowlisted suffix
-  (``.json`` / ``.html``).
+* All ``path`` inputs must resolve to an existing directory; symlinks resolved;
+  a filesystem root is refused so a stray call cannot walk the whole disk.
+* ``output_path`` writes are validated on the **resolved** target: allowlisted
+  suffix (``.json`` / ``.html``) checked after resolution, no write through a
+  symlink, no NUL bytes, existing parent. Absolute paths are permitted by
+  design — the caller is the local user, and the CLI writes beside the project
+  — so this is a data-loss guard (a scan must not clobber ``package.json``),
+  not a sandbox. Deployers fronting this server over HTTP must confine writes
+  at the proxy layer.
 * ``limit`` clamped to 1-50; ``max_iterations`` clamped to 1-5; oversized
   strings truncated. Unknown enum values return structured ``{"error": ...}``
   instead of raising.
@@ -99,18 +104,27 @@ def _validate_scan_path(path: str) -> Path:
     cleaned = _clean_str(path, 1024)
     if not cleaned:
         raise ValueError("path is required")
-    resolved = (Path.cwd() / cleaned).resolve() if not Path(cleaned).is_absolute() else Path(cleaned).resolve()
+    candidate = Path(cleaned).expanduser()
+    resolved = candidate.resolve() if candidate.is_absolute() else (Path.cwd() / candidate).resolve()
     if not resolved.is_dir():
         raise ValueError(f"not a directory: {cleaned[:120]}")
+    if resolved.parent == resolved:
+        # `/` or `C:\` — a scan of the whole filesystem is never the intent and
+        # would read outside any project the user meant to check.
+        raise ValueError("refusing to scan a filesystem root")
     return resolved
 
 
 def _validate_output_path(output_path: str, *, expected_suffix: str) -> Path:
-    """Validate export writes: allowlisted suffix, existing parent dir.
+    """Validate export writes: allowlisted suffix, existing parent, no symlink.
 
-    Relative paths resolve under the process cwd. Absolute paths are allowed
-    (tests and local stdio use tmp dirs); HTTP deployments fronting this
-    server should additionally confine writes at the proxy/layer level.
+    Relative paths resolve under the process cwd; absolute paths are allowed
+    (the caller is the local user and the CLI writes beside the project). The
+    suffix is checked on the **resolved** target, not the raw string, and the
+    final component must not be a symlink: otherwise `report.json` pointing at
+    a shell profile, or a path that resolves into one, would be written
+    through. HTTP deployments fronting this server must additionally confine
+    writes at the proxy layer.
     """
     cleaned = _clean_str(output_path, 512)
     if not cleaned:
@@ -119,10 +133,16 @@ def _validate_output_path(output_path: str, *, expected_suffix: str) -> Path:
         raise ValueError("invalid output_path")
     if expected_suffix not in _OUTPUT_SUFFIXES:
         raise ValueError(f"unsupported suffix: {expected_suffix!r}")
-    if not cleaned.endswith(expected_suffix):
-        raise ValueError(f"output_path must end with {expected_suffix}")
     base = Path.cwd().resolve()
-    resolved = (base / cleaned).resolve() if not Path(cleaned).is_absolute() else Path(cleaned).resolve()
+    candidate = Path(cleaned).expanduser()
+    unresolved = candidate if candidate.is_absolute() else base / candidate
+    if unresolved.is_symlink():
+        raise ValueError(f"refusing to write through a symlink: {cleaned[:120]}")
+    resolved = unresolved.resolve()
+    # Check the resolved path: `x.json/../evil.sh` and symlinked parents both
+    # change the real target after a raw-string suffix check.
+    if resolved.suffix.lower() != expected_suffix:
+        raise ValueError(f"output_path must resolve to a {expected_suffix} file")
     if not resolved.parent.is_dir():
         raise ValueError(f"output parent does not exist: {str(resolved.parent)[:120]}")
     return resolved

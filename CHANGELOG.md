@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.1] - 2026-10-20
+
+### Fixed — obligation text checked against the statute a second time
+
+- `Art. 5` now says *who* owes the real-time biometric identification duties
+  (the law enforcement authority completes the FRIA and registers the system;
+  a judicial or independent administrative authority authorises each use, with
+  a binding decision), keeps the urgency path (authorisation requested within
+  24 hours, registration without delay), the "only to confirm the identity of a
+  specifically targeted individual" limit, and the Art. 5(4) notifications; the
+  Art. 5(1)(d) carve-out is back to an assessment of a person's *involvement*
+  that is *already* based on objective and verifiable facts.
+- `Art. 6(3)` no longer says the provider must "demonstrate" the absence of
+  significant risk — the article states the condition and leaves the
+  documentation duty to 6(4), which the entry now spells out.
+- `Art. 49(3)` binds deployers for a *high-risk* Annex III system explicitly,
+  so the paragraph cannot be read as extending a deployer duty to a system the
+  provider assessed as not high-risk under 6(3).
+- `tests/test_grounding.py` pins each of those elements, and four citation-guard
+  tests pin the clauses that the guard's token pool now covers (measured: the
+  Art. 5 authorisation sentence went from 2 overlapping tokens to 9).
+
+### Security
+
+- **Graph HTML escaping.** The generated context-graph page embeds scan data in
+  an inline `<script>` and renders node labels, gaps and fix text through
+  `innerHTML`. A file or component named `</script><script>…` closed the element
+  and ran arbitrary script when the page was opened, and the project name was
+  interpolated unescaped into the `<title>` and header. The JSON payload now
+  escapes `</` as `\/`, project name/roles are HTML-escaped, and every
+  interpolation goes through `escapeHtml` (which now also escapes quotes).
+  Verified in a browser: the payload renders as text and does not execute.
+- **MCP export paths.** `output_path` is validated on the *resolved* target
+  instead of the raw string (`nested.json/../evil.sh` no longer passes a suffix
+  check), writes through a symlink are refused, and the docstring no longer
+  claims cwd confinement the code never enforced.
+- **MCP scan paths.** A filesystem root is refused, so a stray call cannot walk
+  the whole disk. The module docstring now states the remaining scope decision
+  explicitly: the caller is the local user, so absolute paths are allowed and
+  HTTP deployments must confine writes at the proxy layer.
+
 ## [0.11.0] - 2026-10-20
 
 ### Added — structured recommendation provenance

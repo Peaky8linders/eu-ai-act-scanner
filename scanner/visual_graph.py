@@ -4,10 +4,16 @@ Produces a standalone, self-contained interactive visual HTML graph that allows 
 to browse the discovered AI system architecture, inspect each node for compliance gaps,
 regulatory articles, cross-framework linkages, grounded real-world incidents, and
 production-grade recommended code fixes.
+
+The page is generated from a scan of an *untrusted* repository, so node labels,
+file paths and fix text are treated as hostile: the graph JSON is escaped for
+script context and every interpolated value goes through ``escapeHtml`` before
+it reaches ``innerHTML``.
 """
 
 from __future__ import annotations
 
+import html
 import json
 from pathlib import Path
 from typing import Any
@@ -230,14 +236,22 @@ def generate_visual_graph(
         scan_result,
         Path(root_path) if root_path else None,
     )
-    graph_json = json.dumps(graph_data, indent=2, sort_keys=True)
+    # Graph data is embedded in a <script> block and every label/filename in it
+    # comes from the scanned repository. `</` is the only sequence that can end
+    # the element early, so escape it as `\/` (still valid JSON) — a file named
+    # `</script><script>…` must render as text, not execute.
+    graph_json = json.dumps(graph_data, indent=2, sort_keys=True).replace("</", "<\\/")
+    # The project name and inferred roles reach the page body as well as the
+    # <title>, so escape them once here and reuse.
+    safe_project_name = html.escape(str(scan_result.project_name))
+    safe_roles = html.escape(", ".join(scan_result.inferred_roles) or "deployer")
 
     html_content = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EU AI Act Context Graph — {scan_result.project_name}</title>
+  <title>EU AI Act Context Graph — {safe_project_name}</title>
   <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
   <style>
     :root {{
@@ -283,11 +297,11 @@ def generate_visual_graph(
       </div>
       <div>
         <h1 class="text-base font-semibold leading-tight flex items-center gap-2">
-          {scan_result.project_name}
+          {safe_project_name}
           <span class="text-xs px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300">Context Graph</span>
         </h1>
         <p class="text-xs text-[var(--muted-foreground)]">
-          Regulation (EU) 2024/1689 & Digital Omnibus (EU) 2026/1744 &bull; Inferred: <span class="text-sky-400 font-medium">{(', '.join(scan_result.inferred_roles) or 'deployer')}</span>
+          Regulation (EU) 2024/1689 & Digital Omnibus (EU) 2026/1744 &bull; Inferred: <span class="text-sky-400 font-medium">{safe_roles}</span>
         </p>
       </div>
     </div>
@@ -651,13 +665,13 @@ def generate_visual_graph(
         remContainer.innerHTML = `
           <div class="bg-slate-900 border border-sky-800/80 rounded-xl p-4 shadow-sm">
             <div class="flex items-start justify-between gap-2 mb-2">
-              <h5 class="font-bold text-sky-400 text-sm">${{rf.title}}</h5>
-              <span class="text-xs px-2 py-0.5 rounded bg-sky-950 text-sky-300 border border-sky-700 uppercase">${{rf.fix_kind}}</span>
+              <h5 class="font-bold text-sky-400 text-sm">${{escapeHtml(rf.title)}}</h5>
+              <span class="text-xs px-2 py-0.5 rounded bg-sky-950 text-sky-300 border border-sky-700 uppercase">${{escapeHtml(rf.fix_kind)}}</span>
             </div>
-            <p class="text-xs text-slate-300 mb-3">${{rf.rationale}}</p>
+            <p class="text-xs text-slate-300 mb-3">${{escapeHtml(rf.rationale)}}</p>
             <div class="mb-3">
               <span class="text-xs text-slate-400 block mb-1 font-semibold">Target File to Create/Patch:</span>
-              <code class="text-xs bg-slate-950 px-2 py-1 rounded text-emerald-400 border border-slate-800 block select-all">${{rf.target_path}}</code>
+              <code class="text-xs bg-slate-950 px-2 py-1 rounded text-emerald-400 border border-slate-800 block select-all">${{escapeHtml(rf.target_path)}}</code>
             </div>
             <div class="mb-3">
               <div class="flex items-center justify-between mb-1">
@@ -667,7 +681,7 @@ def generate_visual_graph(
               <pre class="bg-slate-950 p-3 rounded-lg text-xs font-mono text-slate-200 overflow-x-auto max-h-56 custom-scrollbar border border-slate-800"><code id="code-fix-block">${{escapeHtml(rf.code_snippet)}}</code></pre>
             </div>
             <div class="text-xs text-slate-400 bg-slate-800/50 p-2.5 rounded border border-slate-700/60">
-              <strong class="text-slate-300">Verification Gate:</strong> ${{rf.verification}}
+              <strong class="text-slate-300">Verification Gate:</strong> ${{escapeHtml(rf.verification)}}
             </div>
           </div>
         `;
@@ -718,11 +732,11 @@ def generate_visual_graph(
           div.className = 'bg-slate-900 p-2.5 rounded border border-slate-800 text-xs';
           div.innerHTML = `
             <div class="flex items-center justify-between mb-1">
-              <span class="font-mono text-amber-400">${{inc.id}}</span>
-              <span class="px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 font-semibold uppercase text-[10px]">${{inc.severity}}</span>
+              <span class="font-mono text-amber-400">${{escapeHtml(inc.id)}}</span>
+              <span class="px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 font-semibold uppercase text-[10px]">${{escapeHtml(inc.severity)}}</span>
             </div>
             <p class="text-slate-300 font-medium mb-1">${{escapeHtml(inc.title)}}</p>
-            <div class="text-slate-500 text-[10px]">${{inc.tags.join(' / ')}}</div>
+            <div class="text-slate-500 text-[10px]">${{escapeHtml(inc.tags.join(' / '))}}</div>
           `;
           incList.appendChild(div);
         }});
@@ -739,8 +753,8 @@ def generate_visual_graph(
           div.className = 'bg-slate-900 p-2.5 rounded border border-slate-800 flex items-start justify-between gap-3';
           div.innerHTML = `
             <div>
-              <span class="font-semibold text-slate-200">${{cw.framework}}</span>
-              <div class="text-slate-400 text-xs mt-0.5">Controls: ${{cw.controls.map(c => `<code class="bg-slate-800 px-1 py-0.5 rounded text-sky-400 mr-1">${{c}}</code>`).join('')}}</div>
+              <span class="font-semibold text-slate-200">${{escapeHtml(cw.framework)}}</span>
+              <div class="text-slate-400 text-xs mt-0.5">Controls: ${{cw.controls.map(c => `<code class="bg-slate-800 px-1 py-0.5 rounded text-sky-400 mr-1">${{escapeHtml(c)}}</code>`).join('')}}</div>
             </div>
             <span class="text-emerald-400 text-xs font-bold shrink-0">Synergy</span>
           `;
@@ -817,10 +831,16 @@ def generate_visual_graph(
       }});
     }}
 
+    // Escapes for both text and attribute contexts. Node labels, file paths and
+    // fix text are repository-derived (untrusted), so they never reach innerHTML
+    // unescaped.
     function escapeHtml(text) {{
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
+      return String(text ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
     }}
 
     // Canvas Mouse Pan Handling

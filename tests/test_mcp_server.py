@@ -14,6 +14,7 @@ import pytest
 
 import scanner.kb as kb
 from scanner.mcp_server import (
+    _validate_output_path,
     build_server,
     tool_agentic_taxonomy,
     tool_generate_dossier,
@@ -264,6 +265,45 @@ def test_tool_generate_visual_graph(tmp_path: Path) -> None:
     assert out.is_file()
     assert "GRAPH_DATA" in out.read_text(encoding="utf-8")
     _json_serializable(result)
+
+
+# ---------------------------------------------------------------------------
+# Path guards — an MCP client (or a prompt-injected agent driving one) chooses
+# these arguments, so the tool surface must refuse the shapes that turn a
+# write into data loss.
+# ---------------------------------------------------------------------------
+
+
+def test_output_suffix_is_checked_after_resolution(tmp_path: Path) -> None:
+    """`nested.json/../evil.sh` ends in .json as a string but resolves to .sh."""
+    sneaky = tmp_path / "nested.json" / ".." / "evil.sh"
+    with pytest.raises(ValueError, match="must resolve"):
+        _validate_output_path(str(sneaky), expected_suffix=".json")
+
+
+def test_output_write_through_symlink_is_refused(tmp_path: Path) -> None:
+    target = tmp_path / "outside.txt"
+    target.write_text("do not overwrite", encoding="utf-8")
+    link = tmp_path / "report.json"
+    try:
+        link.symlink_to(target)
+    except (OSError, NotImplementedError):  # pragma: no cover — Windows w/o privilege
+        pytest.skip("symlinks unavailable on this platform")
+
+    with pytest.raises(ValueError, match="symlink"):
+        _validate_output_path(str(link), expected_suffix=".json")
+    # The tool surface must return a structured error, not raise at the client.
+    result = tool_generate_dossier(SAMPLE_PROJECT, output_path=str(link))
+    assert "error" in result
+    assert target.read_text(encoding="utf-8") == "do not overwrite"
+
+
+def test_scan_path_refuses_filesystem_root() -> None:
+    from scanner.mcp_server import _validate_scan_path
+
+    root = Path(Path.cwd().anchor)
+    with pytest.raises(ValueError, match="filesystem root"):
+        _validate_scan_path(str(root))
 
 
 # ---------------------------------------------------------------------------
