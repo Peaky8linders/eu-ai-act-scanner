@@ -56,7 +56,8 @@ Especially welcome for the `skills/` content — those drive how Claude Code nar
 
 ## Guardrails
 
-- **No network calls in analyzers.** The scanner's privacy guarantee is that code never leaves the user's machine. Don't break that. Semantic depth lives in the host Claude Code session (assisted mode, your existing subscription) or an MCP client — never a headless wrapper.
+- **No network calls in analyzers.** The scanner's privacy guarantee is that code never leaves the user's machine. Don't break that. Semantic depth lives in the host Claude Code session (assisted mode, your existing subscription) or an MCP client — never a headless wrapper. Generated artifacts are held to the same bar: the context graph inlines its own CSS, `tests/test_offline_artifacts.py` fails on any remote asset in any report (and on a URL outside a provenance field in JSON), and an AST guard forbids outbound HTTP clients in `scanner/`.
+- **Don't let generated artifacts go stale.** `scanner/data/graph.css` is compiled from the page template; if you add a utility class, regenerate it and commit the CSS with the template change.
 - **Don't invent regulation content.** If you're unsure of an article's exact requirement, cite the article number and describe what you observed, not what you remember or assume.
 - **Scores must be in [0, 100].** There's a regression test for this — a previous version of the scanner let negative scores through.
 - **Tests must pass.** `pytest` is the gate. If you're changing analyzer output intentionally, update the fixture assertions.

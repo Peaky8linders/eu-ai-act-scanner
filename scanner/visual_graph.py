@@ -9,12 +9,19 @@ The page is generated from a scan of an *untrusted* repository, so node labels,
 file paths and fix text are treated as hostile: the graph JSON is escaped for
 script context and every interpolated value goes through ``escapeHtml`` before
 it reaches ``innerHTML``.
+
+The output is also **offline**: it references no script, stylesheet, font or
+image on the network. The Tailwind utilities are compiled ahead of time into
+``scanner/data/graph.css`` (regenerate with ``scripts/build_graph_css.py``) and
+inlined into the document, so the file opens identically with the network down.
 """
 
 from __future__ import annotations
 
 import html
 import json
+from functools import lru_cache
+from importlib import resources
 from pathlib import Path
 from typing import Any
 
@@ -23,6 +30,19 @@ from scanner.data.incident_corpus import get_incident
 from scanner.fix_loop import _DIMENSION_TO_FIXER, DETERMINISTIC_FIXERS
 from scanner.kb import DIMENSIONS
 from scanner.models import ScanResult
+
+
+@lru_cache(maxsize=1)
+def _graph_css() -> str:
+    """Return the pre-compiled utility CSS that ships with the package.
+
+    The page used to load a Tailwind JIT bundle from a CDN and synthesise the
+    utilities at open time. That contradicted the scanner's offline guarantee
+    and turned every opened report into a third-party network request, so the
+    utilities are compiled from the final HTML template instead (see
+    ``scripts/build_graph_css.py``) and inlined as a ``<style>`` block.
+    """
+    return (resources.files("scanner.data") / "graph.css").read_text(encoding="utf-8")
 
 
 def _build_node_fix(dim_id: str, dummy_root: Path) -> dict[str, str] | None:
@@ -245,6 +265,7 @@ def generate_visual_graph(
     # <title>, so escape them once here and reuse.
     safe_project_name = html.escape(str(scan_result.project_name))
     safe_roles = html.escape(", ".join(scan_result.inferred_roles) or "deployer")
+    graph_css = _graph_css()
 
     html_content = f"""<!DOCTYPE html>
 <html lang="en">
@@ -252,8 +273,9 @@ def generate_visual_graph(
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EU AI Act Context Graph — {safe_project_name}</title>
-  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <!-- Vendored Tailwind utilities (compiled, no CDN): the page must open without network access. -->
   <style>
+    {graph_css}
     :root {{
       --background: #0f172a;
       --card: #1e293b;
@@ -733,7 +755,7 @@ def generate_visual_graph(
           div.innerHTML = `
             <div class="flex items-center justify-between mb-1">
               <span class="font-mono text-amber-400">${{escapeHtml(inc.id)}}</span>
-              <span class="px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 font-semibold uppercase text-[10px]">${{escapeHtml(inc.severity)}}</span>
+              <span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-semibold uppercase text-[10px]">${{escapeHtml(inc.severity)}}</span>
             </div>
             <p class="text-slate-300 font-medium mb-1">${{escapeHtml(inc.title)}}</p>
             <div class="text-slate-500 text-[10px]">${{escapeHtml(inc.tags.join(' / '))}}</div>

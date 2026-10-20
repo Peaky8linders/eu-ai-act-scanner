@@ -33,6 +33,7 @@ scanned repo (local)  ──►  engine (in-process)  ──►  stdout / JSON /
 ```
 
 - **No network calls, no telemetry, no phone-home** in the engine or any analyzer. CI has no step that ships source anywhere.
+- **Emitted artifacts are inert.** The context graph inlines compiled CSS (no CDN) and no report embeds a remote image, script or stylesheet, so opening a scan report, dossier or graph makes no request. `tests/test_offline_artifacts.py` fails if one does, and an AST guard forbids outbound HTTP clients under `scanner/`.
 - The engine never transmits scanned code. **Host client caveat:** in `assisted` mode (Claude Code) or through an MCP client, the *client* may send the files it chooses to read to its own model provider — that flow is governed by the client's policy, not by this engine. The engine's guarantee is only that *it* sends nothing.
 - Credentials: none required. No API keys, no `.env` secrets read (`.env.example` only), no tokens stored.
 - Maintainer-only scripts (`scripts/sync_incident_corpus.py`, `scripts/update_readme_countdown.py`) run in CI/hand and touch the vendored corpus and README — never at scan time.
