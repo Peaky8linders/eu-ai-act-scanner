@@ -81,6 +81,50 @@ class TestObligationTextCoverage:
         assert "open-source" in text
         assert "general-purpose AI models" in text
 
+    def test_art_5_keeps_the_operative_prohibition_elements(self):
+        """Art. 5(1) is only faithful with its operative limbs intact.
+
+        A paraphrase that keeps "materially distort behaviour" but drops the
+        informed-decision clause turns one prohibition into a vaguer one; the
+        same holds for social scoring's second limb and the sources/subjects
+        of the other practices. The text is also the citation guard's token
+        pool, so a missing limb makes a correct answer look unsupported.
+        """
+        text = OBLIGATION_TEXT["Art. 5"]
+        assert "appreciably impairing" in text
+        assert "would not otherwise have taken" in text
+        assert "groups of persons" in text
+        assert "unjustified or disproportionate" in text
+        assert "personality traits" in text
+        assert "CCTV footage" in text
+        assert "strictly necessary" in text
+
+    def test_art_6_derogation_is_conjunctive(self):
+        """Art. 6(3) needs *no significant risk* **and** a listed condition.
+
+        Read as a bare disjunction, performing a narrow procedural task looks
+        sufficient — the exact misclassification the paragraph prevents.
+        """
+        text = OBLIGATION_TEXT["Art. 6"]
+        assert "including by not materially influencing" in text
+        assert "because it performs" not in text
+        assert "deviations from prior decision-making patterns" in text
+        assert "replace or influence" in text
+
+    def test_art_49_does_not_invent_a_deployer_class(self):
+        """Art. 49(3) binds public bodies *and persons acting on their behalf*.
+
+        A "private deployers ... public services" category is not in the
+        article and would excuse a private contractor acting for a public
+        authority. Paragraph 1 also excludes Annex III point 2.
+        """
+        text = OBLIGATION_TEXT["Art. 49"]
+        assert "persons acting on their behalf" in text
+        assert "select the system and register its use" in text
+        assert "point 2 of Annex III" in text
+        assert "private deployers" not in text
+        assert "public services" not in text
+
 
 class TestObligationTextLookup:
     def test_accepts_canonical_form(self):

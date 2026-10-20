@@ -9,6 +9,8 @@ It serves two jobs:
    (Regulation (EU) 2024/1689, EUR-Lex CELEX 32024R1689). Every article that
    appears in :data:`scanner.kb.ARTICLE_TO_DIMENSIONS` has an entry, so a
    prompt built from a KB dimension always has authoritative text to inject.
+   Articles that only the cross-framework crosswalk names (5, 6 and 49) are
+   covered too, so a projection row can always quote the provision it cites.
    :func:`ground_prompt` packages that text into a labelled block suitable for
    an LLM system prompt.
 
@@ -66,6 +68,65 @@ OBLIGATION_TEXT: dict[str, str] = {
         "must take into account those persons' technical knowledge, experience, "
         "education and training, and the context in which the systems are used. In "
         "force since February 2025."
+    ),
+    # Articles 5, 6 and 49 are not KB dimensions, but the cross-framework
+    # crosswalk maps them, so the projection renders them beside foreign
+    # controls. Without text here those rows cite a bare article number.
+    "Art. 5": (
+        "Prohibited practices include placing on the market, putting into service or "
+        "using an AI system that deploys subliminal techniques beyond a person's "
+        "consciousness, or purposefully manipulative or deceptive techniques, with "
+        "the objective or effect of materially distorting the behaviour of a person "
+        "or group by appreciably impairing their ability to make an informed "
+        "decision, thereby causing them to take a decision they would not otherwise "
+        "have taken, in a manner that causes or is reasonably likely to cause "
+        "significant harm; that exploits vulnerabilities of a person or group due to "
+        "their age, disability or a specific social or economic situation to "
+        "materially distort behaviour in a manner causing or likely to cause "
+        "significant harm; or that evaluates or classifies natural persons or "
+        "groups of persons over a period of time on their social behaviour or on "
+        "known, inferred or predicted personal or personality characteristics, "
+        "where the social score leads to detrimental or unfavourable treatment in "
+        "social contexts unrelated to those in which the data was originally "
+        "generated or collected, or to "
+        "treatment that is unjustified or disproportionate to the social behaviour "
+        "or its gravity. The prohibitions also cover risk assessments to predict "
+        "criminal offending based solely on profiling of a natural person or on "
+        "assessing their personality traits and characteristics (except systems "
+        "supporting a human assessment based on objective and verifiable facts "
+        "directly linked to criminal activity); creating or expanding "
+        "facial-recognition databases through untargeted scraping of facial images "
+        "from the internet or CCTV footage; inferring emotions in the workplace or "
+        "education institutions, except for medical or safety reasons; and biometric "
+        "categorisation to deduce race, political opinions, trade union membership, "
+        "religious or philosophical beliefs, sex life or sexual orientation, except "
+        "labelling or filtering of lawfully acquired datasets and categorisation for "
+        "law enforcement. Real-time remote biometric identification in publicly "
+        "accessible spaces for law enforcement is prohibited unless and in so far "
+        "as it is strictly necessary for one of the exhaustive objectives listed in "
+        "Article 5(1)(h), and each use requires prior authorisation from a judicial "
+        "or independent administrative authority, a completed fundamental rights "
+        "impact assessment under Article 27, and registration in the EU database."
+    ),
+    "Art. 6": (
+        "An AI system is high-risk where it is intended to be used as a safety "
+        "component of a product, or is itself a product, covered by the Union "
+        "harmonisation legislation listed in Annex I, and that product must undergo "
+        "third-party conformity assessment. AI systems listed in Annex III are also "
+        "high-risk, unless the provider demonstrates that the system poses no "
+        "significant risk of harm to health, safety or fundamental rights, including "
+        "by not materially influencing the outcome of decision making, and any of the "
+        "following applies: it performs a narrow procedural task; it improves the "
+        "result of a previously completed human activity; it detects decision-making "
+        "patterns or deviations from prior decision-making patterns and is not meant "
+        "to replace or influence the previously completed human assessment without "
+        "proper human review; or it performs a preparatory task to an assessment "
+        "relevant to an Annex III use case. An Annex III system that profiles natural "
+        "persons is always high-risk, and a provider relying on the derogation must "
+        "document its assessment before placing the system on the market or putting "
+        "it into service, remains subject to the Article 49(2) registration "
+        "obligation, and must provide that documentation to national competent "
+        "authorities on request."
     ),
     "Art. 9": (
         "A risk management system must be established, implemented, documented and "
@@ -230,6 +291,21 @@ OBLIGATION_TEXT: dict[str, str] = {
         "systems provided digitally, a digital CE marking is used where it can be "
         "easily accessed. Where a notified body is involved in conformity "
         "assessment, its identification number must accompany the marking."
+    ),
+    "Art. 49": (
+        "Before placing on the market or putting into service a high-risk AI system "
+        "listed in Annex III, other than those referred to in point 2 of Annex III, "
+        "the provider, or where applicable the authorised representative, must "
+        "register itself and the system in the EU database established by Article 71. "
+        "The same duty applies where the provider has concluded under Article 6(3) "
+        "that an Annex III system is not high-risk. Before putting into service or "
+        "using such a system, deployers that are public authorities, Union "
+        "institutions, bodies, offices or agencies, or persons acting on their "
+        "behalf, must register themselves, select the system and register its use in "
+        "the EU database. Registration of systems in points 1, 6 and 7 of Annex III "
+        "(law enforcement, migration, asylum and border control) is held in a secure "
+        "non-public section of the database with restricted access, while systems in "
+        "point 2 of Annex III are registered at national level."
     ),
     "Art. 50": (
         "Providers must ensure AI systems intended to interact directly with natural "
