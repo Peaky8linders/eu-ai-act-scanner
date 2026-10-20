@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.2] - 2026-10-20
+
+### Fixed — the generated context graph is now actually offline
+
+- **The graph page no longer loads Tailwind from a CDN.** `/ai-act-graph`
+  fetched `tailwindcss.min.js` from `gstatic.com` at open time, so a report
+  opened on an air-gapped or privacy-sensitive machine made a third-party
+  request and lost its styling whenever the network was unavailable —
+  contradicting the scanner's offline guarantee. The utilities the template
+  uses are now compiled ahead of time by `scripts/build_graph_css.py`
+  (Tailwind pinned at 3.4.17) into `scanner/data/graph.css` and inlined into
+  the page, so the output stays one self-contained HTML file with zero network
+  requests.
+- `tests/test_visual_graph.py::test_generated_graph_makes_no_network_request`
+  fails on a remote `<script src>`, `<link>`, `@import`, `url(http…)`, or any
+  absolute URL in the document other than the non-fetchable SVG namespace.
+
+### Added — an audit that keeps every emitted artifact offline
+
+- `tests/test_offline_artifacts.py` covers the remaining surfaces: the scan
+  report, cross-framework markdown, grounded Q&A, the settings file, incident
+  payloads, the dossier, MCP tool results and the patches the fix loop proposes.
+  None may embed a remote asset, and a URL in a JSON artifact is allowed only in
+  a provenance field (`references[].url`, `source_url`, `dataset_url`) —
+  anywhere else it means repo data reached a field a consumer may render.
+- A static AST guard fails if any module under `scanner/` imports an outbound
+  client (`requests`, `httpx`, `urllib.request`, `socket`, …) or shells out to
+  `curl`/`wget`. The MCP server stays the one network surface, and it listens
+  (stdio by default; HTTP only when a deployer wraps `http_app()`) rather than
+  calling out.
+- Audit result: the context graph was the only artifact that made a network
+  request. Everything else was already inert, and the incident URLs those
+  payloads carry are citations to primary sources, not fetches.
+
 ## [0.11.1] - 2026-10-20
 
 ### Fixed — obligation text checked against the statute a second time

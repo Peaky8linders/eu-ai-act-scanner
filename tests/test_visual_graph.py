@@ -2,10 +2,42 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 from scanner.models import ArchitectureNode, FileFinding, ScanResult
 from scanner.visual_graph import build_graph_data, generate_visual_graph
+
+# Absolute URLs that are identifiers, not fetchable resources. The SVG namespace
+# string is passed to createElementNS and is never dereferenced.
+_ALLOWED_ABSOLUTE_URLS = frozenset({"http://www.w3.org/2000/svg"})
+
+# Classes the page script toggles purely as JavaScript hooks; their styling is
+# applied through their own utility classes, so they carry no CSS rule.
+_PAGE_SCRIPT_HOOKS = frozenset({"filter-btn", "inspector-tab", "tab-pane"})
+
+
+def _absolute_urls(markup: str) -> set[str]:
+    """Every absolute URL left once comments (which cannot load anything) are gone."""
+    text = re.sub(r"<!--.*?-->", "", markup, flags=re.DOTALL)
+    text = re.sub(r"/\*.*?\*/", "", text, flags=re.DOTALL)
+    return {url.rstrip(".,;") for url in re.findall(r"https?://[^\s\"'<>()]+", text)}
+
+
+def _class_attributes(markup: str) -> set[str]:
+    """Class tokens written in markup, including those inside JS template literals."""
+    tokens: set[str] = set()
+    for value in re.findall(r'class="([^"]*)"', markup):
+        tokens.update(value.split())
+    return tokens
+
+
+def _css_classes(css: str) -> set[str]:
+    """Class names the stylesheet defines, with CSS escapes removed."""
+    names = set()
+    for raw in re.findall(r"\.((?:\\.|[^\s,{:.\[\]>+~])+)", css):
+        names.add(re.sub(r"\\(.)", r"\1", raw))
+    return names
 
 
 def test_build_graph_data_with_architecture() -> None:
@@ -82,11 +114,67 @@ def test_generate_visual_graph_html_output(tmp_path: Path) -> None:
     assert "EU AI Act Context Graph" in html
     assert "Visual-Test" in html
     assert "GRAPH_DATA" in html
-    assert "tailwindcss.min.js" in html
+    # Utilities are compiled ahead of time and inlined — no CDN JIT at open time.
+    assert "--tw-" in html
+    assert "<script src" not in html
 
     assert out_file.is_file()
     saved = out_file.read_text(encoding="utf-8")
     assert saved == html
+
+
+def test_generated_graph_makes_no_network_request(tmp_path: Path) -> None:
+    """The graph is opened on an analyst's machine and must stay offline.
+
+    Guards both halves of the contract: no element that loads a remote asset,
+    and no absolute URL anywhere in the document (which also catches a
+    ``fetch()`` added to the page script) other than non-fetchable namespace
+    identifiers. Comments are ignored — they cannot cause a request.
+    """
+    scan = ScanResult(
+        project_name="Offline-Graph",
+        is_ai_system=True,
+        overall_compliance_pct=40.0,
+        compliance_scores={"human_oversight": 10.0, "transparency": 90.0},
+    )
+    html = generate_visual_graph(scan, output_path=tmp_path / "offline_graph.html")
+
+    lowered = html.lower()
+    assert "<script src" not in lowered
+    assert "<link" not in lowered
+    assert "@import" not in lowered
+    assert "url(http" not in lowered
+    assert "url(//" not in lowered
+    # Protocol-relative references are remote too and carry no scheme for the
+    # absolute-URL audit below to match.
+    assert "'//" not in html
+    assert '"//' not in html
+
+    unexpected = _absolute_urls(html) - _ALLOWED_ABSOLUTE_URLS
+    assert not unexpected, f"generated graph references remote assets: {sorted(unexpected)}"
+
+
+def test_vendored_css_covers_every_class_the_page_uses(tmp_path: Path) -> None:
+    """Removing the CDN means the bundled CSS can silently go stale.
+
+    Adding a utility class to the template without re-running
+    ``scripts/build_graph_css.py`` would leave that element unstyled, with no
+    error at generation time — so pin the coverage here.
+    """
+    scan = ScanResult(
+        project_name="Css-Coverage",
+        is_ai_system=True,
+        overall_compliance_pct=45.0,
+        compliance_scores={"human_oversight": 20.0, "security": 70.0},
+    )
+    html = generate_visual_graph(scan, output_path=tmp_path / "coverage_graph.html")
+    css = html.split("<style>", 1)[1].split("</style>", 1)[0]
+
+    missing = sorted(_class_attributes(html) - _css_classes(css) - _PAGE_SCRIPT_HOOKS)
+    assert not missing, (
+        "classes used by the page have no rule in scanner/data/graph.css "
+        f"(re-run scripts/build_graph_css.py): {missing}"
+    )
 
 
 def test_repository_derived_label_cannot_break_out_of_the_script(tmp_path: Path) -> None:
@@ -119,9 +207,9 @@ def test_repository_derived_label_cannot_break_out_of_the_script(tmp_path: Path)
     # The breakout sequence is an unescaped `</script>`; `<script>` alone is
     # inert inside script data, so only the closing tag is pinned.
     assert "</script><script>window.__pwned" not in html
-    # Only the two legitimate closing tags remain: the Tailwind CDN loader and
-    # the inline graph script.
-    assert html.count("</script>") == 2
+    # Only the single legitimate closing tag remains — the inline graph script
+    # (the page no longer loads a CDN bundle).
+    assert html.count("</script>") == 1
     # The sequence survives only in its JSON-safe form `\/`.
     assert "<\\/script>" in html
     # The <title> is HTML-escaped, so the payload cannot inject markup there.

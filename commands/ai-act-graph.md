@@ -22,6 +22,8 @@ python -m scanner.cli [PATH] --graph context-graph.html
 
 1. Scans the codebase at `PATH` (defaults to current directory).
 2. Generates an interactive, self-contained visual context graph (`context-graph.html`).
+   The CSS is bundled and inlined, so the file opens offline and makes no network
+   request — safe to attach to a review or open on an air-gapped machine.
 3. Renders a node-link visual diagram where:
    - **Nodes** represent discovered architecture components, agent runtimes, and governance gates.
    - **Badges** indicate compliance status:
