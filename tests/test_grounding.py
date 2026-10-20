@@ -20,6 +20,8 @@ from __future__ import annotations
 
 import re
 
+import pytest
+
 from scanner.grounding import (
     OBLIGATION_TEXT,
     dimension_grounding,
@@ -98,6 +100,16 @@ class TestObligationTextCoverage:
         assert "personality traits" in text
         assert "CCTV footage" in text
         assert "strictly necessary" in text
+        # Art. 5(1)(d)'s carve-out is for a human assessment of *involvement*
+        # that is *already* fact-based; the earlier wording read as a general
+        # allowance for any human review.
+        assert "involvement in a criminal activity" in text
+        assert "already based on objective and verifiable facts" in text
+        # Art. 5(2)-(4) bind the law enforcement authority for the FRIA and the
+        # registration, require a *binding* decision, and carry an urgency path.
+        assert "whose decision is binding" in text
+        assert "law enforcement authority" in text
+        assert "within 24 hours" in text
 
     def test_art_6_derogation_is_conjunctive(self):
         """Art. 6(3) needs *no significant risk* **and** a listed condition.
@@ -110,6 +122,10 @@ class TestObligationTextCoverage:
         assert "because it performs" not in text
         assert "deviations from prior decision-making patterns" in text
         assert "replace or influence" in text
+        # 6(3) states the condition itself; "demonstrates" would import an
+        # evidentiary standard the article puts in 6(4) instead.
+        assert "demonstrates" not in text
+        assert "considers an Annex III system not high-risk" in text
 
     def test_art_49_does_not_invent_a_deployer_class(self):
         """Art. 49(3) binds public bodies *and persons acting on their behalf*.
@@ -121,6 +137,9 @@ class TestObligationTextCoverage:
         text = OBLIGATION_TEXT["Art. 49"]
         assert "persons acting on their behalf" in text
         assert "select the system and register its use" in text
+        # 49(3) binds deployers only for high-risk Annex III systems; a bare
+        # "such a system" would sweep in the 6(3) non-high-risk case above it.
+        assert "using a high-risk Annex III system other than one in point 2" in text
         assert "point 2 of Annex III" in text
         assert "private deployers" not in text
         assert "public services" not in text
@@ -321,3 +340,67 @@ class TestCitationGuard:
             answer, ("Art. 14",), min_overlap_tokens=3
         )
         assert out.strip(), "high threshold emptied the answer"
+
+
+# Sentences that quote only a clause restored by the correction pass. Each is
+# paired with a strict overlap threshold two tokens below today's measured
+# overlap, so losing a clause drops it under the bar:
+#
+#   ref      overlap before -> after   threshold
+#   Art. 5                    2 ->  9         7
+#   Art. 5                    5 ->  8         6
+#   Art. 6                    4 -> 11         9
+#   Art. 49                   1 ->  6         4
+#
+# ``before`` is the overlap with the pre-correction text. At the default
+# ``min_overlap_tokens=1`` all four passed on the old text too: the guard is
+# deliberately lenient, so text drift rarely flips a keep/drop decision and the
+# default cannot detect it. The strict threshold can, which is why the guard's
+# accuracy is tied to the *content* of OBLIGATION_TEXT.
+_RESTORED_CLAUSE_CASES = [
+    (
+        "Art. 5",
+        "Each use requires prior authorisation from an authority whose decision is binding.",
+        "binding",
+        7,
+    ),
+    (
+        "Art. 5",
+        "Scraping facial images from CCTV footage to expand a facial-recognition database.",
+        "CCTV footage",
+        6,
+    ),
+    (
+        "Art. 6",
+        "Deviations from prior decision-making patterns must not replace or influence human review.",
+        "Deviations",
+        9,
+    ),
+    (
+        "Art. 49",
+        "Persons acting on their behalf must select the system and register its use.",
+        "on their behalf",
+        4,
+    ),
+]
+
+
+class TestCitationGuardCoversCrosswalkArticles:
+    """The guard scores a sentence against the *content* of the cited article's
+    obligation text, so a paraphrase that drops a clause silently weakens it.
+    These exercise the clauses restored for the crosswalk-only articles (5, 6,
+    49), which had no text at all until the crosswalk resolution check demanded
+    one.
+    """
+
+    @pytest.mark.parametrize(
+        ("ref", "sentence", "marker", "min_overlap"), _RESTORED_CLAUSE_CASES
+    )
+    def test_restored_clause_carries_support_at_a_strict_threshold(
+        self, ref: str, sentence: str, marker: str, min_overlap: int
+    ):
+        out = filter_unsupported_sentences(
+            f"{sentence} {_UNSUPPORTED}", (ref,), min_overlap_tokens=min_overlap
+        )
+        assert marker in out, f"{ref} clause lost its support: {sentence!r}"
+        assert "marketing budget" not in out

@@ -5,6 +5,12 @@ non-canonical control ID (``MEASURE-2.3``, ``AIM-07``, ``GAI-8``) reads as a
 real mapping to anyone who does not have the standard open next to it, and a
 retired ID silently rots. These tests pin the ID grammar of every framework so
 a wrong ID fails CI instead of shipping.
+
+They also pin *citation resolution*: every EU AI Act article the catalogue or
+its rendered prose cites must have obligation text to quote, and the Act table
+must stay article-level so a GDPR ref of the same number cannot satisfy the
+check against the wrong statute. An identifier that maps to nothing and an
+article that quotes nothing are the same failure — a claim with no evidence.
 """
 
 from __future__ import annotations
@@ -320,6 +326,32 @@ def test_every_crosswalk_article_resolves_to_obligation_text() -> None:
     assert unresolved == [], (
         "crosswalk articles with no obligation text: " + ", ".join(unresolved)
     )
+
+
+def test_evidence_reuse_observations_cite_resolvable_act_articles() -> None:
+    """The reuse-observation prose renders beside foreign controls, so every
+    Act ref it asserts must quote real obligation text.
+
+    Each observation declares its Act refs as data: scraping the sentence
+    would also match the GDPR ``Art. 5/25`` and ``Art. 35`` it cites, which
+    resolve against the Act article of the same number.
+    """
+    from scanner import grounding
+    from scanner.cross_framework import EVIDENCE_REUSE_OBSERVATIONS
+
+    unresolved: list[str] = []
+    stale: list[str] = []
+    for refs, text in EVIDENCE_REUSE_OBSERVATIONS:
+        for ref in refs:
+            if not re.fullmatch(r"Art\. \d+", ref):
+                stale.append(f"{ref} is not an article-level Act ref")
+            elif not grounding.obligation_text(ref).strip():
+                unresolved.append(ref)
+            if ref not in text:
+                stale.append(f"{ref} declared but absent from the prose")
+
+    assert unresolved == [], "reuse observations citing unquoted articles: " + ", ".join(unresolved)
+    assert stale == [], "; ".join(stale)
 
 
 def test_crosswalk_article_keys_are_article_level_act_refs() -> None:

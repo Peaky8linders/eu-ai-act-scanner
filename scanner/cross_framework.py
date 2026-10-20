@@ -188,6 +188,31 @@ class CrossFrameworkScanProjection(BaseModel):
         return "\n".join(lines)
 
 
+# Evidence-reuse observations, each paired with the EU AI Act articles it
+# cites. The Act refs are data rather than prose because the same sentences
+# cite GDPR articles that share the ``Art. N`` surface form (GDPR Art. 5 is
+# data-protection principles; Act Art. 5 is prohibited practices), so a test
+# that scraped the sentence would resolve the wrong statute.
+EVIDENCE_REUSE_OBSERVATIONS: tuple[tuple[tuple[str, ...], str], ...] = (
+    (
+        ("Art. 10",),
+        "**Art. 10 Data Governance ↔ GDPR Art. 5/25 ↔ NIST AI RMF MP-3.4**: A single data quality and provenance datasheet satisfies AI Act technical documentation, GDPR data protection by design, and NIST mapping requirements.",
+    ),
+    (
+        ("Art. 14",),
+        "**Art. 14 Human Oversight ↔ GDPR Art. 22 ↔ OWASP Agentic ASI02**: Implementing a human approval circuit breaker simultaneously addresses EU AI Act operator oversight and GDPR automated decision rights.",
+    ),
+    (
+        ("Art. 12",),
+        "**Art. 12 Logging ↔ SOC 2 CC7.2 ↔ ISO 27002 8.15**: Structured logging with session IDs and model prompt hashing fulfills AI Act record-keeping and SOC 2 / ISO audit logging criteria.",
+    ),
+    (
+        ("Art. 27",),
+        "**Art. 27 FRIA ↔ GDPR Art. 35 DPIA**: A Fundamental Rights Impact Assessment directly reuses data protection impact assessment findings, preventing redundant compliance cycles.",
+    ),
+)
+
+
 def _band(score: float) -> str:
     """Classify dimension score into compliance band."""
     if score >= 60.0:
@@ -369,12 +394,7 @@ def project_scan_to_frameworks(
     satisfy_once_levers.sort(key=lambda lever: (-lever.framework_count, -lever.controls_closed_count))
 
     # Evidence harmonization & reuse observations
-    reuse_opps: list[str] = [
-        "**Art. 10 Data Governance ↔ GDPR Art. 5/25 ↔ NIST AI RMF MP-3.4**: A single data quality and provenance datasheet satisfies AI Act technical documentation, GDPR data protection by design, and NIST mapping requirements.",
-        "**Art. 14 Human Oversight ↔ GDPR Art. 22 ↔ OWASP Agentic ASI02**: Implementing a human approval circuit breaker simultaneously addresses EU AI Act operator oversight and GDPR automated decision rights.",
-        "**Art. 12 Logging ↔ SOC 2 CC7.2 ↔ ISO 27002 8.15**: Structured logging with session IDs and model prompt hashing fulfills AI Act record-keeping and SOC 2 / ISO audit logging criteria.",
-        "**Art. 27 FRIA ↔ GDPR Art. 35 DPIA**: A Fundamental Rights Impact Assessment directly reuses data protection impact assessment findings, preventing redundant compliance cycles.",
-    ]
+    reuse_opps: list[str] = [text for _refs, text in EVIDENCE_REUSE_OBSERVATIONS]
 
     return CrossFrameworkScanProjection(
         scan_id=scan.scan_id,

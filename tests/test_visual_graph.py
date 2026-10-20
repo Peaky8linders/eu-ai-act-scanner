@@ -87,3 +87,42 @@ def test_generate_visual_graph_html_output(tmp_path: Path) -> None:
     assert out_file.is_file()
     saved = out_file.read_text(encoding="utf-8")
     assert saved == html
+
+
+def test_repository_derived_label_cannot_break_out_of_the_script(tmp_path: Path) -> None:
+    """A file or component named `</script><script>...` must render as text.
+
+    Graph data is embedded in an inline <script>. JSON escaping alone leaves
+    ``</script>`` intact, which closes the element and turns the rest of the
+    label into markup — arbitrary script in a page the user opens locally.
+    """
+    payload = "</script><script>window.__pwned = 1</script>"
+    scan = ScanResult(
+        project_name=payload,
+        is_ai_system=True,
+        overall_compliance_pct=40.0,
+        compliance_scores={"logging": 10.0},
+        architecture=[
+            ArchitectureNode(
+                id="logging",
+                label=payload,
+                type="service",
+                compliance_status="gap",
+                connected_to=[],
+                file_count=1,
+            )
+        ],
+    )
+
+    html = generate_visual_graph(scan, output_path=tmp_path / "graph.html")
+
+    # The breakout sequence is an unescaped `</script>`; `<script>` alone is
+    # inert inside script data, so only the closing tag is pinned.
+    assert "</script><script>window.__pwned" not in html
+    # Only the two legitimate closing tags remain: the Tailwind CDN loader and
+    # the inline graph script.
+    assert html.count("</script>") == 2
+    # The sequence survives only in its JSON-safe form `\/`.
+    assert "<\\/script>" in html
+    # The <title> is HTML-escaped, so the payload cannot inject markup there.
+    assert "&lt;/script&gt;" in html
