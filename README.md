@@ -114,9 +114,9 @@ eu-ai-act-scan-mcp          # stdio transport
 
 > **There is no PyPI package.** `pip install eu-ai-act-scanner` installs an
 > unrelated third-party project that owns that name — always install from this
-> repository. The distribution published here is `eu-ai-act-scanner-plugin`,
-> and the console scripts are `eu-ai-act-scan`, `eu-ai-act-scan-mcp` and
-> `eu-ai-act-fix`.
+> repository. The package installed from this repository is
+> `eu-ai-act-scanner-plugin`, and the console scripts are `eu-ai-act-scan`,
+> `eu-ai-act-scan-mcp` and `eu-ai-act-fix`.
 
 Register with any MCP client via [`.mcp.json`](.mcp.json):
 

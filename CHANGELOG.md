@@ -444,10 +444,11 @@ frameworks security teams already report against.
 - Each incident carries its native taxonomy verbatim: OWASP Top 10 for LLM
   Applications (2025), OWASP Agentic (ASI) Top 10, NIST AI RMF, MITRE ATLAS
   techniques + tactics, plus documented mitigations and CVE IDs.
-- Bundled offline (ships in the wheel via `package-data`); no network at scan
-  time. Regenerated deterministically by `scripts/sync_incident_corpus.py`
-  (`pip install eu-ai-act-scanner[sync]`), which selects a coverage-complete
-  subset so every KB dimension and threat category is groundable.
+- Bundled offline (ships with the package via `package-data`); no network at
+  scan time. Regenerated deterministically by `scripts/sync_incident_corpus.py`
+  (`pip install -e ".[sync]"` from this repository), which selects a
+  coverage-complete subset so every KB dimension and threat category is
+  groundable.
 
 **Crosswalk + grounding** (`scanner/data/incident_crosswalk.py`,
 `scanner/incident_grounding.py`):
@@ -468,7 +469,7 @@ frameworks security teams already report against.
   `incidents_for_dimension`, `incidents_for_threat`, `incidents_for_article`,
   `incident_corpus_stats`) so non-Claude-Code agents can call the same engine.
   Tool logic is plain importable functions; the `mcp` SDK is an optional extra
-  (`pip install eu-ai-act-scanner[mcp]`).
+  (`pip install -e ".[mcp]"` from this repository).
 
 **Plugin surface**:
 
