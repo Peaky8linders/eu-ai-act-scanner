@@ -11,7 +11,7 @@ Quick start:
     print(result.overall_compliance_pct)
 """
 
-__version__ = "0.11.1"
+__version__ = "0.11.2"
 
 from scanner.cross_framework import (
     CrossFrameworkScanProjection,

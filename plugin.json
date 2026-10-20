@@ -1,6 +1,6 @@
 {
   "name": "eu-ai-act-scanner",
-  "version": "0.11.1",
+  "version": "0.11.2",
   "description": "EU AI Act (Regulation 2024/1689) and Digital Omnibus (Regulation 2026/1744) compliance harness for Claude Code and Codex. 22 code scanners, interactive visual context graph browser (/ai-act-graph), cryptographic compliance release dossier (/ai-act-dossier), cross-framework projection (/ai-act-cross-framework) mapping to NIST AI RMF, ISO 42001, OWASP LLM 2025, OWASP Agentic Top 10, and GDPR, plus autonomous remediation pipeline (/ai-act-scan-fix) with regression guard. Deep semantic audit mode leverages your active Claude Code or Codex subscription without additional API token costs.",
   "author": "Andrei Bacu (@Peaky8linders)",
   "license": "Apache-2.0",
