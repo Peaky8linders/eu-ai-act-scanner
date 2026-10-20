@@ -28,6 +28,7 @@ from scanner.models import (
     ScanResult,
     TaggedRecommendation,
 )
+from scanner.paths import is_excluded
 
 logger = structlog.get_logger()
 
@@ -49,17 +50,6 @@ _SPECIAL_FILENAMES = {
     "dockerfile", "makefile", "jenkinsfile", "procfile",
     ".gitignore", ".dockerignore", ".env.example",
 }
-
-# Directory names never descended into. Matched against individual path parts
-# (not substrings) so `dist` doesn't exclude `distributed.py` and `.git`
-# doesn't exclude `.gitignore`. Includes agent-workspace dirs (`.claude`,
-# `.freebuff`, `worktrees`) — a stale worktree holds a *copy* of the repo and
-# would otherwise double-count every finding against deleted code.
-_EXCLUDED_PATH_PARTS = frozenset({
-    "__pycache__", "node_modules", ".git", ".venv", "venv", ".tox",
-    ".pytest_cache", ".mypy_cache", ".ruff_cache", "dist", "build",
-    ".claude", ".freebuff", ".worktrees", "worktrees",
-})
 
 _MAX_FILE_BYTES = 2 * 1024 * 1024  # 2 MB — skip generated/bundled files
 
@@ -119,7 +109,10 @@ def scan_project(
     for file_path in root_path.rglob("*"):
         if not file_path.is_file():
             continue
-        if _EXCLUDED_PATH_PARTS & set(file_path.parts):
+        # Compare components *below* the root: matching the absolute path would
+        # exclude every file in a project that lives under `.hidden/` or `build/`.
+        rel_path_obj = file_path.relative_to(root_path)
+        if is_excluded(rel_path_obj):
             continue
 
         total_files += 1
@@ -127,7 +120,7 @@ def scan_project(
             total_size += file_path.stat().st_size
         except OSError:
             continue
-        rel_path = str(file_path.relative_to(root_path)).replace("\\", "/")
+        rel_path = str(rel_path_obj).replace("\\", "/")
         ext = file_path.suffix.lower()
         file_list.append(rel_path)
 

@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed — a project under an excluded directory is scanned, not reported empty
+
+- The file walker matched excluded directory names (`build`, `dist`, `.venv`,
+  `.git`, `.claude`, `.freebuff`, worktrees, caches) against the **absolute**
+  path, so a project living under any of them — a `build/` checkout, a
+  venv-managed tree, a Claude worktree — reported zero files and
+  `is_ai_system: false`. Exclusions now apply only to components below the scan
+  root (`scanner/paths.py`); the dossier's fallback file listing had the same
+  bug and shares the rule. `tests/test_scan_paths.py` covers excluded ancestor
+  names, a root itself named `build`, exclusions that must still apply below
+  the root, hidden files that must still count, and a non-empty dossier
+  manifest under a dot-directory.
+
 ### Added — docs guard against PyPI install instructions
 
 - `tests/test_docs_install.py` scans every tracked file and fails when a doc

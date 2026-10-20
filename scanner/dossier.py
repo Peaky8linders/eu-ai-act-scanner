@@ -30,6 +30,7 @@ from pydantic import BaseModel, Field
 from scanner import __version__
 from scanner.cross_framework import project_scan_to_frameworks
 from scanner.models import ScanResult
+from scanner.paths import is_excluded
 
 
 class FileDigest(BaseModel):
@@ -156,13 +157,15 @@ def generate_dossier(
     }
     levers = [lever.impact_summary for lever in cross_proj.satisfy_once_levers[:3]]
 
-    # Compute file digests from the scan's file findings or directory files
+    # Compute file digests from the scan's file findings or directory files.
+    # Exclusions are relative to the root: a project under `.hidden/` must still
+    # produce a manifest (absolute matching used to drop every file).
     file_paths = [ff.file_path for ff in scan.file_findings]
     if not file_paths:
         file_paths = [
             str(p.relative_to(root_path))
             for p in root_path.rglob("*")
-            if p.is_file() and ".git" not in str(p) and "__pycache__" not in str(p)
+            if p.is_file() and not is_excluded(p.relative_to(root_path))
         ]
 
     manifest = _compute_manifest(root_path, file_paths)
