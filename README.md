@@ -26,10 +26,10 @@ The EU AI Act applies in waves. The **Digital Omnibus (Regulation 2026/1744, in 
 | Prohibited practices | Art. 5 | 2 Feb 2025 | ✅ in force |
 | GPAI model obligations | Art. 53 / 55 | 2 Aug 2025 | ✅ in force |
 | **Transparency** | Art. 50 | 2 Aug 2026 | ✅ in force |
-| New prohibitions (NCII/CSAM) | Art. 5(1)(ba)/(bb) | 2 Dec 2026 | ⏳ T-44 days |
-| High-risk (Annex III) | Art. 9-15 / 17 / 27 | 2 Dec 2027 | ⏳ T-409 days |
+| New prohibitions (NCII/CSAM) | Art. 5(1)(ba)/(bb) | 2 Dec 2026 | ⏳ T-37 days |
+| High-risk (Annex III) | Art. 9-15 / 17 / 27 | 2 Dec 2027 | ⏳ T-402 days |
 
-_Countdown generated 2026-10-19 by `scripts/update_readme_countdown.py` (refreshed weekly in CI). The Digital Omnibus deferred high-risk to Dec 2027 but left Article 50 at 2 Aug 2026._
+_Countdown generated 2026-10-26 by `scripts/update_readme_countdown.py` (refreshed weekly in CI). The Digital Omnibus deferred high-risk to Dec 2027 but left Article 50 at 2 Aug 2026._
 <!-- countdown-table:end -->
 
 **Run this to see where you stand:**
