@@ -157,7 +157,7 @@ ROLE_OBLIGATIONS: list[RoleObligation] = [
         "source": "Art. 3(4) + Art. 26 + Art. 27",
         "paper_lines": "1010-1014, 1738-1744",
         "primary_articles": ["Art. 26", "Art. 27", "Art. 50"],
-        "secondary_articles": ["Art. 4", "Art. 14", "Art. 13"],
+        "secondary_articles": ["Art. 4", "Art. 14"],
         "kb_dimensions": [
             "ai_literacy",
             "deployer_obligations",
@@ -216,12 +216,13 @@ ROLE_OBLIGATIONS: list[RoleObligation] = [
     {
         "id": ROLE_PRODUCT_MANUFACTURER,
         "label": "Product Manufacturer",
-        "art_3_definition": "Art. 25(3) — integrates an AI system into a product placed on the market under the manufacturer's name or trademark; treated as provider.",
+        "art_3_definition": "Art. 2(1)(e), Art. 25(3), Recital 87 — places an AI system on the market together with its product under its own name or trademark as a safety component of an Annex I Section A product; treated as provider.",
         "summary": (
-            "Inherits the full provider obligation set when integrating a "
-            "high-risk AI system into a product."
+            "Inherits the full provider obligation set under Art. 25(3) when "
+            "integrating a high-risk AI safety component into an Annex I "
+            "Section A product."
         ),
-        "source": "Art. 25(3)",
+        "source": "Art. 2(1)(e) + Art. 25(3) + Recital 87",
         "paper_lines": "407-410, 1606-1611",
         "primary_articles": [
             "Art. 9",
@@ -258,13 +259,13 @@ ROLE_OBLIGATIONS: list[RoleObligation] = [
     {
         "id": ROLE_AUTHORIZED_REPRESENTATIVE,
         "label": "Authorized Representative",
-        "art_3_definition": "Art. 22 — appointed by a non-EU provider as their authorized representative in the EU under written mandate.",
+        "art_3_definition": "Art. 3(5), Art. 22, Art. 54 — appointed by written mandate from a third-country provider to act as its authorised representative in the Union.",
         "summary": (
             "Acts on behalf of the non-EU provider; verifies declaration of "
             "conformity + technical documentation; cooperates with MSAs; "
             "terminates mandate where the provider violates obligations."
         ),
-        "source": "Art. 22",
+        "source": "Art. 3(5) + Art. 22 + Art. 54",
         "paper_lines": "1011, 1082-1085",
         "primary_articles": ["Art. 22", "Art. 54"],
         "secondary_articles": ["Art. 47", "Art. 48", "Art. 74"],

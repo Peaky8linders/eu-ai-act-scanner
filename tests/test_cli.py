@@ -49,7 +49,7 @@ def test_cross_framework_flag_emits_projection(capsys) -> None:
     payload = json.loads(capsys.readouterr().out)
     projection = payload["cross_framework_projection"]
     assert projection["catalogue_version"]
-    assert projection["total_frameworks_mapped"] == 11
+    assert projection["total_frameworks_mapped"] == 12
     assert projection["unmapped_dimensions"] == []
 
 
@@ -83,3 +83,191 @@ def test_json_surfaces_tagged_agentic_recommendations(tmp_path, capsys) -> None:
     assert recs, "agentic fixture should populate the tagged field"
     assert {r["source"] for r in recs} == {"act_required", "paper_suggested"}
     assert all(r["ref"] and r["risk_id"] for r in recs)
+
+
+def test_founder_flag_emits_brief_and_json(capsys) -> None:
+    assert main([FIXTURE, "--founder"]) == 0
+    brief = capsys.readouterr().out
+    assert "# Founder AI Compliance Brief" in brief
+    assert "Fix Before Shipping" in brief
+    assert len(brief.splitlines()) < 50
+
+    assert main([FIXTURE, "--founder", "--json"]) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["is_ai_system"] is True
+    assert "ship_now" in payload
+    assert "enterprise_deals" in payload
+    assert "later_2027" in payload
+    assert "brief_markdown" in payload
+
+
+def test_sarif_export_writes_offline_sarif(tmp_path, capsys) -> None:
+    sarif_out = tmp_path / "report.sarif.json"
+    assert main([FIXTURE, "--sarif", str(sarif_out)]) == 0
+    out = capsys.readouterr().out
+    assert "SARIF 2.1.0 report written to" in out
+    assert sarif_out.is_file()
+    doc = json.loads(sarif_out.read_text(encoding="utf-8"))
+    assert doc["version"] == "2.1.0"
+    assert "$schema" not in doc
+    assert doc["runs"][0]["tool"]["driver"]["name"] == "eu-ai-act-scanner"
+
+
+def test_ingest_sarif_merges_external_findings(tmp_path, capsys) -> None:
+    sarif_file = tmp_path / "semgrep.sarif"
+    sarif_file.write_text(
+        json.dumps(
+            {
+                "version": "2.1.0",
+                "runs": [
+                    {
+                        "tool": {"driver": {"name": "Semgrep"}},
+                        "results": [
+                            {
+                                "ruleId": "python.lang.security.audit.exec-detected",
+                                "level": "error",
+                                "message": {"text": "Detected dynamic exec call"},
+                                "locations": [
+                                    {
+                                        "physicalLocation": {
+                                            "artifactLocation": {"uri": "app.py"},
+                                            "region": {"startLine": 12},
+                                        }
+                                    }
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    assert main([FIXTURE, "--ingest-sarif", str(sarif_file), "--json"]) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert any("Semgrep" in c["name"] for c in payload["components"])
+
+
+def test_ingest_compliance_api_and_claude_security(tmp_path, capsys) -> None:
+    cca_file = tmp_path / "compliance-api.json"
+    cca_file.write_text(
+        json.dumps(
+            {
+                "api_version": "2026-10-21",
+                "retention_days": 30,
+                "activities": [{"event_id": "evt-1", "event_type": "login"}],
+                "groups": [{"id": "grp-1", "name": "ai-reviewers"}],
+                "user_preferences": [
+                    {
+                        "user_id": "u-1",
+                        "instructions": "Never disclose that you are an AI assistant.",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    cs_file = tmp_path / "claude-security.json"
+    cs_file.write_text(
+        json.dumps(
+            {
+                "findings": [
+                    {
+                        "id": "CS-01",
+                        "title": "Unauthenticated admin prompt route",
+                        "severity": "high",
+                        "file_path": "routes/admin.py",
+                        "line": 44,
+                        "verified": True,
+                    },
+                    {
+                        "id": "CS-02",
+                        "title": "Refuted SQLi false positive",
+                        "severity": "critical",
+                        "file_path": "routes/db.py",
+                        "line": 10,
+                        "status": "mitigated",
+                    },
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    code = main(
+        [
+            FIXTURE,
+            "--ingest-compliance-api",
+            str(cca_file),
+            "--ingest-claude-security",
+            str(cs_file),
+            "--json",
+        ]
+    )
+    assert code == 0
+    payload = json.loads(capsys.readouterr().out)
+    names = [c["name"] for c in payload["components"]]
+    assert any("Unsafe bypass directives in Claude user preferences" in n for n in names)
+    assert any("Unauthenticated admin prompt route" in n for n in names)
+    assert not any("Refuted SQLi false positive" in n for n in names)
+
+
+def test_save_and_diff_baseline(tmp_path, capsys) -> None:
+    proj = tmp_path / "proj"
+    proj.mkdir()
+    (proj / "app.py").write_text(
+        "import openai\n"
+        "def chat(msg):\n"
+        "    return openai.chat.completions.create(model='gpt-4o', messages=[{'role': 'user', 'content': msg}])\n",
+        encoding="utf-8",
+    )
+    baseline_file = tmp_path / "baseline.json"
+    assert main([str(proj), "--save-baseline", str(baseline_file)]) == 0
+    out = capsys.readouterr().out
+    assert "Baseline snapshot saved to" in out
+    assert baseline_file.is_file()
+
+    # Add structured logging to improve score
+    (proj / "logging_setup.py").write_text(
+        "import structlog\nlogger = structlog.get_logger()\n",
+        encoding="utf-8",
+    )
+    assert main([str(proj), "--diff-baseline", str(baseline_file), "--json"]) == 0
+    diff = json.loads(capsys.readouterr().out)
+    assert "score_delta" in diff
+    assert "dimension_deltas" in diff
+    assert diff["dimension_deltas"].get("logging", 0.0) > 0.0
+
+    # Also verify markdown diff rendering
+    assert main([str(proj), "--diff-baseline", str(baseline_file)]) == 0
+    md = capsys.readouterr().out
+    assert "# Baseline Diff" in md
+
+
+def test_fix_startup_profile_dry_run(tmp_path, capsys) -> None:
+    (tmp_path / "app.py").write_text(
+        "import openai\n"
+        "def chat(msg):\n"
+        "    return openai.chat.completions.create(model='gpt-4o', messages=[{'role': 'user', 'content': msg}])\n",
+        encoding="utf-8",
+    )
+    assert main([str(tmp_path), "--fix", "--startup", "--json"]) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["applied"] == []
+    assert payload["proposals"]
+    # Startup profile prioritizes live Art. 50 / tool_governance / security ahead of Dec 2027 docs
+    first_dim = payload["proposals"][0]["dimension"]
+    assert first_dim in {"content_transparency", "transparency", "tool_governance", "security", "access_control"}
+
+
+def test_benchmark_flag_outputs_metrics(capsys) -> None:
+    assert main(["--benchmark", "--json"]) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["corpus_size"] >= 20
+    assert payload["precision"] >= 0.9
+    assert payload["recall"] >= 0.9
+    assert payload["f1"] >= 0.9
+
+    assert main(["--benchmark"]) == 0
+    md = capsys.readouterr().out
+    assert "# EU AI Act Scanner — Accuracy Benchmark" in md
+    assert "Per-analyzer breakdown" in md

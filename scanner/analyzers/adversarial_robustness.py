@@ -101,8 +101,10 @@ def analyze_adversarial_robustness(ctx: AnalyzerContext) -> AnalyzerResult:
     for module, description in _ADVERSARIAL_FRAMEWORKS.items():
         if module in imported_modules:
             detected_frameworks.append(description)
-            # Find the import file
-            matches = search_code_files(ctx, rf"import\s+{module}|from\s+{module}")
+            # Find the import file (adversarial test suites legitimately live under tests/)
+            matches = search_code_files(
+                ctx, rf"import\s+{module}|from\s+{module}", include_non_product=True
+            )
             file_path = matches[0][0] if matches else "unknown"
             evidence_files.add(file_path)
 
@@ -116,11 +118,15 @@ def analyze_adversarial_robustness(ctx: AnalyzerContext) -> AnalyzerResult:
             compliance_impact="positive",
             compliance_dimensions=["security", "risk_mgmt"],
             evidence_snippet=detected_frameworks[0],
-            kb_question_ids=["sec-3"], suggested_answer="yes",
+            kb_question_ids=["sc-3"], suggested_answer="yes",
         ))
     else:
         # Check for adversarial test patterns even without framework imports
-        adv_test_matches = search_code_files(ctx, r"adversar|robustness.*test|attack.*test|perturbat")
+        adv_test_matches = search_code_files(
+            ctx,
+            r"adversar|robustness.*test|attack.*test|perturbat",
+            include_non_product=True,
+        )
         if adv_test_matches:
             evidence_files.add(adv_test_matches[0][0])
             findings.append(Finding(
@@ -131,7 +137,7 @@ def analyze_adversarial_robustness(ctx: AnalyzerContext) -> AnalyzerResult:
                 compliance_impact="positive",
                 compliance_dimensions=["security", "risk_mgmt"],
                 evidence_snippet=adv_test_matches[0][1],
-                kb_question_ids=["sec-3"], suggested_answer="partial",
+                kb_question_ids=["sc-3"], suggested_answer="partial",
             ))
         elif has_ai_project:
             findings.append(Finding(
@@ -147,7 +153,7 @@ def analyze_adversarial_robustness(ctx: AnalyzerContext) -> AnalyzerResult:
                 compliance_impact="gap",
                 compliance_dimensions=["security", "risk_mgmt"],
                 evidence_snippet="No adversarial testing framework found in imports",
-                kb_question_ids=["sec-3"], suggested_answer="no",
+                kb_question_ids=["sc-3"], suggested_answer="no",
             ))
 
     # ── 2. Prompt injection guards (LLM-specific) ────────────────────
@@ -168,7 +174,7 @@ def analyze_adversarial_robustness(ctx: AnalyzerContext) -> AnalyzerResult:
                 compliance_impact="positive",
                 compliance_dimensions=["security", "risk_mgmt"],
                 evidence_snippet=guard_matches[0][1],
-                kb_question_ids=["sec-3", "rm-4"], suggested_answer="partial",
+                kb_question_ids=["sc-3", "rm-4"], suggested_answer="partial",
             ))
         else:
             findings.append(Finding(
@@ -184,7 +190,7 @@ def analyze_adversarial_robustness(ctx: AnalyzerContext) -> AnalyzerResult:
                 compliance_impact="gap",
                 compliance_dimensions=["security", "risk_mgmt"],
                 evidence_snippet="LLM imports found without prompt injection guards",
-                kb_question_ids=["sec-3", "rm-4"], suggested_answer="no",
+                kb_question_ids=["sc-3", "rm-4"], suggested_answer="no",
             ))
 
     # ── 3. Input validation on model endpoints ───────────────────────
@@ -207,7 +213,7 @@ def analyze_adversarial_robustness(ctx: AnalyzerContext) -> AnalyzerResult:
                 compliance_impact="positive",
                 compliance_dimensions=["security"],
                 evidence_snippet=input_val_matches[0][1],
-                kb_question_ids=["sec-1"], suggested_answer="partial",
+                kb_question_ids=["sc-1"], suggested_answer="partial",
             ))
         else:
             findings.append(Finding(
@@ -232,7 +238,7 @@ def analyze_adversarial_robustness(ctx: AnalyzerContext) -> AnalyzerResult:
             compliance_impact="gap",
             compliance_dimensions=["security"],
             evidence_snippet="No input validation patterns found",
-            kb_question_ids=["sec-1"], suggested_answer="no",
+            kb_question_ids=["sc-1"], suggested_answer="no",
         ))
 
     # ── 4. Model hardening techniques ────────────────────────────────
@@ -251,7 +257,7 @@ def analyze_adversarial_robustness(ctx: AnalyzerContext) -> AnalyzerResult:
             compliance_impact="positive",
             compliance_dimensions=["security", "risk_mgmt"],
             evidence_snippet=hardening_matches[0][1],
-            kb_question_ids=["sec-3"], suggested_answer="partial",
+            kb_question_ids=["sc-3"], suggested_answer="partial",
         ))
 
     # ── 5. Rate limiting / abuse prevention ──────────────────────────
@@ -269,7 +275,7 @@ def analyze_adversarial_robustness(ctx: AnalyzerContext) -> AnalyzerResult:
             compliance_impact="positive",
             compliance_dimensions=["security"],
             evidence_snippet=rate_matches[0][1],
-            kb_question_ids=["sec-1"], suggested_answer="partial",
+            kb_question_ids=["sc-1"], suggested_answer="partial",
         ))
     elif has_llm:
         findings.append(Finding(
@@ -301,7 +307,7 @@ def analyze_adversarial_robustness(ctx: AnalyzerContext) -> AnalyzerResult:
             compliance_impact="positive",
             compliance_dimensions=["security", "risk_mgmt"],
             evidence_snippet=output_matches[0][1],
-            kb_question_ids=["sec-3"], suggested_answer="partial",
+            kb_question_ids=["sc-3"], suggested_answer="partial",
         ))
     elif has_llm:
         findings.append(Finding(
@@ -316,7 +322,7 @@ def analyze_adversarial_robustness(ctx: AnalyzerContext) -> AnalyzerResult:
             compliance_impact="gap",
             compliance_dimensions=["security", "risk_mgmt"],
             evidence_snippet="No output validation patterns found",
-            kb_question_ids=["sec-3"], suggested_answer="no",
+            kb_question_ids=["sc-3"], suggested_answer="no",
         ))
 
     # ── Score calculation ────────────────────────────────────────────

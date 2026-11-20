@@ -15,7 +15,7 @@ Security posture (aligned with MCP spec 2025-11-25 + 2026 hardening guidance):
 * All ``path`` inputs must resolve to an existing directory; symlinks resolved;
   a filesystem root is refused so a stray call cannot walk the whole disk.
 * ``output_path`` writes are validated on the **resolved** target: allowlisted
-  suffix (``.json`` / ``.html``) checked after resolution, no write through a
+  suffix (``.json`` / ``.html`` / ``.sarif``) checked after resolution, no write through a
   symlink, no NUL bytes, existing parent. Absolute paths are permitted by
   design — the caller is the local user, and the CLI writes beside the project
   — so this is a data-loss guard (a scan must not clobber ``package.json``),
@@ -77,7 +77,9 @@ except Exception:  # pragma: no cover
         return (fw_id or "").strip().lower()
 _ARTICLE_RE = re.compile(r"^art\d{1,3}$")
 _MAX_STR = 512
-_OUTPUT_SUFFIXES = (".json", ".html")
+_MAX_INGEST_FILES = 20
+_MAX_INPUT_FILE_BYTES = 20 * 1024 * 1024  # 20 MB cap on external report files
+_OUTPUT_SUFFIXES = (".json", ".html", ".sarif")
 
 # ---------------------------------------------------------------------------
 # Validation helpers — NO mcp dependency
@@ -115,7 +117,11 @@ def _validate_scan_path(path: str) -> Path:
     return resolved
 
 
-def _validate_output_path(output_path: str, *, expected_suffix: str) -> Path:
+def _validate_output_path(
+    output_path: str,
+    *,
+    expected_suffix: str | tuple[str, ...],
+) -> Path:
     """Validate export writes: allowlisted suffix, existing parent, no symlink.
 
     Relative paths resolve under the process cwd; absolute paths are allowed
@@ -131,8 +137,10 @@ def _validate_output_path(output_path: str, *, expected_suffix: str) -> Path:
         raise ValueError("output_path is required")
     if "\x00" in cleaned:
         raise ValueError("invalid output_path")
-    if expected_suffix not in _OUTPUT_SUFFIXES:
-        raise ValueError(f"unsupported suffix: {expected_suffix!r}")
+    allowed = (expected_suffix,) if isinstance(expected_suffix, str) else tuple(expected_suffix)
+    for suffix in allowed:
+        if suffix not in _OUTPUT_SUFFIXES:
+            raise ValueError(f"unsupported suffix: {suffix!r}")
     base = Path.cwd().resolve()
     candidate = Path(cleaned).expanduser()
     unresolved = candidate if candidate.is_absolute() else base / candidate
@@ -141,11 +149,97 @@ def _validate_output_path(output_path: str, *, expected_suffix: str) -> Path:
     resolved = unresolved.resolve()
     # Check the resolved path: `x.json/../evil.sh` and symlinked parents both
     # change the real target after a raw-string suffix check.
-    if resolved.suffix.lower() != expected_suffix:
-        raise ValueError(f"output_path must resolve to a {expected_suffix} file")
+    if resolved.suffix.lower() not in allowed:
+        expected_label = " or ".join(allowed)
+        raise ValueError(f"output_path must resolve to a {expected_label} file")
     if not resolved.parent.is_dir():
         raise ValueError(f"output parent does not exist: {str(resolved.parent)[:120]}")
     return resolved
+
+
+def _validate_input_file(
+    file_path: str,
+    *,
+    allowed_suffixes: tuple[str, ...],
+    root_dir: Path | None = None,
+) -> Path:
+    """Validate an external local report file before ingestion.
+
+    Guards against empty paths, NUL bytes, symlinks, relative traversal escapes
+    outside *root_dir* / process cwd, unexpected suffixes after resolution,
+    missing/non-file targets, and oversized inputs.
+    """
+    cleaned = _clean_str(file_path, 1024)
+    if not cleaned:
+        raise ValueError("input file path is required")
+    if "\x00" in cleaned:
+        raise ValueError("invalid input file path")
+
+    candidate = Path(cleaned).expanduser()
+    if candidate.is_absolute():
+        if candidate.is_symlink():
+            raise ValueError(f"refusing to read through a symlink: {cleaned[:120]}")
+        resolved = candidate.resolve()
+        if resolved.parent == resolved:
+            raise ValueError("refusing to read a filesystem root")
+    else:
+        cwd = Path.cwd().resolve()
+        resolved = None
+        if root_dir is not None:
+            in_root = root_dir / candidate
+            if in_root.is_symlink():
+                raise ValueError(f"refusing to read through a symlink: {cleaned[:120]}")
+            cand_root = in_root.resolve()
+            if cand_root.is_relative_to(root_dir) and cand_root.is_file():
+                resolved = cand_root
+        if resolved is None:
+            in_cwd = cwd / candidate
+            if in_cwd.is_symlink():
+                raise ValueError(f"refusing to read through a symlink: {cleaned[:120]}")
+            cand_cwd = in_cwd.resolve()
+            if not cand_cwd.is_relative_to(cwd):
+                raise ValueError(f"input path escapes allowed directory: {cleaned[:120]}")
+            resolved = cand_cwd
+
+    if resolved is None:  # pragma: no cover - both branches above assign it
+        raise ValueError(f"unable to resolve input file: {cleaned[:120]}")
+    if resolved.suffix.lower() not in allowed_suffixes:
+        expected_label = ", ".join(allowed_suffixes)
+        raise ValueError(
+            f"input file must resolve to one of ({expected_label}): {cleaned[:120]}"
+        )
+    if not resolved.is_file():
+        raise ValueError(f"input file not found: {cleaned[:120]}")
+    try:
+        if resolved.stat().st_size > _MAX_INPUT_FILE_BYTES:
+            raise ValueError(f"input file exceeds size limit: {cleaned[:120]}")
+    except OSError as exc:
+        raise ValueError(f"unable to stat input file: {cleaned[:120]}") from exc
+    return resolved
+
+
+def _validate_input_file_list(
+    paths: list[str] | tuple[str, ...] | str | None,
+    *,
+    allowed_suffixes: tuple[str, ...],
+    root_dir: Path | None = None,
+    field_name: str = "paths",
+) -> list[Path]:
+    """Validate a sequence of external local report file paths."""
+    if paths is None:
+        return []
+    if isinstance(paths, str):
+        raw_list = [paths]
+    elif isinstance(paths, (list, tuple)):
+        raw_list = list(paths)
+    else:
+        raise ValueError(f"{field_name} must be a list of file paths")
+    if len(raw_list) > _MAX_INGEST_FILES:
+        raise ValueError(f"{field_name} exceeds maximum of {_MAX_INGEST_FILES} files")
+    return [
+        _validate_input_file(str(p), allowed_suffixes=allowed_suffixes, root_dir=root_dir)
+        for p in raw_list
+    ]
 
 
 def _validate_frameworks(target_frameworks: list[str] | None) -> list[str] | None:
@@ -434,6 +528,293 @@ def tool_agentic_taxonomy(risk_id: str | None = None) -> dict:
     }
 
 
+def tool_founder_triage(
+    path: str = ".",
+    role: str | None = None,
+) -> dict:
+    """Return a plain-English 3-bucket Founder/Startup compliance triage.
+
+    Splits gaps into ``ship_now`` (live Art. 50 transparency + MCP/Claude Code/
+    security blockers), ``enterprise_deals`` (SOC 2 / GDPR / OWASP blockers plus
+    top 3 cross-framework levers and deployer vendor-contract checklist), and
+    ``later_2027`` (Annex III obligations deferred to 2 Dec 2027 under Digital
+    Omnibus Regulation (EU) 2026/1744). Includes copy-pasteable ``brief_markdown``.
+    """
+    from scanner.founder_triage import build_founder_triage
+
+    try:
+        resolved = _validate_scan_path(path)
+    except ValueError as exc:
+        return {"error": str(exc), "path": _clean_str(path, 120)}
+    if role is not None and role not in _VALID_ROLES:
+        return {"error": f"unknown role {role!r}; expected one of {sorted(_VALID_ROLES)}"}
+    result = scan_project(resolved, role=role, cross_framework=True)
+    triage = build_founder_triage(result)
+    return triage.model_dump()
+
+
+def tool_export_sarif(
+    path: str = ".",
+    output_path: str = "eu-ai-act.sarif.json",
+    role: str | None = None,
+) -> dict:
+    """Scan *path* and export an offline SARIF 2.1.0 report to *output_path*.
+
+    Emits strictly offline SARIF 2.1.0 JSON (zero remote URLs). Output target
+    must resolve to a ``.json`` or ``.sarif`` file without traversing a symlink.
+    """
+    from scanner.sarif import scan_to_sarif, write_sarif
+
+    try:
+        resolved = _validate_scan_path(path)
+        out = _validate_output_path(output_path, expected_suffix=(".json", ".sarif"))
+    except ValueError as exc:
+        return {"error": str(exc)}
+    if role is not None and role not in _VALID_ROLES:
+        return {"error": f"unknown role {role!r}; expected one of {sorted(_VALID_ROLES)}"}
+
+    result = scan_project(resolved, role=role)
+    sarif_doc = scan_to_sarif(result)
+    write_sarif(result, out)
+    run = sarif_doc["runs"][0]
+    return {
+        "status": "success",
+        "output_path": str(out),
+        "sarif_version": sarif_doc["version"],
+        "is_ai_system": result.is_ai_system,
+        "results_count": len(run["results"]),
+        "rules_count": len(run["tool"]["driver"]["rules"]),
+        "sarif": sarif_doc,
+    }
+
+
+def tool_ingest_sarif(
+    path: str = ".",
+    sarif_paths: list[str] | None = None,
+    role: str | None = None,
+    output_dossier: str | None = None,
+) -> dict:
+    """Ingest local SARIF 2.1.0 files (Semgrep, Bandit, Snyk, CodeQL, GHAS) into a scan.
+
+    Maps external cybersecurity findings to EU AI Act Art. 15(4), merges them into
+    ``scan_project(...)``, and optionally seals a cryptographic release dossier
+    at *output_dossier*.
+    """
+    from scanner.sarif import ingest_sarif_files
+
+    try:
+        resolved = _validate_scan_path(path)
+        validated_sarif = _validate_input_file_list(
+            sarif_paths,
+            allowed_suffixes=(".sarif", ".json"),
+            root_dir=resolved,
+            field_name="sarif_paths",
+        )
+        if not validated_sarif:
+            raise ValueError("sarif_paths must contain at least one local SARIF file path")
+        dossier_out = (
+            _validate_output_path(output_dossier, expected_suffix=".json")
+            if output_dossier
+            else None
+        )
+    except ValueError as exc:
+        return {"error": str(exc)}
+
+    if role is not None and role not in _VALID_ROLES:
+        return {"error": f"unknown role {role!r}; expected one of {sorted(_VALID_ROLES)}"}
+
+    try:
+        external_findings, source_tools = ingest_sarif_files(validated_sarif)
+    except ValueError as exc:
+        return {"error": str(exc)}
+
+    result = scan_project(
+        resolved,
+        role=role,
+        cross_framework=True,
+        external_findings=external_findings,
+        external_sources=source_tools,
+    )
+
+    payload: dict = {
+        "status": "success",
+        "ingested_files": [str(p) for p in validated_sarif],
+        "source_tools": source_tools,
+        "external_findings_count": len(external_findings),
+        "is_ai_system": result.is_ai_system,
+        "overall_compliance_pct": result.overall_compliance_pct,
+        "compliance_scores": result.compliance_scores,
+        "scan_result": result.model_dump(),
+    }
+
+    if dossier_out is not None:
+        dossier = generate_dossier(result, resolved)
+        dossier.export_json(str(dossier_out))
+        payload["dossier_path"] = str(dossier_out)
+        payload["dossier_integrity_hash"] = dossier.dossier_integrity_hash
+
+    return payload
+
+
+def tool_ingest_claude_ecosystem(
+    path: str = ".",
+    compliance_api_paths: list[str] | None = None,
+    claude_security_paths: list[str] | None = None,
+    role: str | None = None,
+    output_dossier: str | None = None,
+) -> dict:
+    """Ingest local Claude Compliance API exports and/or /claude-security reports.
+
+    Strictly offline: reads only local files exported by the user (e.g. from
+    ``scripts/fetch_claude_compliance.py`` or ``claude-security@claude-plugins-official``).
+    Honors Claude Security's adversarial verification panel, audits Art. 26(6)
+    retention & user preferences, merges findings into ``scan_project(...)``,
+    and returns grounded findings, metadata, and updated dimension scores.
+    """
+    from scanner.claude_ecosystem import (
+        ingest_claude_security_report,
+        ingest_compliance_api_export,
+    )
+
+    try:
+        resolved = _validate_scan_path(path)
+        validated_cca = _validate_input_file_list(
+            compliance_api_paths,
+            allowed_suffixes=(".json", ".jsonl", ".ndjson"),
+            root_dir=resolved,
+            field_name="compliance_api_paths",
+        )
+        validated_cs = _validate_input_file_list(
+            claude_security_paths,
+            allowed_suffixes=(".sarif", ".json", ".md", ".markdown", ".txt"),
+            root_dir=resolved,
+            field_name="claude_security_paths",
+        )
+        if not validated_cca and not validated_cs:
+            raise ValueError(
+                "provide at least one of compliance_api_paths or claude_security_paths"
+            )
+        dossier_out = (
+            _validate_output_path(output_dossier, expected_suffix=".json")
+            if output_dossier
+            else None
+        )
+    except ValueError as exc:
+        return {"error": str(exc)}
+
+    if role is not None and role not in _VALID_ROLES:
+        return {"error": f"unknown role {role!r}; expected one of {sorted(_VALID_ROLES)}"}
+
+    external_findings = []
+    external_sources: list[str] = []
+    compliance_meta: dict | None = None
+    claude_sec_meta: dict | None = None
+
+    try:
+        if validated_cca:
+            cca_findings, compliance_meta = ingest_compliance_api_export(validated_cca)
+            external_findings.extend(cca_findings)
+            external_sources.append(
+                str(compliance_meta.get("source") or "anthropic_claude_compliance_api")
+            )
+        if validated_cs:
+            cs_findings, claude_sec_meta = ingest_claude_security_report(validated_cs)
+            external_findings.extend(cs_findings)
+            for tool_name in claude_sec_meta.get("source_tools") or ["claude-security"]:
+                if tool_name not in external_sources:
+                    external_sources.append(str(tool_name))
+    except ValueError as exc:
+        return {"error": str(exc)}
+
+    result = scan_project(
+        resolved,
+        role=role,
+        cross_framework=True,
+        external_findings=external_findings,
+        external_sources=external_sources,
+    )
+
+    payload: dict = {
+        "status": "success",
+        "external_sources": external_sources,
+        "external_findings_count": len(external_findings),
+        "external_findings": [f.model_dump() for f in external_findings],
+        "compliance_api_metadata": compliance_meta,
+        "claude_security_metadata": claude_sec_meta,
+        "is_ai_system": result.is_ai_system,
+        "overall_compliance_pct": result.overall_compliance_pct,
+        "compliance_scores": result.compliance_scores,
+        "scan_result": result.model_dump(),
+    }
+
+    if dossier_out is not None:
+        dossier = generate_dossier(result, resolved)
+        dossier.export_json(str(dossier_out))
+        payload["dossier_path"] = str(dossier_out)
+        payload["dossier_integrity_hash"] = dossier.dossier_integrity_hash
+
+    return payload
+
+
+def tool_regulatory_applicability(
+    risk_class: str,
+    role: str,
+    as_of: str | None = None,
+) -> dict:
+    """Resolve EU AI Act / Digital Omnibus (Reg. 2026/1744) applicability dates & duties.
+
+    Deterministically returns ``phases_in_force``, ``phases_pending``,
+    ``duties_in_force``, and ``duties_pending`` for *risk_class* and *role* on
+    ISO date *as_of* (defaults to today).
+    """
+    from datetime import date
+
+    from scanner.data.omnibus import resolve_applicability
+    from scanner.data.ontology import OPERATOR_ROLES, ActorRole, RiskClass
+
+    raw_rc = _clean_str(risk_class, 64).lower()
+    try:
+        rc_enum = RiskClass(raw_rc)
+    except ValueError:
+        return {
+            "error": (
+                f"unknown risk_class {risk_class!r}; expected one of "
+                f"{[r.value for r in RiskClass]}"
+            )
+        }
+
+    raw_role = _clean_str(role, 64).lower()
+    if raw_role == "authorized_representative":
+        raw_role = "authorised_representative"
+    try:
+        role_enum = ActorRole(raw_role)
+    except ValueError:
+        return {
+            "error": (
+                f"unknown role {role!r}; expected one of "
+                f"{[r.value for r in OPERATOR_ROLES]}"
+            )
+        }
+    if role_enum not in OPERATOR_ROLES:
+        return {
+            "error": (
+                f"role {role_enum.value!r} is not a value-chain operator; expected one of "
+                f"{[r.value for r in OPERATOR_ROLES]}"
+            )
+        }
+
+    if as_of is None or not _clean_str(as_of, 32):
+        parsed_date = date.today()
+    else:
+        raw_date = _clean_str(as_of, 32)
+        try:
+            parsed_date = date.fromisoformat(raw_date)
+        except ValueError:
+            return {"error": f"invalid as_of date {as_of!r}; expected ISO YYYY-MM-DD"}
+
+    return resolve_applicability(parsed_date, rc_enum, role_enum).model_dump()
+
+
 # ---------------------------------------------------------------------------
 # MCP server wiring — lazy import so tests run without the mcp package
 # ---------------------------------------------------------------------------
@@ -441,7 +822,11 @@ def tool_agentic_taxonomy(risk_id: str | None = None) -> dict:
 
 def _tool_meta(read_only: bool, destructive: bool = False) -> dict:
     """Tool annotations for MCP clients (hint; server still enforces)."""
-    return {"readOnlyHint": read_only, "destructiveHint": destructive}
+    return {
+        "readOnlyHint": read_only,
+        "destructiveHint": destructive,
+        "openWorldHint": False,
+    }
 
 
 def _load_server_class():
@@ -627,6 +1012,74 @@ def build_server():  # noqa: ANN201  (returns MCPServer/FastMCP — type only av
         """
         return tool_generate_visual_graph(path, output_path)
 
+    def founder_triage_tool(
+        path: str = ".",
+        role: str | None = None,
+    ) -> dict:
+        """Build a plain-English 3-bucket Founder/Startup EU AI Act triage brief.
+
+        Splits findings into ship_now (live Art. 50 + MCP/Claude Code/security blockers),
+        enterprise_deals (SOC 2 / GDPR / OWASP quick wins + deployer vendor checklist),
+        and later_2027 (Annex III deferred to 2 Dec 2027 under Reg. 2026/1744).
+        """
+        return tool_founder_triage(path, role)
+
+    def export_sarif_tool(
+        path: str = ".",
+        output_path: str = "eu-ai-act.sarif.json",
+        role: str | None = None,
+    ) -> dict:
+        """Export an offline SARIF 2.1.0 report for GitHub Code Scanning or security pipelines.
+
+        Strictly offline (zero remote URLs). Output path must resolve to .json or .sarif.
+        """
+        return tool_export_sarif(path, output_path, role)
+
+    def ingest_sarif_tool(
+        path: str = ".",
+        sarif_paths: list[str] | None = None,
+        role: str | None = None,
+        output_dossier: str | None = None,
+    ) -> dict:
+        """Ingest local SARIF 2.1.0 reports (Semgrep, Bandit, Snyk, CodeQL, GHAS) into a scan.
+
+        Merges external cybersecurity findings into Art. 15(4) compliance scoring and
+        optionally exports a sealed cryptographic release dossier.
+        """
+        return tool_ingest_sarif(path, sarif_paths, role, output_dossier)
+
+    def ingest_claude_ecosystem_tool(
+        path: str = ".",
+        compliance_api_paths: list[str] | None = None,
+        claude_security_paths: list[str] | None = None,
+        role: str | None = None,
+        output_dossier: str | None = None,
+    ) -> dict:
+        """Ingest local Anthropic Claude Compliance API exports and/or /claude-security reports.
+
+        Honors Claude Security's adversarial verification panel, audits Art. 26(6) log
+        retention and user preferences, and merges grounded findings into scan scores.
+        """
+        return tool_ingest_claude_ecosystem(
+            path,
+            compliance_api_paths,
+            claude_security_paths,
+            role,
+            output_dossier,
+        )
+
+    def regulatory_applicability_tool(
+        risk_class: str,
+        role: str,
+        as_of: str | None = None,
+    ) -> dict:
+        """Resolve exact EU AI Act / Digital Omnibus (Reg. 2026/1744) applicability dates & duties.
+
+        Returns phases_in_force, phases_pending, duties_in_force, and duties_pending
+        for the given risk_class, operator role, and optional ISO date as_of.
+        """
+        return tool_regulatory_applicability(risk_class, role, as_of)
+
     _register("scan_project", scan_project_tool, read_only=True)
     _register("list_dimensions", list_dimensions, read_only=True)
     _register("get_article", get_article, read_only=True)
@@ -639,6 +1092,11 @@ def build_server():  # noqa: ANN201  (returns MCPServer/FastMCP — type only av
     _register("generate_dossier", generate_dossier_tool, read_only=False)
     _register("remediation_loop", remediation_loop_tool, read_only=False, destructive=True)
     _register("generate_visual_graph", generate_visual_graph_tool, read_only=False)
+    _register("founder_triage", founder_triage_tool, read_only=True)
+    _register("export_sarif", export_sarif_tool, read_only=False)
+    _register("ingest_sarif", ingest_sarif_tool, read_only=False)
+    _register("ingest_claude_ecosystem", ingest_claude_ecosystem_tool, read_only=False)
+    _register("regulatory_applicability", regulatory_applicability_tool, read_only=True)
 
     return mcp
 

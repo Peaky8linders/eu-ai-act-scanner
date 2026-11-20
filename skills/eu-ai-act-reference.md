@@ -60,7 +60,7 @@ The scanner does not check the following. They require document review, organisa
 
 - **Art. 5** — prohibited practices. Requires semantic review of the use case. Route to [eu-ai-act-article-5-prohibited](eu-ai-act-article-5-prohibited.md).
 - **Art. 6 + Annex III** — high-risk classification. Requires reading the system purpose. Route to [eu-ai-act-article-6-classification](eu-ai-act-article-6-classification.md).
-- **Art. 40** — harmonised standards. Organisational adoption, not code-observable.
+- **Art. 40** — harmonised standards. Organisational adoption, not code-observable. **EN 18286:2026** (cited in OJ L, 2026/2274, 14 October 2026) confers presumption of conformity for **Art. 17(1)** and the **first sentence of Art. 11(1)** only; CEN-CENELEC JTC 21 technical standards (`prEN 18228`, `prEN 18229-1`, `prEN 18229-2`, `prEN 18282`, `prEN 18283`, `prEN 18284`) remain drafts.
 - **Art. 52** — notification of conformity assessment bodies. Administrative.
 - **Art. 56** — Code of Practice for GPAI. Organisational commitment.
 - **Art. 64–70** — governance (AI Office, Board, panels, authorities). Not developers' concern.
@@ -115,7 +115,7 @@ A General-Purpose AI model (Art. 3(63)) is trained on broad data at scale for ge
 
 ### "When do the obligations apply?"
 
-Art. 113 sets staggered application dates. Most of the regulation applies 24 months after entry into force (so: 2 August 2026). Prohibited practices (Art. 5) apply earlier; some high-risk obligations apply later. Route to [eu-ai-act-timeline](eu-ai-act-timeline.md).
+Art. 113 (as amended by Digital Omnibus Regulation (EU) 2026/1744) sets staggered application dates: Art. 4 & Art. 5(1)(a)-(h) from **2 Feb 2025**; GPAI & governance from **2 Aug 2025**; Art. 50 transparency & Art. 101 GPAI fines from **2 Aug 2026** (with Art. 111(4) grace to **2 Dec 2026** for pre-2-Aug-2026 Art. 50(2) synthetic systems); Art. 5(1)(ba)-(bb) NCII/CSAM prohibitions from **2 Dec 2026**; Annex III high-risk from **2 Dec 2027**; and Annex I high-risk from **2 Aug 2028**. Route to [eu-ai-act-timeline](eu-ai-act-timeline.md).
 
 ## Common rationalizations
 
@@ -124,7 +124,7 @@ Art. 113 sets staggered application dates. Most of the regulation applies 24 mon
 | "Art. 6(3) says preparatory tasks are exempt, so our classifier is fine." | Art. 6(3) exempts only narrow categories (preparatory, narrow procedural, decision-pattern detection without replacing decisions, human-oversight-assistive). Profiling of natural persons is always high-risk (Art. 6(3) final paragraph). Check whether the classifier profiles individuals. |
 | "Art. 50 only applies to deepfakes, we have a chatbot." | Art. 50(1) applies to any AI system *intended to interact directly with natural persons* — users must be informed they're interacting with AI unless obvious. Chatbots fall under Art. 50(1). Art. 50(2-4) covers generated content. Both subsections can apply to the same system. Route to [eu-ai-act-article-50-transparency](eu-ai-act-article-50-transparency.md) for the per-paragraph provider/deployer split. |
 | "We registered an LLM-based customer service tool in the EU database." | Art. 49 EU database registration is required for providers of high-risk AI (Art. 6) and *deployers* that are public authorities. Non-public-authority deployers of limited-risk chatbots do not register. Registering a non-high-risk system is not harmful but suggests a misclassification — verify risk tier. |
-| "The Commission hasn't published standards, so Art. 15 is not enforceable." | Art. 15 is directly applicable. Harmonised standards (when published) offer a presumption of conformity, but their absence does not suspend the obligation. State-of-the-art engineering is the current baseline. |
+| "The Commission hasn't published standards, so Art. 15 is not enforceable." | **EN 18286:2026** was cited in the OJ on **14 October 2026** (OJ L, 2026/2274) for **Art. 17(1)** and the **first sentence of Art. 11(1)** only. While Art. 15's JTC 21 deliverables (`prEN 18229-2`, `prEN 18282`) remain drafts, Art. 15 is directly applicable once its statutory date hits — harmonised standards confer presumption of conformity, and their absence does not suspend the obligation. |
 
 ## Cross-references
 
@@ -141,4 +141,4 @@ Art. 113 sets staggered application dates. Most of the regulation applies 24 mon
 
 ## Source of truth
 
-EU Regulation 2024/1689, published in the Official Journal of the European Union, 12 July 2024. Citations refer to the consolidated text of that regulation.
+EU Regulation (EU) 2024/1689 (OJ L, 12 July 2024), as amended by Digital Omnibus on AI Regulation (EU) 2026/1744 (OJ L, 2026/1744, 24 July 2026), and Commission Implementing Decision (EU) 2026/2274 (OJ L, 2026/2274, 14 October 2026) citing EN 18286:2026.

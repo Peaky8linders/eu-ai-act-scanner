@@ -172,6 +172,21 @@ def _emit_finding(
     )
 
 
+_ROLE_PROVIDER = "provider"
+_ROLE_DEPLOYER = "deployer"
+_PROVIDER_LEANING_ROLES = frozenset({
+    _ROLE_PROVIDER,
+    "product_manufacturer",
+    "gpai_provider",
+    "gpai_systemic_provider",
+})
+
+
+def _infer_codebase_role(has_distributable_artifact: bool) -> str:
+    """Infer coarse NLF operator role from distributable-artefact content signals."""
+    return _ROLE_PROVIDER if has_distributable_artifact else _ROLE_DEPLOYER
+
+
 def analyze_regulatory_perimeter(ctx: AnalyzerContext) -> AnalyzerResult:
     findings: list[Finding] = []
     evidence_files: set[str] = set()
@@ -365,6 +380,46 @@ def analyze_regulatory_perimeter(ctx: AnalyzerContext) -> AnalyzerResult:
                 kb_question_ids=["rp-9"], suggested_answer="no",
             ))
 
+    # ── Role / perimeter reconciliation (declared vs codebase signals) ─
+    # Key on `cra_content_hits` ONLY (entry points / npm bin / shebangs), never
+    # bare `cra_files` (`pyproject.toml` / `package.json`), so a plain deployer
+    # repo with a packaging manifest is not misclassified as a provider.
+    if ctx.extracted_role:
+        declared_role = ctx.extracted_role.strip().lower()
+        inferred_role = _infer_codebase_role(bool(cra_content_hits))
+        code_says_provider = inferred_role == _ROLE_PROVIDER
+        doc_says_provider_leaning = declared_role in _PROVIDER_LEANING_ROLES
+        doc_says_deployer = declared_role == _ROLE_DEPLOYER
+        mismatch = (code_says_provider and doc_says_deployer) or (
+            not code_says_provider and doc_says_provider_leaning
+        )
+        if mismatch:
+            findings.append(Finding(
+                id="rp-role-mismatch",
+                category="regulatory_perimeter",
+                title="Declared operator role disagrees with codebase signals",
+                description=(
+                    f"Declared operator role is '{declared_role}', but codebase signals "
+                    f"imply '{inferred_role}' "
+                    + (
+                        "(a distributable entry point — CLI script / npm bin / shebang — "
+                        "indicates placing on the market as a provider / product manufacturer "
+                        "under Art. 3(3))."
+                        if code_says_provider
+                        else "(no distributable entry point found — the codebase reads as a "
+                        "consumer/deployer of third-party AI under Art. 3(4))."
+                    )
+                    + " Reconcile the declared role before relying on role-filtered Art. 9-15 obligations."
+                ),
+                file_path="(declared vs. inferred)",
+                confidence=0.6,
+                compliance_impact="gap",
+                compliance_dimensions=["regulatory_perimeter", "risk_mgmt"],
+                evidence_snippet=f"declared={declared_role} inferred={inferred_role}",
+                kb_question_ids=["rp-1"],
+                suggested_answer="no",
+            ))
+
     # ── Score ───────────────────────────────────────────────────────────
     if not findings:
         score = 80.0  # not applicable — no perimeter triggers
@@ -391,7 +446,7 @@ def analyze_regulatory_perimeter(ctx: AnalyzerContext) -> AnalyzerResult:
         file_count=len(evidence_files),
         graph_node_type="regulation",
         graph_icon="⚖",
-        connected_categories=["agent_inventory", "tool_governance", "agent_cascade"],
+        connected_categories=["agent_inventory", "privilege_minimization", "agent_cascade"],
         metadata={
             "triggered_instruments": sorted(triggered),
             "instrument_count": len(triggered),

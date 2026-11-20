@@ -46,7 +46,12 @@ from scanner.analyzers._base import (
 
 _AGENT_RUNTIME_SIGNALS: list[tuple[str, str, str]] = [
     # MCP clients (Model Context Protocol)
-    (r"\bfrom\s+mcp\b", "mcp_client", "looped"),
+    (
+        r"\bfrom\s+mcp\.client\b|\bfrom\s+mcp\s+import\s+"
+        r"(?:client|ClientSession|StdioServerParameters|SseClientTransport|StreamableHttpClientTransport)\b",
+        "mcp_client",
+        "looped",
+    ),
     (r"\bmcp\.client\b", "mcp_client", "looped"),
     (r"@mcp\.server\.tool\b", "mcp_server_tool", "looped"),
     (r"@mcp\.tool\b", "mcp_server_tool", "looped"),
@@ -315,7 +320,7 @@ def analyze_agent_inventory(ctx: AnalyzerContext) -> AnalyzerResult:
         file_count=len(evidence_files),
         graph_node_type="agent",
         graph_icon="🛰",
-        connected_categories=["agent_cascade", "tool_governance", "regulatory_perimeter"],
+        connected_categories=["agent_cascade", "privilege_minimization", "regulatory_perimeter"],
         metadata={
             "autonomy_axis": autonomy_axis,
             "runtime_signals": sorted(runtime_hits.keys()),

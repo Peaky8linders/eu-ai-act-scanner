@@ -31,9 +31,16 @@ from scanner.cli import _filter_by_article, _format_markdown, _format_qa, _incid
 from scanner.cross_framework import project_scan_to_frameworks
 from scanner.dossier import generate_dossier
 from scanner.fix_loop import DETERMINISTIC_FIXERS, run_fix_loop
-from scanner.mcp_server import tool_incidents_for_article, tool_scan_project
+from scanner.founder_triage import build_founder_triage, format_founder_brief
+from scanner.mcp_server import (
+    tool_founder_triage,
+    tool_incidents_for_article,
+    tool_regulatory_applicability,
+    tool_scan_project,
+)
 from scanner.orchestrator import scan_project
 from scanner.qa import answer_question
+from scanner.sarif import scan_to_sarif
 from scanner.settings import save_settings
 
 FIXTURE = str(Path(__file__).parent / "fixtures" / "sample_project")
@@ -129,6 +136,7 @@ def test_markdown_and_settings_artifacts_load_nothing_remotely(tmp_path: Path) -
 
     artifacts = {
         "scan report": _format_markdown(scan),
+        "founder brief": format_founder_brief(build_founder_triage(scan)),
         "cross-framework report": project_scan_to_frameworks(scan).format_markdown(),
         "grounded answer": _format_qa(qa),
         "settings file": settings_path.read_text(encoding="utf-8"),
@@ -161,10 +169,16 @@ def test_json_artifacts_only_cite_remote_urls(tmp_path: Path) -> None:
     artifacts = {
         "dossier": dossier.model_dump(),
         "scan": scan.model_dump(),
+        "sarif": scan_to_sarif(scan),
+        "founder triage": build_founder_triage(scan).model_dump(),
         "cross-framework": project_scan_to_frameworks(scan).model_dump(),
         "article filter": _filter_by_article(scan, "art15"),
         "incidents": _incidents_payload("art15"),
         "mcp scan": tool_scan_project(FIXTURE),
+        "mcp founder triage": tool_founder_triage(FIXTURE),
+        "mcp regulatory applicability": tool_regulatory_applicability(
+            "high_risk_annex_iii", "provider", "2026-10-01"
+        ),
         "mcp incidents": tool_incidents_for_article("art15"),
     }
 

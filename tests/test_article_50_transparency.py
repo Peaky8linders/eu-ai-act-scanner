@@ -207,3 +207,184 @@ def test_newsroom_without_generation_does_not_trip_50_4_text():
     }
     res = analyze_article_50_transparency(_ctx(files))
     assert "art50-unlabelled-ai-text" not in _ids(res)
+
+
+# ─── AST / TS use-vs-mention, deferral & disabled-literal guards ─────────
+
+
+def test_readme_roadmap_c2pa_mention_never_counts_as_marking_control():
+    files = {
+        "README.md": "C2PA watermarking and SynthID provenance are on the roadmap.\n",
+        "gen.py": (
+            "import openai\n\n"
+            "def make_image(prompt: str):\n"
+            "    # C2PA marking planned for next quarter\n"
+            "    return openai.images.generate(model='dall-e-3', prompt=prompt)\n"
+        ),
+    }
+    res = analyze_article_50_transparency(_ctx(files))
+    ids = _ids(res)
+    assert "art50-unmarked-synthetic" in ids
+    assert "art50-marking-present" not in ids
+
+
+def test_deferred_disclosure_string_never_counts_as_control():
+    files = {
+        "bot.py": (
+            "import openai\n"
+            'BANNER = "TODO: add you are chatting with an AI notice on roadmap"\n\n'
+            "def reply(msg: str):\n"
+            "    return openai.chat.completions.create(model='gpt-4o', messages=[{'role': 'user', 'content': msg}])\n"
+        ),
+    }
+    res = analyze_article_50_transparency(_ctx(files))
+    ids = _ids(res)
+    assert "art50-no-ai-disclosure" in ids
+    assert "art50-disclosure-present" not in ids
+
+
+def test_disabled_marking_literals_do_not_suppress_50_2_gap():
+    files = {
+        "gen.py": (
+            "import openai\n"
+            "c2pa_enabled = False\n"
+            'content_provenance: str = "disabled"\n'
+            "embed_watermark = None\n\n"
+            "def make_image(prompt: str):\n"
+            "    return openai.images.generate(model='dall-e-3', prompt=prompt)\n"
+        ),
+    }
+    res = analyze_article_50_transparency(_ctx(files))
+    ids = _ids(res)
+    assert "art50-unmarked-synthetic" in ids
+    assert "art50-marking-present" not in ids
+
+
+def test_ts_disabled_literal_and_commented_disclosure_ignored():
+    files = {
+        "src/chat.tsx": (
+            "// You are chatting with an AI\n"
+            "const c2paEnabled = false;\n"
+            'const contentProvenance = "disabled";\n'
+            "export function sendChat(client: any, msg: string) {\n"
+            "  return client.chat.completions.create({ model: 'gpt-4o', messages: [msg] });\n"
+            "}\n"
+        ),
+    }
+    res = analyze_article_50_transparency(_ctx(files))
+    ids = _ids(res)
+    assert "art50-no-ai-disclosure" in ids
+    assert "art50-disclosure-present" not in ids
+
+
+def test_ts_live_jsx_disclosure_satisfies_50_1():
+    files = {
+        "src/ChatWidget.tsx": (
+            "export function ChatWidget({ client }: any) {\n"
+            "  const send = (m: string) => client.chat.completions.create({ messages: [m] });\n"
+            "  return <p>You are chatting with an AI</p>;\n"
+            "}\n"
+        ),
+    }
+    res = analyze_article_50_transparency(_ctx(files))
+    ids = _ids(res)
+    assert "art50-no-ai-disclosure" not in ids
+    assert "art50-disclosure-present" in ids
+
+
+def test_iptc_digital_source_type_provenance_satisfies_50_2():
+    files = {
+        "gen.py": (
+            "import openai\n"
+            "from app.content_provenance import stamp_digital_source_type\n\n"
+            "def make_audio(text: str):\n"
+            "    audio = text_to_speech(text)\n"
+            "    return stamp_digital_source_type(audio)\n"
+        ),
+    }
+    res = analyze_article_50_transparency(_ctx(files))
+    ids = _ids(res)
+    assert "art50-unmarked-synthetic" not in ids
+    assert "art50-marking-present" in ids
+    assert "audio" in res.metadata.get("modalities", [])
+
+
+def test_chatbot_sentence_disclosure_does_not_prefill_ct3_deepfake_question():
+    files = {
+        "bot.py": (
+            "import openai\n"
+            'GREETING = "You are chatting with an AI assistant."\n\n'
+            "def reply(msg: str):\n"
+            "    return openai.chat.completions.create(model='gpt-4o', messages=[{'role': 'user', 'content': msg}])\n"
+        ),
+    }
+    res = analyze_article_50_transparency(_ctx(files))
+    disc = next(f for f in res.findings if f.id == "art50-disclosure-present")
+    assert "tr-1" in disc.kb_question_ids
+    assert "ct-3" not in disc.kb_question_ids
+
+
+def test_schema_declaration_biometric_field_does_not_raise_phantom_50_3_surface():
+    files = {
+        "schemas.py": (
+            "from pydantic import BaseModel\n\n"
+            "class ComplianceForm(BaseModel):\n"
+            "    biometric_categorisation: bool = False\n"
+            "    emotion_recognition: bool = False\n"
+        ),
+    }
+    res = analyze_article_50_transparency(_ctx(files))
+    assert res.findings == []
+    assert res.score == 80.0
+
+
+def test_generation_modalities_reported_without_guessing_vendors():
+    from scanner.analyzers.article_50_transparency import detect_art50_signals
+
+    files = {
+        "media.py": (
+            "def build(client, prompt):\n"
+            "    img = client.images.generate(prompt=prompt)\n"
+            "    vid = client.video.generate(prompt=prompt)\n"
+            "    return img, vid\n"
+        ),
+    }
+    signals = detect_art50_signals(_ctx(files))
+    assert signals.generation.present is True
+    assert set(signals.generation.modalities) == {"image", "video"}
+
+    vendor_only = {
+        "requirements.txt": "elevenlabs==1.2.0\n",
+    }
+    vendor_signals = detect_art50_signals(_ctx(vendor_only))
+    assert vendor_signals.generation.present is True
+    assert vendor_signals.generation.modalities == []
+
+
+def test_self_sentinel_prevents_self_flagging_analyzer_source():
+    from pathlib import Path
+
+    src = Path(__file__).parent.parent / "scanner" / "analyzers" / "article_50_transparency.py"
+    res = analyze_article_50_transparency(
+        _ctx({"scanner/analyzers/article_50_transparency.py": src.read_text(encoding="utf-8")})
+    )
+    assert res.findings == []
+    assert res.score == 80.0
+
+
+def test_knowledge_base_and_detector_mentions_are_not_art50_surfaces():
+    from pathlib import Path
+
+    root = Path(__file__).parent.parent
+    paths = [
+        root / "scanner" / "kb.py",
+        root / "scanner" / "data" / "ontology.py",
+        root / "scanner" / "analyzers" / "adversarial_robustness.py",
+    ]
+    files = {
+        str(path.relative_to(root)).replace("\\", "/"): path.read_text(encoding="utf-8")
+        for path in paths
+    }
+    res = analyze_article_50_transparency(_ctx(files))
+    assert res.findings == []
+    assert res.score == 80.0

@@ -2,9 +2,9 @@
 
 Detects AWS/Azure/GCP resources related to AI workloads and flags missing
 compliance controls: CloudTrail for Art. 12 logging, KMS for Art. 15 security,
-S3 Object Lock for Art. 11 tamper-proof docs, EU region for Art. 10(5) residency,
-mandatory risk-tier tag for Art. 49 inventory, guardrails for Art. 14/50,
-drift monitors for Art. 72 post-market.
+S3 Object Lock for Art. 11 tamper-proof docs, EU region for Art. 10(2) / Art. 15
+(and GDPR Ch. V) data residency, mandatory risk-tier tag for Art. 49 inventory,
+guardrails for Art. 14/50, drift monitors for Art. 72 post-market.
 
 No external HCL parser dependency — regex-based detection of resource blocks
 matches the zero-dep posture of sibling analyzers.
@@ -18,6 +18,7 @@ from scanner.analyzers._base import (
     AnalyzerContext,
     AnalyzerResult,
     Finding,
+    product_files,
 )
 
 _AI_RESOURCE_RE = re.compile(
@@ -30,7 +31,7 @@ _TF_EXT_RE = re.compile(r"\.tf$", re.IGNORECASE)
 
 
 def _tf_files(ctx: AnalyzerContext) -> list[tuple[str, str]]:
-    return [(p, c) for p, c in ctx.files.items() if _TF_EXT_RE.search(p)]
+    return [(p, c) for p, c in product_files(ctx) if _TF_EXT_RE.search(p)]
 
 
 def _finding(
@@ -158,17 +159,20 @@ def analyze_terraform(ctx: AnalyzerContext) -> AnalyzerResult:
                 findings.append(_finding(
                     id=f"tf-region-non-eu-{region}",
                     title=f"Provider region is not EU ({region})",
-                    description="Risk-tier high data may fall under Art. 10(5) residency.",
+                    description=(
+                        "AI workload targets a non-EU region — verify data governance "
+                        "and transfer safeguards (Art. 10(2), Art. 15, GDPR Ch. V)."
+                    ),
                     file_path=path, confidence=0.7, impact="gap",
-                    dims=["data_gov"], articles=["Art. 10(5)"],
+                    dims=["data_gov"], articles=["Art. 10(2)", "Art. 15"],
                 ))
             else:
                 findings.append(_finding(
                     id=f"tf-region-eu-{region}",
                     title=f"Provider region is EU ({region})",
-                    description="AI workload stays within EU boundary.",
+                    description="AI workload stays within EU boundary (Art. 10(2), Art. 15, GDPR Ch. V).",
                     file_path=path, confidence=1.0, impact="positive",
-                    dims=["data_gov"], articles=["Art. 10(5)"],
+                    dims=["data_gov"], articles=["Art. 10(2)", "Art. 15"],
                 ))
 
     return AnalyzerResult(

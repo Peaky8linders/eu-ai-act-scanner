@@ -58,6 +58,7 @@ def test_deterministic_fixers_cover_required_keys():
     required = {
         "logging", "human_oversight", "tech_docs", "test_suite",
         "data_gov", "documentation", "fairness_testing", "configuration",
+        "tool_governance", "claude_code_security",
     }
     assert required <= set(DETERMINISTIC_FIXERS)
 
@@ -100,6 +101,85 @@ def test_rank_gaps_is_worst_first_by_weighted_score():
     scores = [score for _dim, score in ranked]
     # The very first ranked dimension should be a genuine gap (low score).
     assert scores[0] <= 85.0
+
+
+def test_rank_gaps_startup_profile_prioritises_live_and_security_blockers():
+    """profile='startup' ranks Art. 50 / tool_governance / security ahead of Dec 2027 Annex III dims."""
+    from scanner.models import ScanResult
+
+    synthetic = ScanResult(
+        project_name="StartupAI",
+        is_ai_system=True,
+        compliance_scores={
+            "risk_mgmt": 20.0,
+            "data_gov": 20.0,
+            "tech_docs": 20.0,
+            "fundamental_rights": 20.0,
+            "content_transparency": 20.0,
+            "tool_governance": 20.0,
+            "security": 20.0,
+            "access_control": 20.0,
+            "logging": 20.0,
+        },
+    )
+
+    startup_order = [dim for dim, _score in rank_gaps(synthetic, profile="startup")]
+    reg_order = [dim for dim, _score in rank_gaps(synthetic, profile="regulatory")]
+
+    # Regulatory default puts Art. 9 risk_mgmt first.
+    assert reg_order[0] == "risk_mgmt"
+
+    # Startup profile puts live Art. 50 & immediate security blockers ahead of risk_mgmt / deferred Annex III.
+    assert startup_order[:5] == [
+        "content_transparency",
+        "tool_governance",
+        "security",
+        "access_control",
+        "logging",
+    ]
+    for live_dim in ("content_transparency", "tool_governance", "security"):
+        assert startup_order.index(live_dim) < startup_order.index("risk_mgmt")
+    assert startup_order.index("logging") < startup_order.index("data_gov")
+    assert startup_order.index("logging") < startup_order.index("tech_docs")
+    assert startup_order.index("logging") < startup_order.index("fundamental_rights")
+
+
+def test_rank_gaps_and_fix_loop_reject_unknown_profile(project):
+    result = scan_project(project)
+    with pytest.raises(ValueError, match="Unknown fix-loop profile"):
+        rank_gaps(result, profile="invalid")  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="Unknown fix-loop profile"):
+        run_fix_loop(project, profile="invalid")  # type: ignore[arg-type]
+
+
+def test_startup_deterministic_fixers_scaffold_expected_evidence(tmp_path):
+    from scanner.fix_loop import _fixer_key_for_dimension
+
+    tg = DETERMINISTIC_FIXERS["tool_governance"](tmp_path)
+    assert tg.target_path == "compliance_evidence/mcp_tool_policy.py"
+    assert "ALLOWED_HOSTS" in tg.content
+    assert "@require_scope" in tg.content
+    assert "PINNED_MCP_SERVERS" in tg.content
+
+    ccs = DETERMINISTIC_FIXERS["claude_code_security"](tmp_path)
+    assert ccs.target_path == "compliance_evidence/claude_security_baseline.md"
+    assert ".claude/settings.json" in ccs.content
+    assert "/claude-security" in ccs.content
+    assert "claude-security@claude-plugins-official" in ccs.content
+
+    assert _fixer_key_for_dimension("tool_governance") == "tool_governance"
+    assert _fixer_key_for_dimension("access_control") == "claude_code_security"
+
+
+def test_run_fix_loop_startup_profile_dry_run(project):
+    res = run_fix_loop(project, top_n=3, apply=False, profile="startup")
+    assert res.proposals
+    assert res.applied == []
+    # Under startup profile, security (via configuration fixer) outranks risk_mgmt (test_suite).
+    dims = [p.dimension for p in res.proposals]
+    assert "configuration" in dims
+    assert "test_suite" in dims
+    assert dims.index("configuration") < dims.index("test_suite")
 
 
 # ─── Out-of-scope (non-AI project) short-circuit ──────────────────────────
@@ -164,13 +244,34 @@ def test_dry_run_writes_nothing_and_collects_proposals(project):
     assert result.overall_delta == 0.0
 
 
-def test_dry_run_surfaces_known_missing_dimensions(project):
-    """The fixture is missing strong evidence for tech_docs / test_suite / logging."""
+def test_dry_run_surfaces_known_missing_dimensions(project, tmp_path):
+    """sample_project/model.py has real logging (100%) and human_oversight (100%);
+    the fix loop should target its genuine missing dimensions (tech_docs, risk_mgmt
+    via test_suite, security via configuration) and surface human_oversight when absent."""
+    scan = scan_project(project)
+    assert scan.compliance_scores["logging"] == 100.0
+    ranked_dims = {dim for dim, _score in rank_gaps(scan)}
+    assert {"tech_docs", "risk_mgmt", "security"} <= ranked_dims
+    assert "logging" not in ranked_dims
+
     result = run_fix_loop(project, top_n=8, apply=False)
     proposed_dims = {p.dimension for p in result.proposals}
     assert "tech_docs" in proposed_dims
     assert "test_suite" in proposed_dims
-    assert "logging" in proposed_dims
+    assert "configuration" in proposed_dims
+    assert "logging" not in proposed_dims
+
+    # A minimal AI project without human_oversight should surface human_oversight too.
+    minimal = tmp_path / "no_oversight"
+    minimal.mkdir()
+    (minimal / "agent.py").write_text(
+        "import openai\nclient = openai.OpenAI()\n",
+        encoding="utf-8",
+    )
+    minimal_res = run_fix_loop(minimal, top_n=8, apply=False)
+    minimal_dims = {p.dimension for p in minimal_res.proposals}
+    assert "human_oversight" in minimal_dims
+    assert "tech_docs" in minimal_dims
 
 
 def test_dry_run_default_apply_is_false(project):

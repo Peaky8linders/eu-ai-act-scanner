@@ -15,7 +15,8 @@ from scanner.analyzers._base import (
     AnalyzerResult,
     Finding,
     file_content,
-    get_import_modules,
+    is_test_path,
+    parse_python_imports,
     search_code_files,
 )
 
@@ -64,29 +65,39 @@ def analyze_ai_frameworks(ctx: AnalyzerContext) -> AnalyzerResult:
     detected_frameworks: list[str] = []
     evidence_files: set[str] = set()
 
-    # 1. Framework detection — AST-first for Python, regex fallback for others
-    ast_modules = get_import_modules(ctx)
+    # 1. Framework detection — AST-first for Python, regex fallback for others.
+    # Hoist parse_python_imports out of the loop and index by top-level module
+    # so each framework lookup is O(1).
+    all_imports = [imp for imp in parse_python_imports(ctx) if not is_test_path(imp.file_path)]
+    ast_modules = {imp.module.split(".")[0] for imp in all_imports}
+    imports_by_top_module: dict[str, list] = {}
+    for imp in all_imports:
+        top = imp.module.split(".")[0]
+        imports_by_top_module.setdefault(top, []).append(imp)
+
     ast_detected: set[str] = set()
     for mod, fw_name in _AST_FRAMEWORK_MAP.items():
-        if mod in ast_modules:
-            ast_detected.add(fw_name)
-            detected_frameworks.append(fw_name)
-            # Find the file that imports it for evidence
-            from scanner.analyzers._base import parse_python_imports
-            for imp in parse_python_imports(ctx):
-                if imp.module.split(".")[0] == mod:
-                    evidence_files.add(imp.file_path)
-                    findings.append(Finding(
-                        id=f"af-detect-{fw_name}", category="ai_frameworks",
-                        title=f"{fw_name.title()} framework detected (AST-verified)",
-                        description=f"AI framework '{fw_name}' imported in Python source (AST analysis).",
-                        file_path=imp.file_path, confidence=0.95,
-                        compliance_impact="positive",
-                        compliance_dimensions=["tech_docs"],
-                        evidence_snippet=f"import {imp.module}" + (f" ({', '.join(imp.names)})" if imp.names else ""),
-                        kb_question_ids=["td-1"], suggested_answer="partial",
-                    ))
-                    break
+        if mod not in ast_modules:
+            continue
+        ast_detected.add(fw_name)
+        detected_frameworks.append(fw_name)
+        matches = imports_by_top_module.get(mod, [])
+        if not matches:
+            continue
+        imp = matches[0]
+        evidence_files.add(imp.file_path)
+        findings.append(Finding(
+            id=f"af-detect-{fw_name}", category="ai_frameworks",
+            title=f"{fw_name.title()} framework detected (AST-verified)",
+            description=f"AI framework '{fw_name}' imported in Python source (AST analysis).",
+            file_path=imp.file_path, confidence=0.95,
+            compliance_impact="positive",
+            compliance_dimensions=["tech_docs"],
+            evidence_snippet=f"import {imp.module}" + (f" ({', '.join(imp.names)})" if imp.names else ""),
+            kb_question_ids=["td-1"], suggested_answer="partial",
+            line_number=imp.line if imp.line else None,
+            matched_pattern=f"ast.Import:{mod}",
+        ))
 
     # Regex fallback for non-Python files (JS/TS/Java/etc.) — code files only,
     # so README/CHANGELOG prose never counts as framework evidence.

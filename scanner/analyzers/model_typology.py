@@ -446,6 +446,6 @@ def analyze_model_typology(ctx: AnalyzerContext) -> AnalyzerResult:  # noqa: C90
         file_count=len(evidence_files),
         graph_node_type="model",
         graph_icon="🧬",
-        connected_categories=["ai_frameworks", "transparency", "human_oversight"],
+        connected_categories=["ai_frameworks", "documentation", "human_oversight"],
         metadata={"typology": typology},
     )

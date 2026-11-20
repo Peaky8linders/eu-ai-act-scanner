@@ -81,3 +81,81 @@ def test_inferred_role_maps_but_never_hides():
 def test_distributor_keeps_registry_dimensions():
     dist = scan_project(FIXTURE, role="distributor")
     assert not {"tech_docs", "supply_chain"} & set(dist.role_scope["out_of_scope_dimensions"])
+
+
+def test_deployer_does_not_owe_art13_and_refined_role_citations():
+    from scanner.data.role_obligations import (
+        ROLE_AUTHORIZED_REPRESENTATIVE,
+        ROLE_DEPLOYER,
+        ROLE_PRODUCT_MANUFACTURER,
+        ROLE_PROVIDER,
+        applies_to_role,
+        articles_for_role,
+        get_role_obligation,
+    )
+
+    # Art. 13 is provider-only; Art. 72 stays removed from deployer; provider keeps 16, 18-21.
+    assert not applies_to_role("Art. 13", ROLE_DEPLOYER)
+    assert not applies_to_role("Art. 72", ROLE_DEPLOYER)
+    assert applies_to_role("Art. 50", ROLE_DEPLOYER)
+    prov_prim = set(articles_for_role(ROLE_PROVIDER, include_secondary=False))
+    assert {"Art. 16", "Art. 18", "Art. 19", "Art. 20", "Art. 21"} <= prov_prim
+
+    pm = get_role_obligation(ROLE_PRODUCT_MANUFACTURER)
+    assert pm is not None
+    assert "Art. 2(1)(e)" in pm["art_3_definition"]
+    assert "Art. 25(3)" in pm["art_3_definition"]
+    assert "Recital 87" in pm["art_3_definition"]
+
+    ar = get_role_obligation(ROLE_AUTHORIZED_REPRESENTATIVE)
+    assert ar is not None
+    assert "Art. 3(5)" in ar["art_3_definition"]
+    assert "Art. 22" in ar["art_3_definition"]
+    assert "Art. 54" in ar["art_3_definition"]
+
+
+def test_compute_role_scope_chapter_iii_tier_floor_and_duty_floor():
+    from scanner.obligations import compute_role_scope
+
+    scores = {
+        "ai_literacy": 50.0,
+        "risk_mgmt": 40.0,
+        "transparency": 30.0,
+        "content_transparency": 30.0,
+        "human_oversight": 20.0,
+        "deployer_obligations": 20.0,
+        "voluntary_codes": 10.0,
+    }
+
+    # Limited-risk deployer: Chapter III (Art. 6-49, incl. Art. 13 inside "Art. 13 & 50") never leaks.
+    lim_dep = compute_role_scope(["deployer"], scores, explicit=True, risk_tier="limited")
+    assert lim_dep["risk_tier"] == "limited"
+    assert "Art. 50" in lim_dep["articles"]
+    assert "Art. 4" in lim_dep["articles"]
+    assert lim_dep["primary_articles"] == ["Art. 50"]
+    assert not any(a in lim_dep["articles"] for a in ("Art. 13", "Art. 14", "Art. 26", "Art. 27"))
+    assert "transparency" in lim_dep["owed_dimensions"]
+    assert "ai_literacy" in lim_dep["owed_dimensions"]
+    assert {"risk_mgmt", "human_oversight", "deployer_obligations"} <= set(
+        lim_dep["out_of_scope_dimensions"]
+    )
+
+    # Minimal-risk provider: neither Chapter III nor Art. 50 transparency leaks.
+    min_prov = compute_role_scope(["provider"], scores, explicit=True, risk_tier="minimal")
+    assert "Art. 4" in min_prov["articles"]
+    assert "Art. 13" not in min_prov["articles"]
+    assert "Art. 50" not in min_prov["articles"]
+    assert "transparency" in min_prov["out_of_scope_dimensions"]
+    assert "ai_literacy" in min_prov["owed_dimensions"]
+
+    # High-risk deployer: known-role duty floor explicitly exposes Art. 26, 27, 50.
+    hr_dep = compute_role_scope(["deployer"], scores, explicit=True, risk_tier="high")
+    assert hr_dep["primary_articles"] == ["Art. 26", "Art. 27", "Art. 50"]
+    assert "deployer_obligations" in hr_dep["owed_dimensions"]
+    assert "transparency" in hr_dep["owed_dimensions"]
+
+    # Backwards compatibility when risk_tier=None.
+    default_dep = compute_role_scope(["deployer"], scores, explicit=True)
+    assert default_dep["risk_tier"] is None
+    assert default_dep["primary_articles"] == ["Art. 26", "Art. 27", "Art. 50"]
+    assert "transparency" in default_dep["owed_dimensions"]

@@ -10,12 +10,26 @@ Run the EU AI Act compliance scanner on a local codebase and summarise the findi
 ## Arguments
 
 - `$1` (optional) — path to scan. Defaults to the current working directory.
+- `--founder` — emit the plain-English 3-bucket Founder/Startup Triage brief (`Ship Now` / `Enterprise Deals` / `Later 2027`), or structured JSON when combined with `--json`. (See also `/ai-act-quickstart`.)
 - `--article ARTN` — filter results to a single article (e.g. `art9`, `art15`, `art50`).
-- `--cross-framework`, `-x` — project findings onto NIST AI RMF, ISO 42001, GDPR, and OWASP.
+- `--cross-framework`, `-x` — project findings across 12 frameworks (NIST AI RMF, ISO 42001, CEN/CENELEC EN 18286:2026, OWASP LLM/Agentic, GDPR, MITRE ATLAS, SOC 2, ISO 27002, NIST SP 800-53, CSA AICM).
+- `--sarif [PATH]` — export an offline SARIF 2.1.0 report (`eu-ai-act.sarif.json` by default) for GitHub Code Scanning or security pipelines.
+- `--ingest-sarif PATH` — ingest local SARIF 2.1.0 files from Semgrep, Bandit, Snyk, CodeQL, or GitHub Code Scanning (repeatable).
+- `--ingest-compliance-api PATH` — ingest local Anthropic **Claude Compliance API** exports (`/v1/compliance/*`, pulled via `scripts/fetch_claude_compliance.py`) into Art. 12/14/26/50 scoring (repeatable).
+- `--ingest-claude-security PATH` — ingest local **`/claude-security`** (`claude-security@claude-plugins-official`) or `/security-review` JSON/Markdown/SARIF reports (repeatable; honors the adversarial verification panel).
+- `--save-baseline [PATH]` — save a local per-repo baseline snapshot (`.eu-ai-act-baseline.json` by default).
+- `--diff-baseline [PATH]` — diff current scores and fixed/new gaps against a saved local baseline (`.eu-ai-act-baseline.json` by default).
+- `--benchmark` — run the offline deterministic analyzer precision/recall/F1 accuracy benchmark (no codebase scan).
 - `--graph [PATH]` — generate an interactive visual context graph browser (`context-graph.html`).
 - `--dossier [PATH]` — seal and export a cryptographic release dossier (`compliance-dossier.json`).
-- `--role ROLE` — scope evaluation to an explicit operator role (`provider`, `deployer`).
+- `--role ROLE` — scope evaluation to an explicit operator role (`provider`, `deployer`, `gpai_provider`, etc.).
 - `--deep`, `--extensive` — include a semantic-review pointer for your host Claude Code session / MCP client (deterministic scores stay the baseline).
+
+## Related Workflows
+
+- **Startup / Founder 60-Second Triage**: run `/ai-act-quickstart` (backed by `--founder`) to translate findings into plain-English **Ship Now**, **Enterprise Deals**, and **Later 2027** buckets.
+- **Diff-Aware Security Review**: run `/ai-act-security-review` to pair the scanner's `mcp_toolchain` and `claude_code_security` analyzers with **`claude-security@claude-plugins-official`** (`/claude-security`, `/threat-model` -> `THREAT_MODEL.md`, `/security-review`), SARIF 2.1.0, and local Claude Compliance API exports.
+- **Guided Remediation**: run `/ai-act-scan-fix` (or `python -m scanner.cli "$1" --fix --startup`) to walk through fixes one PR at a time with regression protection.
 
 ## Behaviour
 

@@ -42,7 +42,8 @@ Infringements of:
 - Authorised representative obligations (Art. 22)
 - Importer obligations (Art. 23)
 - Distributor obligations (Art. 24)
-- Deployer obligations (Art. 26) — except Art. 27 which has its own tier below but same level
+- Value-chain cooperation and supplier agreement obligations under Art. 25(2) and Art. 25(4) — inserted as Art. 99(4)(da) by Digital Omnibus Reg. (EU) 2026/1744, Art. 1(38)
+- Deployer obligations (Art. 26) — Art. 99(4)(e)
 - Notified bodies' obligations (Art. 31, 33, 34)
 - Transparency obligations for providers and deployers (Art. 50)
 
@@ -65,11 +66,13 @@ Triggered by:
 - Failure to comply with a Commission request for information under Art. 91
 - Failure to cooperate with the Commission under Art. 93
 
-## SME and start-up cap
+## SME, start-up, and SMC cap
 
-Art. 99(6): for SMEs, including start-ups, each of the fines in Art. 99(3), (4), and (5) is **capped at the percentage** (7%, 3%, 1%) OR **the euro amount, whichever is lower**. This reverses the default — for SMEs the absolute euro ceiling dominates when it's less than the percentage.
+- **SMEs and start-ups — Art. 99(6)**: each of the fines in Art. 99(3), (4), and (5) is **capped at the percentage** (7%, 3%, 1%) OR **the euro amount, whichever is lower**. This reverses the default "whichever is higher" rule so smaller undertakings are bounded by their turnover percentage when it is below the euro ceiling.
+- **Small mid-cap enterprises (SMCs) — Art. 99(6a)** (inserted by Digital Omnibus Reg. (EU) 2026/1744, Art. 1(38), referencing Recommendation (EU) 2025/1099): extends the same **"whichever is lower"** cap (percentage vs. euro ceiling) to SMCs.
+- **No SME/SMC cap under Art. 101**: Commission fines on GPAI model providers under Art. 101 do **not** carry an SME or SMC "whichever is lower" cap — the "whichever is higher" ceiling (€15M or 3% of worldwide turnover) applies regardless of undertaking size.
 
-The Commission definition of SME applies (Recommendation 2003/361/EC): fewer than 250 employees AND annual turnover ≤ €50 million OR annual balance sheet total ≤ €43 million.
+The Commission definition of SME applies (Recommendation 2003/361/EC): fewer than 250 employees AND annual turnover ≤ €50 million OR annual balance sheet total ≤ €43 million. SMCs are defined in Commission Recommendation (EU) 2025/1099 (art. 3(14b) AI Act as amended).
 
 ## Factors considered when imposing fines — Art. 99(7)
 
@@ -122,7 +125,7 @@ Example: A company with €5 billion worldwide turnover in breach of Art. 5 face
 | "We'll use Chapter 11 / insolvency to escape fines." | Fines are imposed on the undertaking. Group liability rules may extend to parent companies depending on structural control. This is a legal question, not a compliance shortcut. |
 | "We're non-Union; EU can't collect." | Art. 99 applies to operators placing AI on the Union market. Authorities can block market access (withdrawing CE marking via Art. 83, requiring withdrawal / recall). Unpaid fines can result in asset freezes in Union territory and enforcement through bilateral mechanisms. |
 | "We'll self-report after launch if something goes wrong." | Self-reporting weighs favourably under Art. 99(7) but does not eliminate fines. The strongest mitigation is doing the work correctly before launch, supported by documented good-faith efforts. |
-| "Penalties don't start until 2 Aug 2026 so we have time." | Most of Chapter XII (penalties) applies from 2 Aug 2025 per Art. 113(b) — covering GPAI and governance infringements. Art. 5 prohibitions carry enforcement exposure from 2 Feb 2025. The full provider/deployer penalty regime activates with the main obligations on 2 Aug 2026. |
+| "Penalties don't start until 2 Aug 2026 so we have time." | Chapter XII penalties (except Art. 101) have applied since **2 Aug 2025** per Art. 113(3)(b) — covering Art. 5 prohibitions (in force since 2 Feb 2025) and governance infringements. Under the Digital Omnibus (Reg. (EU) 2026/1744), **2 Aug 2026** activates **Art. 50 transparency** and **Art. 101 GPAI fines** (neither deferred); **2 Dec 2026** adds Art. 5(1)(ba)-(bb) NCII/CSAM prohibitions; **2 Dec 2027** activates **Annex III** high-risk obligations; and **2 Aug 2028** activates **Annex I** high-risk obligations. |
 
 ## Cross-references
 
@@ -133,4 +136,4 @@ Example: A company with €5 billion worldwide turnover in breach of Art. 5 face
 
 ## Source of truth
 
-EU Regulation 2024/1689, Art. 99, Art. 100, Art. 101, Art. 113, published in the Official Journal of the European Union, 12 July 2024. Commission Recommendation 2003/361/EC for the SME definition.
+EU Regulation (EU) 2024/1689, Art. 99, Art. 100, Art. 101, Art. 113 (OJ L, 12 July 2024), as amended by Digital Omnibus on AI Regulation (EU) 2026/1744 (OJ L, 2026/1744, 24 July 2026). Commission Recommendation 2003/361/EC (SMEs) and Commission Recommendation (EU) 2025/1099 (SMCs).

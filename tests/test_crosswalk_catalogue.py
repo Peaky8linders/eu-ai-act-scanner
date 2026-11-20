@@ -41,6 +41,7 @@ from scanner.data.frameworks import CANONICAL_FRAMEWORK_IDS as _CANON
 #   SOC 2                -> CC<n>.<n> / PI1.<n> / A1.<n> / C1.<n>
 #   ISO/IEC 27002:2022   -> <theme>.<control>
 #   NIST SP 800-53 r5    -> <FAMILY>-<n>
+#   CEN-CENELEC JTC 21   -> EN <NNNNN>:<YYYY> (OJ-cited) or prEN <NNNNN>[-<p>] (draft)
 ID_PATTERNS: dict[str, re.Pattern[str]] = {
     "nist_ai_rmf": re.compile(r"^(GV|MP|MS|MG)-\d+\.\d+$"),
     "iso_42001": re.compile(r"^(\d+\.\d+|A\.\d+\.\d+)$"),
@@ -55,6 +56,9 @@ ID_PATTERNS: dict[str, re.Pattern[str]] = {
     "soc2": re.compile(r"^(CC\d\.\d|PI1\.\d|A1\.\d|C1\.\d)$"),
     "iso_27002": re.compile(r"^\d{1,2}\.\d{1,2}$"),
     "nist_sp_800_53": re.compile(r"^[A-Z]{2}-\d+$"),
+    "cen_cenelec_jtc21": re.compile(
+        r"^(EN \d{5}:\d{4}|prEN (?:ISO/IEC )?\d{5}(?:-\d+)? \(draft\))$"
+    ),
 }
 
 # IDs that were removed/renamed upstream and must not come back.
@@ -382,5 +386,29 @@ def test_variant_framework_ids_are_aliased() -> None:
         ("owasp_llm_top10", "owasp_llm"),
         ("owasp_llm_2025", "owasp_llm"),
         ("owasp_agentic_top10", "owasp_agentic"),
+        ("cen_cenelec", "cen_cenelec_jtc21"),
+        ("jtc21", "cen_cenelec_jtc21"),
     ):
         assert normalize_framework_id(variant) == canonical
+
+
+def test_cen_cenelec_jtc21_en_18286_scope_and_draft_labelling() -> None:
+    """EN 18286:2026 (OJ L 2026/2274, 14 Oct 2026) covers Art. 17(1) and the
+    first sentence of Art. 11(1) only; prEN siblings must stay clearly labelled
+    as drafts so auditors never mistake them for OJ-cited harmonised standards.
+    """
+    assert "cen_cenelec_jtc21" in CANONICAL_FRAMEWORK_IDS
+    assert "cen_cenelec_jtc21" in FRAMEWORK_LABELS
+
+    # EN 18286:2026 appears on Art. 17 / quality_management and Art. 11 / tech_docs only.
+    assert DIMENSION_CROSSWALK["quality_management"]["cen_cenelec_jtc21"] == ["EN 18286:2026"]
+    assert DIMENSION_CROSSWALK["tech_docs"]["cen_cenelec_jtc21"] == ["EN 18286:2026"]
+    assert ARTICLE_FRAMEWORK_CROSSWALK["Art. 17"]["cen_cenelec_jtc21"] == ["EN 18286:2026"]
+    assert ARTICLE_FRAMEWORK_CROSSWALK["Art. 11"]["cen_cenelec_jtc21"] == ["EN 18286:2026"]
+
+    # EN 18286:2026 must NOT claim Art. 9, 10, 12, 13, 14 or 15 presumption.
+    for art in ("Art. 9", "Art. 10", "Art. 12", "Art. 13", "Art. 14", "Art. 15"):
+        stds = ARTICLE_FRAMEWORK_CROSSWALK[art].get("cen_cenelec_jtc21", [])
+        assert stds, f"{art} missing cen_cenelec_jtc21 draft mapping"
+        assert "EN 18286:2026" not in stds, f"EN 18286:2026 over-claimed on {art}"
+        assert all("(draft)" in s for s in stds), f"unlabelled draft on {art}: {stds}"

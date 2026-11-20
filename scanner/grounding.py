@@ -62,12 +62,14 @@ logger = structlog.get_logger(__name__)
 # MUST cover every article in :data:`scanner.kb.ARTICLE_TO_DIMENSIONS`.
 OBLIGATION_TEXT: dict[str, str] = {
     "Art. 4": (
-        "Providers and deployers of AI systems must take measures to ensure, to "
-        "their best extent, a sufficient level of AI literacy among their staff and "
-        "other persons operating or using the systems on their behalf. The measures "
-        "must take into account those persons' technical knowledge, experience, "
-        "education and training, and the context in which the systems are used. In "
-        "force since February 2025."
+        "Providers and deployers of AI systems must take measures to support the "
+        "development of a sufficient level of AI literacy among their staff and "
+        "other persons operating or using the systems on their behalf, as amended "
+        "by Regulation (EU) 2026/1744. Those measures must take into account "
+        "technical knowledge, experience, education and training, and the context "
+        "in which the systems are used, without requiring providers or deployers "
+        "to guarantee any specific level of AI literacy of any individual. In "
+        "force since 2 February 2025."
     ),
     # Articles 5, 6 and 49 are not KB dimensions, but the cross-framework
     # crosswalk maps them, so the projection renders them beside foreign
@@ -216,6 +218,52 @@ OBLIGATION_TEXT: dict[str, str] = {
         "and quality control, data management, risk management, post-market "
         "monitoring, incident reporting, record-keeping and an accountability "
         "framework."
+    ),
+    "Art. 18": (
+        "Providers of high-risk AI systems must keep the technical documentation "
+        "under Article 11, the quality management system documentation under "
+        "Article 17, documentation of notified-body-approved changes and decisions, "
+        "and the EU declaration of conformity under Article 47 at the disposal of "
+        "national competent authorities for 10 years after the system is placed on "
+        "the market or put into service. Member States must determine conditions "
+        "ensuring that documentation remains available if the provider or its "
+        "authorised representative goes bankrupt or ceases activity within that "
+        "period. Financial institutions subject to Union financial services "
+        "governance law must maintain the technical documentation as part of their "
+        "relevant sectoral records."
+    ),
+    "Art. 19": (
+        "Providers of high-risk AI systems must keep the automatically generated "
+        "logs referred to in Article 12(1), to the extent those logs are under "
+        "their control. The logs must be retained for a period appropriate to the "
+        "intended purpose of the system and of at least six months, unless "
+        "applicable Union or national law, including personal data protection law, "
+        "provides otherwise. Financial institutions subject to Union financial "
+        "services governance law must maintain those automatically generated logs "
+        "as part of the documentation kept under that sectoral law."
+    ),
+    "Art. 20": (
+        "Providers of high-risk AI systems that consider or have reason to "
+        "consider a system placed on the market or put into service is not in "
+        "conformity must immediately take the necessary corrective actions to "
+        "bring it into conformity, withdraw it, disable it, or recall it, as "
+        "appropriate. They must inform the distributors concerned and, where "
+        "applicable, deployers, the authorised representative, and importers. "
+        "Where the system presents a risk within the meaning of Article 79(1), "
+        "the provider must immediately investigate the causes and inform the "
+        "competent market surveillance authorities and any relevant notified body "
+        "of the non-compliance and corrective actions taken."
+    ),
+    "Art. 21": (
+        "Upon a reasoned request by a competent authority, providers of high-risk "
+        "AI systems must provide all information and documentation necessary to "
+        "demonstrate conformity with Chapter III, Section 2, in a Union official "
+        "language easily understood by the authority as indicated by the Member "
+        "State concerned. Upon a reasoned request, providers must also give the "
+        "authority access to the automatically generated logs under Article 12(1) "
+        "to the extent those logs are under their control. Information obtained "
+        "under this provision is subject to the confidentiality obligations of "
+        "Article 78."
     ),
     "Art. 22": (
         "Prior to making a high-risk AI system available on the Union market, "
@@ -393,6 +441,58 @@ OBLIGATION_TEXT: dict[str, str] = {
         "also cover voluntary commitments on environmental sustainability, AI "
         "literacy, inclusive and diverse design, and the impact on vulnerable "
         "persons."
+    ),
+    "Art. 99": (
+        "Member States must lay down effective, proportionate and dissuasive "
+        "penalties and enforcement measures for infringements by operators. "
+        "Non-compliance with Article 5 prohibited practices carries administrative "
+        "fines of up to EUR 35 000 000 or 7% of total worldwide annual turnover "
+        "(whichever is higher); infringements of listed operator, notified-body, "
+        "and Article 50 transparency obligations carry up to EUR 15 000 000 or 3% "
+        "of turnover; and supplying incorrect, incomplete, or misleading "
+        "information to authorities or notified bodies carries up to EUR 7 500 000 "
+        "or 1% of turnover. For SMEs, including start-ups, and small mid-cap "
+        "enterprises (Article 99(6) and (6a) as amended by Regulation (EU) "
+        "2026/1744), each cap applies as the lower of the percentage or the euro "
+        "amount."
+    ),
+    "Art. 101": (
+        "The European Commission may impose fines of up to 3% of total worldwide "
+        "annual turnover or EUR 15 000 000, whichever is higher, on providers of "
+        "general-purpose AI models that intentionally or negligently infringe "
+        "their obligations under the Regulation. Fines also apply where a GPAI "
+        "provider fails to comply with an Article 91 information request, "
+        "supplies incorrect or misleading information, fails to comply with an "
+        "Article 93 measure, or refuses model access for an Article 92 evaluation. "
+        "In fixing the fine, the Commission must consider the nature, gravity and "
+        "duration of the infringement, proportionality, and commitments made "
+        "under codes of practice."
+    ),
+    "Art. 111": (
+        "AI systems that are components of large-scale EU IT systems listed in "
+        "Annex X placed on the market or put into service before 2 August 2027 "
+        "must achieve compliance by 31 December 2030. Other high-risk AI systems "
+        "already placed on the market or put into service before their "
+        "application date fall under the Regulation only if subjected to "
+        "significant changes in design, except that high-risk systems intended "
+        "for public authorities must comply by 2 August 2030. General-purpose AI "
+        "models placed on the market before 2 August 2025 must comply by 2 August "
+        "2027, and under Article 111(4) inserted by Regulation (EU) 2026/1744 "
+        "pre-2-August-2026 synthetic content systems have until 2 December 2026 "
+        "to meet Article 50(2)."
+    ),
+    "Art. 113": (
+        "The Regulation entered into force on 1 August 2024 and applies in "
+        "staggered phases as amended by Regulation (EU) 2026/1744 (Digital "
+        "Omnibus on AI). Chapters I and II (including Article 4 AI literacy and "
+        "Article 5(1)(a)-(h) prohibitions) have applied since 2 February 2025, "
+        "while Chapter V GPAI obligations, governance, and Chapter XII penalties "
+        "(except Article 101) have applied since 2 August 2025. General "
+        "application including Article 50 transparency and Article 101 GPAI fines "
+        "took effect on 2 August 2026, Article 5(1)(ba)-(bb) NCII and CSAM "
+        "prohibitions apply from 2 December 2026, Annex III high-risk obligations "
+        "apply from 2 December 2027, and Annex I safety-component high-risk "
+        "obligations apply from 2 August 2028."
     ),
 }
 

@@ -12,9 +12,11 @@ Usage:
 
 from __future__ import annotations
 
-import statistics
+import time
 from collections.abc import Callable
 from typing import Any
+
+import structlog
 
 from scanner.analyzers._base import AnalyzerContext, AnalyzerResult, Finding
 from scanner.analyzers.adversarial_robustness import analyze_adversarial_robustness
@@ -23,6 +25,7 @@ from scanner.analyzers.agent_inventory import analyze_agent_inventory
 from scanner.analyzers.ai_frameworks import analyze_ai_frameworks
 from scanner.analyzers.article_50_transparency import analyze_article_50_transparency
 from scanner.analyzers.cicd_dockerfile import analyze_cicd_dockerfile
+from scanner.analyzers.claude_code_security import analyze_claude_code_security
 from scanner.analyzers.cloud_deployment import analyze_cloud_deployment
 from scanner.analyzers.cloudformation_k8s import analyze_cloudformation_k8s
 from scanner.analyzers.configuration import analyze_configuration
@@ -32,6 +35,7 @@ from scanner.analyzers.fairness_testing import analyze_fairness_testing
 from scanner.analyzers.human_oversight import analyze_human_oversight
 from scanner.analyzers.lethal_trifecta import analyze_lethal_trifecta
 from scanner.analyzers.logging_monitoring import analyze_logging_monitoring
+from scanner.analyzers.mcp_toolchain import analyze_mcp_toolchain
 from scanner.analyzers.model_typology import analyze_model_typology
 from scanner.analyzers.privilege_minimization import analyze_privilege_minimization
 from scanner.analyzers.regulatory_perimeter import analyze_regulatory_perimeter
@@ -46,6 +50,8 @@ from scanner.data.role_obligations import (
     ROLE_PROVIDER,
 )
 from scanner.incident_grounding import incidents_for_finding
+
+logger = structlog.get_logger(__name__)
 
 ANALYZER_REGISTRY: dict[str, Callable[[AnalyzerContext], AnalyzerResult]] = {
     "ai_frameworks": analyze_ai_frameworks,
@@ -71,6 +77,9 @@ ANALYZER_REGISTRY: dict[str, Callable[[AnalyzerContext], AnalyzerResult]] = {
     "privilege_minimization": analyze_privilege_minimization,
     "runtime_drift": analyze_runtime_drift,
     "regulatory_perimeter": analyze_regulatory_perimeter,
+    # Agentic supply-chain & AI-DevSecOps analyzers
+    "mcp_toolchain": analyze_mcp_toolchain,
+    "claude_code_security": analyze_claude_code_security,
 }
 
 
@@ -123,6 +132,26 @@ _DEFAULT_TAXONOMY_TAGS: dict[str, dict[str, Any]] = {
         ],
         "applicable_roles": list(_PROVIDER_DEPLOYER_MFR),
     },
+    "mcp_toolchain": {
+        # Poisoned / unpinned / SSRF-exposed MCP tools cascade across every
+        # downstream tool invocation (OWASP MCP Top 10 / paper §6.1).
+        "compound_risk_type": CompoundRiskType.cascading.value,
+        "threat_categories": [
+            ThreatCategory.prompt_injection.value,
+            ThreatCategory.tool_misuse_privilege_escalation.value,
+        ],
+        "applicable_roles": list(_PROVIDER_DEPLOYER_MFR),
+    },
+    "claude_code_security": {
+        # Overprivileged coding-agent permissions / unsafe hooks / unguarded
+        # MCP auto-approval cascade into autonomous code/secret compromise.
+        "compound_risk_type": CompoundRiskType.cascading.value,
+        "threat_categories": [
+            ThreatCategory.tool_misuse_privilege_escalation.value,
+            ThreatCategory.autonomous_cyber_exploit.value,
+        ],
+        "applicable_roles": list(_PROVIDER_DEPLOYER_MFR),
+    },
 }
 
 
@@ -170,8 +199,44 @@ def _attach_incident_grounding(findings: list[Finding], limit: int = 3) -> list[
     return findings
 
 
+def _execute_analyzer(analyzer_id: str, ctx: AnalyzerContext) -> AnalyzerResult:
+    """Run one analyzer fail-soft; stamp ``duration_ms`` and ``status`` into metadata.
+
+    An exception inside one analyzer (hostile input file, edge-case AST/regex)
+    is caught, logged, and returned as an error-status ``AnalyzerResult`` so
+    the remaining analyzers always complete.
+    """
+    fn = ANALYZER_REGISTRY[analyzer_id]
+    label = analyzer_id.replace("_", " ").title()
+    started = time.perf_counter()
+    try:
+        result = fn(ctx)
+        duration_ms = round((time.perf_counter() - started) * 1000, 1)
+        result.metadata = {**result.metadata, "duration_ms": duration_ms, "status": "ok"}
+        return result
+    except Exception as exc:  # noqa: BLE001 — fail-soft isolation per analyzer
+        duration_ms = round((time.perf_counter() - started) * 1000, 1)
+        logger.error(
+            "scanner_analyzer_failed",
+            analyzer=analyzer_id,
+            error=str(exc)[:300],
+            duration_ms=duration_ms,
+        )
+        return AnalyzerResult(
+            analyzer_id=analyzer_id,
+            label=label,
+            findings=[],
+            score=0.0,
+            metadata={
+                "duration_ms": duration_ms,
+                "status": "error",
+                "error": str(exc)[:300],
+            },
+        )
+
+
 def run_all_analyzers(ctx: AnalyzerContext) -> list[AnalyzerResult]:
-    """Run all registered analyzers and return their results.
+    """Run all registered analyzers with fail-soft isolation and return their results.
 
     Findings emitted by analyzers in :data:`_DEFAULT_TAXONOMY_TAGS` are
     automatically tagged with the corresponding compound-risk axis,
@@ -191,7 +256,7 @@ def run_all_analyzers(ctx: AnalyzerContext) -> list[AnalyzerResult]:
     # partial-initialisation cycle during ``import scanner``.
     from scanner import obligations
 
-    results = [fn(ctx) for fn in ANALYZER_REGISTRY.values()]
+    results = [_execute_analyzer(aid, ctx) for aid in ANALYZER_REGISTRY]
     for r in results:
         _apply_default_taxonomy_tags(r.findings)
         _attach_incident_grounding(r.findings)
@@ -249,15 +314,20 @@ def detect_ai_system(analyzer_results: list[AnalyzerResult]) -> tuple[bool, list
                 signals.add(f"model_typology:{typology}")
         elif ar.analyzer_id == "agent_inventory":
             for sig in ar.metadata.get("runtime_signals", []):
-                signals.add(f"agent_runtime:{sig}")
+                # An MCP tool server is an integration endpoint, not evidence
+                # that the scanned repository itself runs an AI system.
+                if sig != "mcp_server_tool":
+                    signals.add(f"agent_runtime:{sig}")
     return bool(signals), sorted(signals)
 
 
 def compute_dimension_scores(all_findings: list[Finding]) -> dict[str, float]:
     """Compute compliance scores per KB dimension from all findings.
 
-    Score = avg confidence of positive evidence, penalized by gap ratio.
-    Result clamped to [0, 100].
+    Score is the confidence-weighted coverage ratio:
+    ``weighted_positive / (weighted_positive + len(gaps)) * 100``.
+    Dimensions referenced ONLY by neutral (informational) findings are skipped
+    so a not-applicable informational note never registers as a 0% failure.
     """
     dim_ids: set[str] = set()
     for f in all_findings:
@@ -266,14 +336,13 @@ def compute_dimension_scores(all_findings: list[Finding]) -> dict[str, float]:
     scores: dict[str, float] = {}
     for dim_id in sorted(dim_ids):
         relevant = [f for f in all_findings if dim_id in f.compliance_dimensions]
-        if not relevant:
-            scores[dim_id] = 0.0
-            continue
         positive = [f for f in relevant if f.compliance_impact == "positive"]
         gaps = [f for f in relevant if f.compliance_impact == "gap"]
-        base = statistics.mean(f.confidence for f in positive) * 100 if positive else 0.0
-        penalty = len(gaps) / (len(positive) + len(gaps)) * 30 if gaps else 0.0
-        scores[dim_id] = min(max(round(base - penalty, 1), 0.0), 100.0)
+        weighted_positive = sum(f.confidence for f in positive)
+        denom = weighted_positive + len(gaps)
+        if denom == 0:
+            continue
+        scores[dim_id] = round(weighted_positive / denom * 100, 1)
 
     return scores
 
@@ -281,16 +350,27 @@ def compute_dimension_scores(all_findings: list[Finding]) -> dict[str, float]:
 def collect_pre_filled_answers(all_findings: list[Finding]) -> dict[str, str]:
     """Aggregate pre-filled assessment answers from all findings.
 
-    When multiple findings target the same question, 'yes' wins over 'partial'.
+    When multiple findings target the same question, ``yes`` wins over
+    ``partial`` — unless at least one finding explicitly asserted ``no``, in
+    which case conflicting evidence resolves to ``partial`` for human review.
     """
     answers: dict[str, str] = {}
     priority = {"yes": 2, "partial": 1, "no": 0}
+    explicit_gaps: set[str] = {
+        qid
+        for f in all_findings
+        if f.suggested_answer == "no" and f.kb_question_ids
+        for qid in f.kb_question_ids
+    }
     for f in all_findings:
         if f.suggested_answer and f.kb_question_ids:
             for qid in f.kb_question_ids:
                 existing = answers.get(qid)
                 if existing is None or priority.get(f.suggested_answer, 0) > priority.get(existing, 0):
                     answers[qid] = f.suggested_answer
+    for qid in explicit_gaps:
+        if answers.get(qid) == "yes":
+            answers[qid] = "partial"
     return answers
 
 
@@ -300,6 +380,7 @@ __all__ = [
     "AnalyzerResult",
     "Finding",
     "run_all_analyzers",
+    "_execute_analyzer",
     "compute_dimension_scores",
     "detect_ai_system",
     "collect_pre_filled_answers",

@@ -1,0 +1,222 @@
+# EU AI Act Vendor Contract Review Playbook
+# Designed for Anthropic's official Legal Plugin (/review-contract) and
+# Claude Code compliance workflows.
+#
+# Usage: Point /review-contract at this playbook when reviewing an AI vendor
+# MSA, SaaS agreement with AI features, LLM API enterprise terms, or DPA
+# covering AI processing. Updated for Digital Omnibus Regulation (EU) 2026/1744.
+
+name: EU AI Act Vendor Contract Positions
+version: "2.0.0"
+regulation: "EU Regulation 2024/1689 (as amended by Digital Omnibus Regulation (EU) 2026/1744)"
+key_dates:
+  prohibited_practices_and_literacy: "2025-02-02"
+  gpai_obligations: "2025-08-02"
+  article_50_transparency: "2026-08-02"
+  en_18286_qms_milestone: "2026-10"
+  ncii_csam_prohibitions: "2026-12-02"
+  annex_iii_high_risk: "2027-12-02"
+  annex_i_safety_components: "2028-08-02"
+category: ai-vendor-agreements
+
+triggers:
+  - keywords:
+      - "artificial intelligence"
+      - "AI system"
+      - "machine learning"
+      - "large language model"
+      - "foundation model"
+      - "automated decision"
+  - keywords:
+      - "EU AI Act"
+      - "AI Act"
+      - "Regulation 2024/1689"
+      - "Regulation 2026/1744"
+  - document_types:
+      - "AI vendor agreement"
+      - "SaaS agreement with AI features"
+      - "LLM API enterprise agreement"
+      - "DPA for AI processing"
+
+positions:
+  - id: aiact-01
+    clause: "Provider Obligation Transfer & Role Flip Protection"
+    article: "Art. 25(1)"
+    applies_from: "2027-12-02 (Annex III high-risk); Art. 50 transparency live since 2026-08-02"
+    description: "Whether the agreement preserves clear provider vs. deployer role boundaries and prevents silent transfer of high-risk provider obligations onto the buyer."
+    acceptable:
+      description: "Vendor explicitly retains provider obligations (Art. 9-15, 16-21, 50) for the supplied AI system and commits to notify customer before substantial modifications."
+      language_hints:
+        - "vendor retains provider obligations under the EU AI Act"
+        - "provider maintains full compliance responsibility for the AI system"
+    yellow:
+      description: "Obligations are shared between vendor and customer with a documented responsibility allocation matrix."
+      language_hints:
+        - "shared compliance responsibility"
+        - "joint allocation of EU AI Act duties"
+    red:
+      description: "Agreement shifts all EU AI Act compliance responsibility onto customer 'as-is' without addressing Art. 25(1) reclassification."
+      language_hints:
+        - "customer assumes all regulatory responsibility"
+        - "as-is compliance status"
+        - "buyer solely responsible for AI Act compliance"
+    escalation: "RED — customer may inadvertently assume provider liability under Art. 25(1). Push back before signing."
+
+  - id: aiact-02
+    clause: "Instructions for Use & Transparency Information"
+    article: "Art. 13, Art. 26(1), Art. 50"
+    applies_from: "2026-08-02 (Art. 50 transparency live); 2027-12-02 (Art. 13/26 high-risk)"
+    description: "Whether the vendor supplies up-to-date instructions for use, model capabilities/limitations, and Art. 50 transparency/marking metadata."
+    acceptable:
+      description: "Version-controlled instructions for use attached or linked, including intended purpose, known limitations, and Art. 50 content-marking support, with change notifications."
+      language_hints:
+        - "instructions for use attached as Schedule"
+        - "model documentation and intended purpose maintained with version notice"
+    yellow:
+      description: "Documentation referenced as available upon request without update notification commitments."
+      language_hints:
+        - "instructions available upon request"
+        - "documentation provided separately"
+    red:
+      description: "No instructions for use or capability disclosures; customer expected to infer safe operating boundaries alone."
+      language_hints:
+        - "customer independently determines suitability"
+        - "no usage documentation provided"
+    escalation: "RED — deployer cannot satisfy Art. 26(1) or verify Art. 50 compliance without vendor documentation. Request before execution."
+
+  - id: aiact-03
+    clause: "Automatic Log Retention & Audit Access"
+    article: "Art. 12, Art. 19(1), Art. 26(6)"
+    applies_from: "2027-12-02 (Annex III high-risk); immediate enterprise SOC 2 CC7.2 value"
+    description: "Whether automatic event logs are retained for at least 6 months and made accessible to the deployer for compliance and incident audits."
+    acceptable:
+      description: "Minimum 6-month log retention (where under vendor control) explicitly guaranteed, or full export APIs provided so deployer can retain logs for 6+ months."
+      language_hints:
+        - "logs retained for minimum six months"
+        - "audit logs exportable and retained for at least 6 months"
+    yellow:
+      description: "Retention period shorter than 6 months (e.g. 30-90 days) or log access requires paid add-on / separate request."
+      language_hints:
+        - "logs retained for 90 days"
+        - "audit log export available as add-on"
+    red:
+      description: "No log retention commitment, or logs deleted immediately with no deployer export capability."
+      language_hints:
+        - "no obligation to retain logs"
+        - "logs are proprietary and not accessible to customer"
+    escalation: "RED/YELLOW — Art. 19(1) and Art. 26(6) set a 6-month minimum retention floor for high-risk systems. Negotiate retention or local log export."
+
+  - id: aiact-04
+    clause: "AI-Specific Data Governance & Zero-Training DPA Safeguards"
+    article: "Art. 10(5), Art. 53(1)(c)-(d)"
+    applies_from: "2025-08-02 (Art. 53 GPAI); 2027-12-02 (Art. 10 high-risk); GDPR live"
+    description: "Whether the DPA addresses AI-specific data governance, zero training on customer inputs/outputs, copyright compliance, and bias-monitoring safeguards."
+    acceptable:
+      description: "DPA explicitly prohibits training on customer prompts/data without opt-in, confirms lawful training data governance, and addresses Art. 10(5) special-category safeguards where relevant."
+      language_hints:
+        - "vendor will not train models on customer data"
+        - "AI data governance and bias monitoring safeguards"
+    yellow:
+      description: "Standard GDPR DPA present, but silent on model training opt-out or AI-specific data quality/provenance."
+      language_hints:
+        - "standard GDPR data processing addendum"
+        - "service improvement usage"
+    red:
+      description: "No DPA, vendor claims unrestricted right to train models on customer inputs, or AI data excluded from DPA scope."
+      language_hints:
+        - "vendor may use customer inputs to train or improve models"
+        - "AI data excluded from DPA"
+    escalation: "RED/YELLOW — require explicit zero-training clause and AI-ready DPA addendum before sending customer data to the vendor."
+
+  - id: aiact-05
+    clause: "EU Database Registration & Transparency Disclosures"
+    article: "Art. 49, Art. 71"
+    applies_from: "2027-12-02 (Annex III high-risk)"
+    description: "Whether EU public database registration responsibilities (provider under Art. 49(1) and public-authority deployer under Art. 49(3)) are clearly allocated."
+    acceptable:
+      description: "Provider commits to complete Art. 49 registration for high-risk systems before placing on market and supply registration details required for any deployer filing."
+      language_hints:
+        - "provider registers high-risk AI system in the EU database"
+        - "provider supplies registration identifier to deployer"
+    yellow:
+      description: "Registration acknowledged generally but allocation and timelines are left to future agreement."
+      language_hints:
+        - "parties will cooperate on regulatory registrations"
+    red:
+      description: "No mention of EU database registration for a high-risk AI offering."
+      language_hints: []
+    escalation: "RED (for high-risk AI) — add clear Art. 49 registration allocation ahead of the 2 Dec 2027 Annex III deadline."
+
+  - id: aiact-06
+    clause: "Post-Market Monitoring & Serious Incident Reporting"
+    article: "Art. 72, Art. 73"
+    applies_from: "2027-12-02 (Annex III high-risk); immediate security SLA value"
+    description: "Whether the vendor maintains a post-market monitoring plan and commits to timely serious incident notification supporting Art. 73 statutory deadlines (2 / 10 / 15 days)."
+    acceptable:
+      description: "Vendor maintains ongoing performance/safety monitoring and notifies customer promptly (e.g. within 24-72 hours) of serious AI or security incidents to support Art. 73 reporting."
+      language_hints:
+        - "post-market monitoring plan"
+        - "serious incident notification within 48 hours"
+        - "supports Art. 73 incident reporting timelines"
+    yellow:
+      description: "General uptime/security monitoring mentioned, but no AI-specific incident definition or notification SLA."
+      language_hints:
+        - "commercially reasonable monitoring"
+        - "notify customer without undue delay"
+    red:
+      description: "No post-market monitoring or incident notification obligations; strictly as-is delivery."
+      language_hints:
+        - "no ongoing monitoring obligations"
+        - "as-is without incident notification"
+    escalation: "RED — Art. 73 enforces strict 2-day (widespread/critical), 10-day (death), and 15-day (general serious incident) reporting windows. Negotiate explicit notice SLAs."
+
+  - id: aiact-07
+    clause: "Conformity Assessment, CE Marking & Audit Artifacts"
+    article: "Art. 43, Art. 47, Art. 48"
+    applies_from: "2027-12-02 (Annex III); 2028-08-02 (Annex I products)"
+    description: "Whether the provider commits to complete conformity assessment, affix CE marking, and share the EU Declaration of Conformity for high-risk AI systems."
+    acceptable:
+      description: "Provider supplies EU Declaration of Conformity, conformity assessment confirmation, and CE marking status (plus SOC 2 / ISO 42001 / EN 18286:2026 artifacts where applicable)."
+      language_hints:
+        - "EU Declaration of Conformity provided"
+        - "conformity assessment completed under Art. 43"
+        - "CE marked"
+    yellow:
+      description: "Provider represents compliance readiness but restricts summary evidence to NDA-only inspection or roadmap commitments."
+      language_hints:
+        - "conformity summary available under NDA"
+        - "roadmap to EU AI Act conformity"
+    red:
+      description: "No commitment to conformity assessment or Declaration of Conformity for a high-risk AI system."
+      language_hints: []
+    escalation: "RED (if high-risk) — cannot legally deploy an unassessed high-risk AI system after 2 Dec 2027 (Annex III) or 2 Aug 2028 (Annex I)."
+
+  - id: aiact-08
+    clause: "Fundamental Rights Impact Assessment (FRIA) & High-Risk Support"
+    article: "Art. 27, Art. 26(9)"
+    applies_from: "2027-12-02 (Annex III high-risk deployers)"
+    description: "Whether the provider supplies the system risk, accuracy, and affected-group information a deployer needs to complete an Art. 27 FRIA and GDPR Art. 35 DPIA."
+    acceptable:
+      description: "Provider supplies structured FRIA/DPIA support documentation detailing known risks, subgroup performance, and oversight controls."
+      language_hints:
+        - "FRIA support documentation provided"
+        - "impact assessment information and oversight metrics"
+    yellow:
+      description: "High-level product security overview available, but lacks bias/subgroup or human-oversight detail needed for a FRIA."
+      language_hints:
+        - "general security whitepaper provided"
+    red:
+      description: "No FRIA or DPIA cooperation; vendor refuses to disclose model risk characteristics."
+      language_hints: []
+    escalation: "RED (if public-sector or covered private-sector high-risk deployer, e.g. credit/insurance) — request FRIA support documentation before deployment."
+
+penalties:
+  prohibited_practices:
+    max_fine: "35,000,000 EUR or 7% global annual turnover"
+    article: "Art. 99(3)"
+  high_risk_and_transparency_non_compliance:
+    max_fine: "15,000,000 EUR or 3% global annual turnover"
+    article: "Art. 99(4)"
+  incorrect_information:
+    max_fine: "7,500,000 EUR or 1% global annual turnover"
+    article: "Art. 99(5)"

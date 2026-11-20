@@ -48,6 +48,7 @@ from scanner.analyzers._base import (
     Finding,
     has_file,
     is_test_path,
+    search_code_files,
     search_files,
 )
 
@@ -66,6 +67,7 @@ _FLOATING_MODEL_PATTERNS = [
     # gemini-1.5-pro / gemini-pro
     r"model\s*=\s*[\"']gemini-(?:1\.5-)?(?:pro|flash)[\"']",
 ]
+_MODEL_PATTERN_BANK_SENTINEL = "_FLOATING_MODEL_PATTERNS = ["
 
 _PINNED_MODEL_PATTERNS = [
     # ISO-style date suffix: gpt-4o-2024-08-06, mistral-large-2407
@@ -143,10 +145,18 @@ def analyze_runtime_drift(ctx: AnalyzerContext) -> AnalyzerResult:
     # ── 1. Model snapshot pinning ───────────────────────────────────────
     floating_hits: list[tuple[str, str]] = []
     for pattern in _FLOATING_MODEL_PATTERNS:
-        floating_hits.extend(search_files(ctx, pattern))
+        floating_hits.extend(
+            (path, line)
+            for path, line in search_code_files(ctx, pattern, mask_strings=False)
+            if _MODEL_PATTERN_BANK_SENTINEL not in ctx.files.get(path, "")
+        )
     pinned_hits: list[tuple[str, str]] = []
     for pattern in _PINNED_MODEL_PATTERNS:
-        pinned_hits.extend(search_files(ctx, pattern))
+        pinned_hits.extend(
+            (path, line)
+            for path, line in search_code_files(ctx, pattern, mask_strings=False)
+            if _MODEL_PATTERN_BANK_SENTINEL not in ctx.files.get(path, "")
+        )
 
     if floating_hits and not pinned_hits:
         first = floating_hits[0]

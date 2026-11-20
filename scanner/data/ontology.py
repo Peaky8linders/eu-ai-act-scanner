@@ -15,8 +15,9 @@ single typed source of truth.
 * :class:`RiskClass` — prohibited / high_risk_annex_i / high_risk_annex_iii /
   limited_risk / minimal_risk / gpai / gpai_systemic. The taxonomy
   the regulation uses to gate obligations.
-* :class:`Practice` — each Art. 5(1)(a)..(h) prohibited practice + the
-  Digital Omnibus 9th prohibition (CSAM/NCII) as a first-class entity.
+* :class:`Practice` — each Art. 5(1)(a)..(h) prohibited practice plus
+  points ``(ba)`` (NCII) and ``(bb)`` (CSAM) inserted after ``(b)`` by
+  Digital Omnibus Regulation (EU) 2026/1744 as first-class entities.
 * :class:`AnnexIIICategory` — each of the 8 high-risk use-case
   categories from Annex III.
 * :class:`Phase` — applicability timeline phases (2 Feb 2025, 2 Aug
@@ -260,6 +261,13 @@ PHASE_REGISTRY: dict[str, Phase] = {
     ),
 }
 
+# Alias for the general 2 August 2026 live phase (Art. 50 transparency),
+# preserving both the scanner's existing phase_2026_08_02_transparency key
+# and the phase_2026_08_02_general name used by the as-of applicability resolver.
+PHASE_REGISTRY["phase_2026_08_02_general"] = PHASE_REGISTRY[
+    "phase_2026_08_02_transparency"
+]
+
 
 # ── Practices (Art. 5 prohibited practices + Omnibus additions) ──────────
 
@@ -269,7 +277,8 @@ class Practice:
     """One prohibited practice under Art. 5 (or Omnibus extension).
 
     Each instance is addressable as a sub-paragraph node (Art. 5(1)(a)
-    through (h), plus the proposed 9th paragraph for CSAM/NCII). Carries
+    through (h), plus points (ba) NCII and (bb) CSAM inserted after (b)
+    by Regulation (EU) 2026/1744). Carries
     the practice description, the exact citation chain, exception
     contexts (workplace-only narrowing, medical-safety carve-out, etc.),
     and the verdict-template prose used by the classification path.
@@ -783,10 +792,12 @@ ROLE_OBLIGATIONS: dict[ActorRole, dict[RiskClass, tuple[str, ...]]] = {
         # accuracy/robustness/cybersecurity). Art. 12 (record-keeping)
         # was previously missing from this list — fixed in the May 2026
         # ontology review per the senior-engineer audit.
+        # No Art. 49: Art. 49(1) registers "a high-risk AI system listed in
+        # Annex III", and 49(2)-(3) are Annex III cases too.
         RiskClass.HIGH_RISK_ANNEX_I: (
             "Art. 6", "Art. 8", "Art. 9", "Art. 10", "Art. 11", "Art. 12",
             "Art. 13", "Art. 14", "Art. 15", "Art. 16", "Art. 17",
-            "Art. 43", "Art. 47", "Art. 48", "Art. 49", "Art. 72",
+            "Art. 43", "Art. 47", "Art. 48", "Art. 72",
             "Annex I", "Annex IV",
         ),
         RiskClass.HIGH_RISK_ANNEX_III: (
@@ -825,12 +836,15 @@ ROLE_OBLIGATIONS: dict[ActorRole, dict[RiskClass, tuple[str, ...]]] = {
         # selected categories). Annex I medical-device deployers operate
         # under MDR/IVDR oversight, not the FRIA regime. Fixed in the
         # May 2026 ontology audit.
+        # No Art. 13 in either row: Art. 13 obliges the PROVIDER to supply
+        # instructions for use, and the deployer's duty to follow them is
+        # Art. 26(1) ("use such systems in accordance with the instructions for
+        # use").
         RiskClass.HIGH_RISK_ANNEX_I: (
             "Art. 26",  # General deployer obligations
-            "Art. 13",  # Read & follow instructions
         ),
         RiskClass.HIGH_RISK_ANNEX_III: (
-            "Art. 26", "Art. 27", "Art. 13", "Art. 86",  # right to explanation
+            "Art. 26", "Art. 27", "Art. 86",  # right to explanation
         ),
         RiskClass.LIMITED_RISK: ("Art. 50",),
         RiskClass.MINIMAL_RISK: ("Art. 4",),
@@ -841,7 +855,9 @@ ROLE_OBLIGATIONS: dict[ActorRole, dict[RiskClass, tuple[str, ...]]] = {
         RiskClass.PROHIBITED: ("Art. 5",),
         RiskClass.HIGH_RISK_ANNEX_I: ("Art. 23",),
         RiskClass.HIGH_RISK_ANNEX_III: ("Art. 23",),
-        RiskClass.LIMITED_RISK: ("Art. 23",),  # Importer still verifies marking
+        # Empty: Art. 23(1) opens "Before placing a high-risk AI system on the
+        # market", and Art. 50 gives importers no duty of their own.
+        RiskClass.LIMITED_RISK: (),
         RiskClass.MINIMAL_RISK: (),
         RiskClass.GPAI: (),
         RiskClass.GPAI_SYSTEMIC: (),
@@ -850,7 +866,9 @@ ROLE_OBLIGATIONS: dict[ActorRole, dict[RiskClass, tuple[str, ...]]] = {
         RiskClass.PROHIBITED: ("Art. 5",),
         RiskClass.HIGH_RISK_ANNEX_I: ("Art. 24",),
         RiskClass.HIGH_RISK_ANNEX_III: ("Art. 24",),
-        RiskClass.LIMITED_RISK: ("Art. 24",),
+        # Empty: Art. 24(1) opens "Before making a high-risk AI system available
+        # on the market".
+        RiskClass.LIMITED_RISK: (),
         RiskClass.MINIMAL_RISK: (),
         RiskClass.GPAI: (),
         RiskClass.GPAI_SYSTEMIC: (),
@@ -893,6 +911,54 @@ def obligations_for(role: ActorRole, risk_class: RiskClass) -> tuple[str, ...]:
     return ROLE_OBLIGATIONS.get(role, {}).get(risk_class, ())
 
 
+# ── As-of resolution (scanner.data.omnibus) ──────────────────────────────
+
+
+#: The phase that dates each risk class's own row in ROLE_OBLIGATIONS. Art. 113,
+#: third paragraph, dates regimes rather than single articles: point (c), as
+#: replaced by Regulation (EU) 2026/1744, applies "Chapter III Sections 1, 2
+#: and 3" from one date per route, so a whole high-risk row takes its route's
+#: date. PROHIBITED is absent because each practice carries its own phase
+#: (Practice.effective_phase). The resolver follows superseded_by from these
+#: ids, so a later amendment needs only a new phase.
+RISK_CLASS_PHASE: dict[RiskClass, str] = {
+    RiskClass.HIGH_RISK_ANNEX_III: "phase_omnibus_2027_12_02",
+    RiskClass.HIGH_RISK_ANNEX_I: "phase_omnibus_2028_08_02",
+    RiskClass.LIMITED_RISK: "phase_2026_08_02_transparency",
+    RiskClass.MINIMAL_RISK: "phase_2025_02_02",
+    RiskClass.GPAI: "phase_2025_08_02",
+    RiskClass.GPAI_SYSTEMIC: "phase_2025_08_02",
+}
+
+#: Duties a role owes whatever an AI system's risk class. Art. 4 binds
+#: "providers and deployers of AI systems"; Art. 50 conditions its duties on
+#: what the system does, never on a risk class (Recital 132), so a high-risk
+#: system that talks to people owes it too. Each is dated by the one live phase
+#: that lists it. Art. 5 binds through the Practice records instead.
+EVERY_RISK_CLASS_OBLIGATIONS: dict[ActorRole, tuple[str, ...]] = {
+    ActorRole.PROVIDER: ("Art. 4", "Art. 50"),
+    ActorRole.DEPLOYER: ("Art. 4", "Art. 50"),
+}
+
+#: Risk classes that classify a general-purpose AI MODEL, not an AI system.
+#: Arts. 4, 5 and 50 address AI systems, so a model is dated on Chapter V alone
+#: and a system built on it is resolved under that system's own class.
+MODEL_RISK_CLASSES: frozenset[RiskClass] = frozenset(
+    {RiskClass.GPAI, RiskClass.GPAI_SYSTEMIC}
+)
+
+#: The value-chain operators the resolver dates duties for. Notified bodies work
+#: under Chapter III Section 4, which Art. 113(b) applied from 2 August 2025
+#: whatever the route, and affected persons hold rights, not duties.
+OPERATOR_ROLES: tuple[ActorRole, ...] = (
+    ActorRole.PROVIDER,
+    ActorRole.DEPLOYER,
+    ActorRole.IMPORTER,
+    ActorRole.DISTRIBUTOR,
+    ActorRole.AUTHORISED_REPRESENTATIVE,
+)
+
+
 # ── Public API ───────────────────────────────────────────────────────────
 
 
@@ -909,6 +975,11 @@ __all__ = [
     "ANNEX_III_REGISTRY",
     "PHASE_REGISTRY",
     "ROLE_OBLIGATIONS",
+    # As-of resolution
+    "RISK_CLASS_PHASE",
+    "EVERY_RISK_CLASS_OBLIGATIONS",
+    "MODEL_RISK_CLASSES",
+    "OPERATOR_ROLES",
     # Helpers
     "practice_for_keyword",
     "category_for_keyword",

@@ -20,6 +20,8 @@ class DiscoveredComponent(BaseModel):
     compliance_dimensions: list[str] = Field(default_factory=list)
     compliance_impact: str = "neutral"  # positive | neutral | gap
     details: dict = Field(default_factory=dict)
+    line_number: int | None = None
+    matched_pattern: str = ""
 
 
 class ArchitectureNode(BaseModel):
@@ -27,9 +29,10 @@ class ArchitectureNode(BaseModel):
     id: str
     label: str
     type: str
-    compliance_status: str = "unknown"  # compliant | partial | gap | unknown
+    compliance_status: str = "unknown"  # compliant | partial | gap | info | unknown
     connected_to: list[str] = Field(default_factory=list)
     file_count: int = 0
+    finding_count: int = 0
     icon: str = ""
 
 
@@ -40,6 +43,8 @@ class FileFinding(BaseModel):
     gaps: list[str] = Field(default_factory=list)
     compliance_dimensions: list[str] = Field(default_factory=list)
     status: str = "partial"  # compliant | partial | gap
+    line_number: int | None = None
+    matched_pattern: str = ""
 
 
 class TaggedRecommendation(BaseModel):
@@ -98,18 +103,20 @@ class ScanResult(BaseModel):
     # Operator role(s) the scanned codebase most plausibly occupies, inferred
     # deterministically from code signals (scanner.obligations.infer_roles).
     # Drives which EU AI Act obligations apply; ordered by NLF hierarchy
-    # (provider first). Always contains at least one role — a codebase with no
-    # detectable signal defaults to "deployer" (the most conservative role).
+    # (provider first). Empty for non-AI projects; an in-scope AI project with
+    # no role-specific signal defaults to "deployer".
     inferred_roles: list[str] = Field(default_factory=list)
     # Explicitly declared or active operator role (e.g. 'provider', 'deployer').
     active_role: str | None = None
     # Role-scoped obligation mapping (see scanner.obligations.compute_role_scope):
     # which articles / dimensions the effective role(s) owe, and which dimensions
     # were deprioritised because they are owed only by other roles. Empty for
-    # out-of-scope (non-AI) projects.
+    # out-of-scope (non-AI) projects; inferred_roles is also empty there.
     role_scope: dict = Field(default_factory=dict)
     # Cross-framework readiness mapping (NIST AI RMF, ISO 42001, GDPR, OWASP).
     cross_framework_summary: dict[str, float] = Field(default_factory=dict)
     # Semantic-review pointer (host Claude Code session / MCP client).
     # Deterministic engine never synthesizes prose headlessly.
     semantic_audit: dict | None = None
+    # External security / compliance sources ingested (SARIF, Claude Code Security, Compliance API).
+    external_security_sources: list[str] = Field(default_factory=list)

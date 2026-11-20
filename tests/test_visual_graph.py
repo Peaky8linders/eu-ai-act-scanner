@@ -214,3 +214,30 @@ def test_repository_derived_label_cannot_break_out_of_the_script(tmp_path: Path)
     assert "<\\/script>" in html
     # The <title> is HTML-escaped, so the payload cannot inject markup there.
     assert "&lt;/script&gt;" in html
+
+
+def test_omnibus_timeline_avoids_substring_collisions_and_conflation() -> None:
+    """REGRESSION: _get_omnibus_timeline must parse articles via scanner.refs
+    so ISO 27002 does not match Art. 27, Art. 95 does not match Art. 9,
+    Art. 51/55 do not match Art. 5, Art. 4 does not fall through, and
+    Art. 13 & 50 does not conflate two distinct statutory dates."""
+    from scanner.visual_graph import _get_omnibus_timeline
+
+    iso_27002 = _get_omnibus_timeline("Art. 15 / ISO 27002")
+    assert "2 December 2027" in iso_27002
+    assert "deployer" not in iso_27002.lower()
+
+    art_95 = _get_omnibus_timeline("Art. 95")
+    assert "Voluntary" in art_95
+    assert "2 December 2027" not in art_95
+
+    gpai_sys = _get_omnibus_timeline("Art. 51, 55")
+    assert "2 August 2025" in gpai_sys
+    assert "prohibition" not in gpai_sys.lower()
+
+    art_4 = _get_omnibus_timeline("Art. 4")
+    assert "2 February 2025" in art_4
+
+    mixed = _get_omnibus_timeline("Art. 13 & 50")
+    assert "Art. 13" in mixed and "2 December 2027" in mixed
+    assert "Art. 50" in mixed and "2 August 2026" in mixed

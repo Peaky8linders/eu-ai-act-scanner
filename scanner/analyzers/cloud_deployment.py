@@ -25,6 +25,7 @@ from scanner.analyzers._base import (
     Finding,
     get_import_modules,
     has_file,
+    product_files,
     search_files,
 )
 
@@ -146,7 +147,8 @@ def analyze_cloud_deployment(ctx: AnalyzerContext) -> AnalyzerResult:  # noqa: C
             break
 
     # AWS Terraform resources
-    tf_files = [(p, c) for p, c in ctx.files.items() if p.endswith(".tf")]
+    prod_files = product_files(ctx)
+    tf_files = [(p, c) for p, c in prod_files if p.endswith(".tf")]
     for path, content in tf_files:
         if _AWS_TF_RESOURCE.search(content):
             has_iac["aws"] = True
@@ -168,7 +170,7 @@ def analyze_cloud_deployment(ctx: AnalyzerContext) -> AnalyzerResult:  # noqa: C
             break
 
     # AWS CloudFormation
-    for path, content in ctx.files.items():
+    for path, content in prod_files:
         if path.endswith((".yml", ".yaml", ".json")) and _AWS_CFN_MARKER.search(content):
             has_iac["aws"] = True
             findings.append(Finding(
@@ -406,7 +408,8 @@ def analyze_cloud_deployment(ctx: AnalyzerContext) -> AnalyzerResult:  # noqa: C
             title=f"Multi-cloud deployment detected ({', '.join(c for c in clouds_detected if c != 'multi')})",
             description=(
                 "Multiple cloud platforms detected — good portability posture. "
-                "Ensure data residency and cross-cloud IAM policies are documented (Art. 10(5), Art. 15)."
+                "Ensure data residency and cross-cloud IAM policies are documented "
+                "(Art. 10(2), Art. 15, GDPR Ch. V)."
             ),
             file_path="",
             confidence=0.85,

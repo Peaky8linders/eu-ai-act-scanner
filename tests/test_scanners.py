@@ -45,8 +45,9 @@ def test_dimensions_for_article_unknown_returns_empty():
 def test_analyzer_registry_has_expected_analyzers():
     # 14 baseline analyzers + 7 added in v0.3 (lethal_trifecta, cloud_deployment,
     # model_typology, agent_inventory, privilege_minimization, runtime_drift,
-    # regulatory_perimeter) + article_50_transparency (v0.8)
-    assert len(ANALYZER_REGISTRY) == 22
+    # regulatory_perimeter) + article_50_transparency (v0.8) + mcp_toolchain +
+    # claude_code_security
+    assert len(ANALYZER_REGISTRY) == 24
 
 
 def test_every_analyzer_is_callable():
@@ -59,7 +60,7 @@ def test_every_analyzer_is_callable():
 def test_analyzers_tolerate_empty_project():
     ctx = AnalyzerContext(files={}, file_list=[], binary_files={}, languages={})
     results = run_all_analyzers(ctx)
-    assert len(results) == 22
+    assert len(results) == 24
     for r in results:
         assert 0.0 <= r.score <= 100.0
 
@@ -134,6 +135,19 @@ def test_non_ai_project_is_out_of_scope():
     # A human-readable explanation is surfaced instead of a number.
     assert result.scope_note
     assert "AI system" in result.scope_note
+    assert result.inferred_roles == []
+
+
+def test_ai_library_only_in_fixture_does_not_scope_the_repository(tmp_path):
+    fixture = tmp_path / "tests" / "fixtures"
+    fixture.mkdir(parents=True)
+    (fixture / "sample_model.py").write_text("import torch\n", encoding="utf-8")
+
+    result = scan_project(tmp_path)
+
+    assert result.is_ai_system is False
+    assert result.ai_system_signals == []
+    assert result.inferred_roles == []
 
 
 def test_out_of_scope_suppresses_compliance_framed_output():
