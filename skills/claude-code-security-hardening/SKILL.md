@@ -160,14 +160,15 @@ Combine deterministic EU AI Act scanning with Anthropic's **`anthropics/claude-c
 Install from this repository:
 
 ```bash
-/plugin install Peaky8linders/eu-ai-act-scanner
+/plugin marketplace add Peaky8linders/eu-ai-act-scanner
+/plugin install eu-ai-act-scanner@eu-ai-act-scanner
 pip install -e ".[mcp]"
 ```
 
 ## Cross-references
 
-- [founder-startup-triage](founder-startup-triage.md) — 3-bucket founder triage & enterprise questionnaires
-- [interpreting-findings](interpreting-findings.md) — scoring bands & false-positive triage
+- [founder-startup-triage](../founder-startup-triage/SKILL.md) — 3-bucket founder triage & enterprise questionnaires
+- [interpreting-findings](../interpreting-findings/SKILL.md) — scoring bands & false-positive triage
 - `hooks/sensitive-data-guard.json` — opt-in secret & `.env` PreToolUse hook
 - `templates/security-scan-instructions.md` & `templates/false-positive-filter.md` — reusable PR security review rules
 

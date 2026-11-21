@@ -299,7 +299,10 @@ def _infer_compliance_resource_from_item(item: dict[str, Any]) -> str:
     }:
         return "activities"
 
-    if "role" in keys or "roles" in keys:
+    # Raw /v1/compliance/groups records are just {id, name, created_at, ...}:
+    # no actor and no event type. Without this they fell through to the
+    # "activities" default and were counted as audit-trail evidence.
+    if "role" in keys or "roles" in keys or ("name" in keys and "type" not in keys):
         return "groups"
 
     return "activities"
@@ -536,6 +539,10 @@ def ingest_compliance_api_export(
     retention_days: int | None = None
     api_version: str = _DEFAULT_API_VERSION
     files_ingested: list[str] = []
+    # True once any input actually covers the activities resource. An export of
+    # only groups / user_preferences says nothing about the audit trail, so it
+    # must not raise the "empty activity trail" gap.
+    activities_exported = False
 
     buckets: dict[str, list[dict[str, Any]]] = {
         "activities": activities,
@@ -565,6 +572,8 @@ def ingest_compliance_api_export(
                 for k in ("activities", "groups", "user_preferences", "remote_sessions")
             )
             if is_combined:
+                if "activities" in envelope:
+                    activities_exported = True
                 for key in ("activities", "groups", "user_preferences", "remote_sessions"):
                     val = envelope.get(key)
                     if isinstance(val, list):
@@ -579,6 +588,8 @@ def ingest_compliance_api_export(
             if isinstance(envelope.get("data"), list):
                 endpoint = str(envelope.get("endpoint") or envelope.get("resource") or "")
                 inferred_bucket = _infer_compliance_resource_from_endpoint(endpoint) if endpoint else None
+                if inferred_bucket == "activities":
+                    activities_exported = True
                 for item in envelope["data"]:
                     if not isinstance(item, dict):
                         continue
@@ -586,11 +597,15 @@ def ingest_compliance_api_export(
                     if item_ret is not None:
                         retention_days = item_ret if retention_days is None else min(retention_days, item_ret)
                     target = inferred_bucket or _infer_compliance_resource_from_item(item)
+                    if target == "activities":
+                        activities_exported = True
                     buckets[target].append(item)
                 continue
 
             # Single-record object fallback
             target = _infer_compliance_resource_from_item(envelope)
+            if target == "activities":
+                activities_exported = True
             buckets[target].append(envelope)
         else:
             # JSONL or JSON array
@@ -599,6 +614,8 @@ def ingest_compliance_api_export(
                 if item_ret is not None:
                     retention_days = item_ret if retention_days is None else min(retention_days, item_ret)
                 target = _infer_compliance_resource_from_item(rec)
+                if target == "activities":
+                    activities_exported = True
                 buckets[target].append(rec)
 
     primary_file = files_ingested[0]
@@ -627,8 +644,10 @@ def ingest_compliance_api_export(
             )
         )
 
-    if (retention_days is not None and retention_days < _MIN_RETENTION_DAYS_ART26) or len(activities) == 0:
-        if retention_days is not None and retention_days < _MIN_RETENTION_DAYS_ART26:
+    short_retention = retention_days is not None and retention_days < _MIN_RETENTION_DAYS_ART26
+    empty_trail = activities_exported and len(activities) == 0
+    if short_retention or empty_trail:
+        if short_retention:
             reason = (
                 f"Configured log retention is {retention_days} days, which is below the "
                 f"EU AI Act Art. 26(6) 6-month ({_MIN_RETENTION_DAYS_ART26}-day) deployer minimum."
@@ -868,9 +887,26 @@ def _normalize_severity(raw: Any) -> str:
         return "high"
     if low in {"medium", "moderate", "warning", "warn", "p2"}:
         return "medium"
-    if low in {"low", "minor", "p3"}:
+    if low in {"low", "minor", "p3", "info", "informational", "note", "p4"}:
         return "low"
     return "medium"
+
+
+def _parse_jsonl_findings(text: str) -> list[dict[str, Any]] | None:
+    """Parse JSON Lines (one finding object per line); None if any line is not an object."""
+    records: list[dict[str, Any]] = []
+    for line in text.splitlines():
+        line_s = line.strip()
+        if not line_s:
+            continue
+        try:
+            rec = json.loads(line_s)
+        except json.JSONDecodeError:
+            return None
+        if not isinstance(rec, dict):
+            return None
+        records.append(rec)
+    return records or None
 
 
 def _split_file_and_line(raw_file: str, explicit_line: int | None) -> tuple[str, int | None]:
@@ -897,6 +933,10 @@ def _ingest_claude_security_json(
             if isinstance(data.get(key), list):
                 raw_items = data[key]
                 break
+        if raw_items is None and (data.get("file") or data.get("file_path")) and (
+            data.get("severity") or data.get("title") or data.get("description")
+        ):
+            raw_items = [data]  # a single bare finding object
     if raw_items is None:
         raise ValueError(
             f"Invalid Claude Security JSON report in {path}: expected top-level array or "
@@ -936,10 +976,25 @@ def _ingest_claude_security_json(
         file_path, line_number = _split_file_and_line(raw_file, raw_line)
 
         raw_id = str(item.get("id") or item.get("rule_id") or "").strip()
+        desc = str(item.get("description") or item.get("details") or item.get("message") or "").strip()
+        # anthropics/claude-code-security-review findings carry no title: they
+        # are keyed by `category` (e.g. "sql_injection") plus a description.
+        category = str(item.get("category") or "").strip().replace("_", " ")
+        first_sentence = desc.split(". ")[0].strip().rstrip(".")[:90] if desc else ""
         title = str(
-            item.get("title") or item.get("name") or item.get("summary") or raw_id or "Security finding"
+            item.get("title")
+            or item.get("name")
+            or item.get("summary")
+            or (f"{category}: {first_sentence}" if category and first_sentence else category)
+            or first_sentence
+            or raw_id
+            or "Security finding"
         ).strip()
-        desc = str(item.get("description") or item.get("details") or item.get("message") or title).strip()
+        if not desc:
+            desc = title
+        exploit = str(item.get("exploit_scenario") or "").strip()
+        if exploit:
+            desc = f"{desc} Exploit scenario: {exploit}"
         remediation = str(
             item.get("remediation") or item.get("patch") or item.get("fix") or item.get("recommendation") or ""
         ).strip()
@@ -1142,15 +1197,24 @@ def ingest_claude_security_report(
             raise ValueError(f"Empty Claude Security report file: {path}")
 
         suffix = path.suffix.lower()
-        looks_like_json = suffix in {".json", ".sarif"} or stripped[0] in {"{", "["}
+        looks_like_json = (
+            suffix in {".json", ".sarif", ".jsonl", ".ndjson"} or stripped[0] in {"{", "["}
+        )
 
         if looks_like_json:
             try:
                 data = json.loads(stripped)
+                if suffix in {".jsonl", ".ndjson"} and isinstance(data, dict):
+                    # A one-finding JSONL file is also a valid JSON object.
+                    data = [data]
             except json.JSONDecodeError as exc:
-                raise ValueError(
-                    f"Malformed JSON in Claude Security report {path}: {exc.msg}"
-                ) from exc
+                # claude-security writes CLAUDE-SECURITY-RESULTS.jsonl: one
+                # finding object per line. Fall back to JSONL before failing.
+                data = _parse_jsonl_findings(stripped)
+                if data is None:
+                    raise ValueError(
+                        f"Malformed JSON in Claude Security report {path}: {exc.msg}"
+                    ) from exc
 
             # SARIF 2.1.0 delegation
             if (

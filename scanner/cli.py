@@ -425,7 +425,7 @@ def main(argv: list[str] | None = None) -> int:
         "--ingest-claude-security",
         action="append",
         metavar="FILE",
-        help="Ingest local /claude-security or /security-review reports (JSON, Markdown, or SARIF). Repeatable.",
+        help="Ingest local /claude-security or /security-review reports (JSONL, JSON, Markdown, or SARIF). Repeatable.",
     )
     parser.add_argument(
         "--save-baseline",
@@ -721,9 +721,19 @@ def main(argv: list[str] | None = None) -> int:
 
         triage = build_founder_triage(result)
         if args.json:
-            print(triage.model_dump_json(indent=2))
+            if baseline_diff is not None:
+                founder_payload = triage.model_dump()
+                founder_payload["baseline_diff"] = baseline_diff
+                print(json.dumps(founder_payload, indent=2, default=str))
+            else:
+                print(triage.model_dump_json(indent=2))
         else:
-            print(format_founder_brief(triage))
+            brief = format_founder_brief(triage)
+            if baseline_diff is not None:
+                from scanner.baseline import format_baseline_diff
+
+                brief += "\n\n" + format_baseline_diff(baseline_diff)
+            print(brief)
         return 0
 
     if baseline_diff is not None:

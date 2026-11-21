@@ -93,7 +93,7 @@ Art. 25(2) — the *original* provider is released from the role of provider for
 - GPAI **provider** obligations (Art. 53-55) apply to whoever develops the GPAI model and places it on the Union market. Using a GPAI model via an API generally does not make the API caller a GPAI provider.
 - GPAI **downstream providers** — if you build a product on top of a GPAI model and distribute it, you are a *provider* (in the general sense) of the downstream product, but the GPAI-specific obligations (Art. 53 model card, Art. 55 systemic-risk testing) remain with the GPAI creator. You still inherit Art. 6-15 obligations if the downstream product is high-risk.
 
-Route GPAI-specific questions to [eu-ai-act-gpai-classification](eu-ai-act-gpai-classification.md).
+Route GPAI-specific questions to [eu-ai-act-gpai-classification](../eu-ai-act-gpai-classification/SKILL.md).
 
 ## Role-to-obligation quick map
 
@@ -122,11 +122,11 @@ Route GPAI-specific questions to [eu-ai-act-gpai-classification](eu-ai-act-gpai-
 
 ## Cross-references
 
-- [eu-ai-act-article-5-prohibited](eu-ai-act-article-5-prohibited.md) — prohibition applies to all roles
-- [eu-ai-act-article-6-classification](eu-ai-act-article-6-classification.md) — role determines which article bundle applies
-- [eu-ai-act-fria-guide](eu-ai-act-fria-guide.md) — FRIA is deployer-only, specific domains
-- [eu-ai-act-gpai-classification](eu-ai-act-gpai-classification.md) — GPAI provider vs. downstream provider
-- [eu-ai-act-reference](eu-ai-act-reference.md) — article-to-obligation map
+- [eu-ai-act-article-5-prohibited](../eu-ai-act-article-5-prohibited/SKILL.md) — prohibition applies to all roles
+- [eu-ai-act-article-6-classification](../eu-ai-act-article-6-classification/SKILL.md) — role determines which article bundle applies
+- [eu-ai-act-fria-guide](../eu-ai-act-fria-guide/SKILL.md) — FRIA is deployer-only, specific domains
+- [eu-ai-act-gpai-classification](../eu-ai-act-gpai-classification/SKILL.md) — GPAI provider vs. downstream provider
+- [eu-ai-act-reference](../eu-ai-act-reference/SKILL.md) — article-to-obligation map
 
 ## Source of truth
 

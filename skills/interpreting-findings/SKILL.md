@@ -80,8 +80,8 @@ Example answer for a low `logging` score:
 | "The scanner says we're compliant." | The scanner surfaces evidence. Compliance is determined by conformity assessment (Art. 43), not by static analysis percentages. |
 | "We got 80% — we're good." | 80% means broad evidence for *that dimension*. Governance articles (Art. 4, 17, 26, 27) are not fully code-observable; a high score there can still reflect partial evidence. |
 | "This analyzer is wrong — we *have* logging." | Ask which logging pattern. The scanner looks for specific signatures. If your pattern is legitimate and not recognised, that is an analyzer gap, not a compliance gap — file an issue at the repo. |
-| "GPAI doesn't apply to us." | Confirm: is your model a foundation/general-purpose model, or are you using someone else's? Provider duties (Art. 53) apply to the model's creator. Deployer duties (Art. 26) and Art. 50 transparency still apply to downstream users. Route to [eu-ai-act-operator-roles](eu-ai-act-operator-roles.md). |
-| "Art. 6(3) exception applies — we can skip high-risk obligations." | Art. 6(3) is narrow and has strict conditions: the system must perform a preparatory task, a narrow procedural task, detect decision-making patterns without replacing the decision, or perform human-oversight-assistive tasks. Even then, profiling of natural persons is always high-risk regardless of Art. 6(3). Route to [eu-ai-act-article-6-classification](eu-ai-act-article-6-classification.md). |
+| "GPAI doesn't apply to us." | Confirm: is your model a foundation/general-purpose model, or are you using someone else's? Provider duties (Art. 53) apply to the model's creator. Deployer duties (Art. 26) and Art. 50 transparency still apply to downstream users. Route to [eu-ai-act-operator-roles](../eu-ai-act-operator-roles/SKILL.md). |
+| "Art. 6(3) exception applies — we can skip high-risk obligations." | Art. 6(3) is narrow and has strict conditions: the system must perform a preparatory task, a narrow procedural task, detect decision-making patterns without replacing the decision, or perform human-oversight-assistive tasks. Even then, profiling of natural persons is always high-risk regardless of Art. 6(3). Route to [eu-ai-act-article-6-classification](../eu-ai-act-article-6-classification/SKILL.md). |
 
 ## Common rationalizations
 
@@ -104,9 +104,9 @@ Contributions improve every future scan. That is the point of making this public
 
 ## Cross-references
 
-- [using-eu-ai-act-scanner](using-eu-ai-act-scanner.md) — orchestration, when to scan
-- [eu-ai-act-reference](eu-ai-act-reference.md) — article → dimension map
-- [eu-ai-act-fria-guide](eu-ai-act-fria-guide.md) — for deployer-side obligations the scanner cannot evaluate
+- [using-eu-ai-act-scanner](../using-eu-ai-act-scanner/SKILL.md) — orchestration, when to scan
+- [eu-ai-act-reference](../eu-ai-act-reference/SKILL.md) — article → dimension map
+- [eu-ai-act-fria-guide](../eu-ai-act-fria-guide/SKILL.md) — for deployer-side obligations the scanner cannot evaluate
 
 ## Source of truth
 

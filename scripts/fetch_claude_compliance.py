@@ -136,12 +136,38 @@ def _build_endpoint_plan(
     return plan
 
 
-def _append_cursor(base_url: str, cursor: str) -> str:
+def _append_cursor(base_url: str, cursor: str, *, param: str = "after_id") -> str:
     parsed = urllib.parse.urlparse(base_url)
     params = dict(urllib.parse.parse_qsl(parsed.query))
-    params["after_id"] = cursor
+    params[param] = cursor
     new_query = urllib.parse.urlencode(params)
     return _validate_endpoint_url(urllib.parse.urlunparse(parsed._replace(query=new_query)))
+
+
+def _next_page_url(base_url: str, payload: dict[str, Any]) -> str | None:
+    """Return the next page URL for a Compliance API response, or None when done.
+
+    The Compliance API uses three pagination shapes:
+
+    * activities / chats: ``has_more`` + ``last_id`` -> request ``after_id=<last_id>``;
+    * organizations, users, roles, groups, user_preferences: ``has_more`` +
+      ``next_page`` -> request ``page=<next_page>``;
+    * sessions and session messages: ``next_page`` only (no ``has_more``) ->
+      request ``page=<next_page>`` until it is null.
+    """
+    next_page = payload.get("next_page")
+    if isinstance(next_page, str) and next_page.strip():
+        if payload.get("has_more") is False:
+            return None
+        return _append_cursor(base_url, next_page.strip(), param="page")
+    if isinstance(next_page, int) and not isinstance(next_page, bool):
+        if payload.get("has_more") is False:
+            return None
+        return _append_cursor(base_url, str(next_page), param="page")
+    last_id = payload.get("last_id")
+    if payload.get("has_more") is True and isinstance(last_id, str) and last_id.strip():
+        return _append_cursor(base_url, last_id.strip(), param="after_id")
+    return None
 
 
 def _fetch_paginated_endpoint(
@@ -177,11 +203,10 @@ def _fetch_paginated_endpoint(
             elif payload:
                 items.append(payload)
 
-            has_more = bool(payload.get("has_more"))
-            next_cursor = payload.get("next_page") or payload.get("last_id") or payload.get("after_id")
-            if not has_more or not isinstance(next_cursor, str) or not next_cursor.strip():
+            next_url = _next_page_url(url, payload)
+            if next_url is None or next_url == current_url:
                 break
-            current_url = _append_cursor(url, next_cursor.strip())
+            current_url = next_url
         elif isinstance(payload, list):
             items.extend(entry for entry in payload if isinstance(entry, dict))
             break

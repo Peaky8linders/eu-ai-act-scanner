@@ -12,9 +12,11 @@
 Shipping an AI product or agent and need to know **what actually blocks launch today** versus what can wait until **2 December 2027**?
 
 ```bash
-# 1. Install the Claude Code plugin + local offline engine (from this repo)
-/plugin install Peaky8linders/eu-ai-act-scanner
+# 1. Install the local offline engine (from this repo) ...
 git clone https://github.com/Peaky8linders/eu-ai-act-scanner && cd eu-ai-act-scanner && pip install -e ".[mcp]"
+# ... then, inside Claude Code, add this repo as a marketplace and install the plugin
+/plugin marketplace add Peaky8linders/eu-ai-act-scanner
+/plugin install eu-ai-act-scanner@eu-ai-act-scanner
 
 # 2. Run the 60-second plain-English triage in Claude Code
 /ai-act-quickstart ./my-app
@@ -133,14 +135,18 @@ The scanner never calls an LLM headlessly. When you want more than deterministic
 
 ## Install
 
-**Claude Code plugin** — the 11 commands and 16 article-grounded skills:
+**Claude Code plugin** — the 11 commands, 16 article-grounded skills and the
+bundled MCP server. This repository is its own plugin marketplace
+(`.claude-plugin/marketplace.json`), so inside Claude Code run:
 
 ```bash
-/plugin install Peaky8linders/eu-ai-act-scanner
+/plugin marketplace add Peaky8linders/eu-ai-act-scanner
+/plugin install eu-ai-act-scanner@eu-ai-act-scanner
 ```
 
 The plugin drives the local Python engine, so install the engine once from this
-repository:
+repository (into an environment whose `bin`/`Scripts` directory is on your
+`PATH`, so Claude Code can start `eu-ai-act-scan-mcp`):
 
 ```bash
 git clone https://github.com/Peaky8linders/eu-ai-act-scanner

@@ -390,6 +390,19 @@ def _classify_component_bucket(comp: DiscoveredComponent) -> Literal["ship_now",
     return "later_2027"
 
 
+_EXTERNAL_FIX_RE = re.compile(r"(?:^|;\s*)fix=(.+)$")
+
+
+def _external_tool_fix(comp: DiscoveredComponent) -> str:
+    """Remediation text an ingested security report supplied (``...; fix=<text>``)."""
+    if comp.component_type not in {"claude_security_plugin", "external_security_sarif"}:
+        return ""
+    if not isinstance(comp.details, dict):
+        return ""
+    match = _EXTERNAL_FIX_RE.search(str(comp.details.get("evidence", "")))
+    return _clean_text(match.group(1))[:200] if match else ""
+
+
 def _describe_component(
     comp: DiscoveredComponent,
     bucket: Literal["ship_now", "enterprise_deals", "later_2027"],
@@ -847,6 +860,11 @@ def build_founder_triage(
         what_wrong, why_now, effort, pr_title, fix_hint = _describe_component(
             comp, bucket, high_risk_verticals
         )
+        tool_fix = _external_tool_fix(comp)
+        if tool_fix:
+            # The security tool's own recommendation ("Use parameterized
+            # queries") beats a generic keyword-chosen hint.
+            fix_hint = tool_fix
         item = TriageItem(
             id=f"{bucket.replace('_', '-')}-{_slug(comp.component_type, max_len=20)}-{idx}",
             title=_clean_text(comp.name),

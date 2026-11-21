@@ -1,0 +1,20 @@
+{
+  "name": "eu-ai-act-scanner",
+  "owner": {
+    "name": "Andrei Bacu",
+    "url": "https://github.com/Peaky8linders"
+  },
+  "metadata": {
+    "description": "EU AI Act compliance and AI security tooling for Claude Code."
+  },
+  "plugins": [
+    {
+      "name": "eu-ai-act-scanner",
+      "source": "./",
+      "description": "EU AI Act + Digital Omnibus compliance scanner, founder triage, and Claude security/compliance ingestion for Claude Code.",
+      "version": "0.11.3",
+      "license": "Apache-2.0",
+      "category": "security"
+    }
+  ]
+}

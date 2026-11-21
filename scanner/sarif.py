@@ -62,6 +62,11 @@ _HIGH_SEVERITY_KEYWORDS = (
     "no-auth",
     "unauthenticated",
 )
+# Whole-token match: a bare substring test made "eval" hit "retrieval" /
+# "evaluation" and "exec" hit "execution", escalating ordinary gaps to error.
+_HIGH_SEVERITY_RE = re.compile(
+    "|".join(rf"(?<![a-z0-9]){re.escape(kw)}(?![a-z0-9])" for kw in _HIGH_SEVERITY_KEYWORDS)
+)
 
 
 def _slugify(value: str, *, max_len: int = 48) -> str:
@@ -149,9 +154,7 @@ def _component_sarif_level(comp: DiscoveredComponent) -> str:
             return "note"
 
     haystack = f"{comp.component_type} {comp.name}".lower()
-    if comp.component_type in _HIGH_SEVERITY_COMPONENTS or any(
-        kw in haystack for kw in _HIGH_SEVERITY_KEYWORDS
-    ):
+    if comp.component_type in _HIGH_SEVERITY_COMPONENTS or _HIGH_SEVERITY_RE.search(haystack):
         return "error"
     if comp.confidence >= 0.85:
         return "error"

@@ -19,7 +19,7 @@ Determine whether a use case falls under Art. 5(1) prohibitions. Getting this wr
 
 - Classification of a single use case against the eight prohibitions in Art. 5(1).
 - **In scope**: Art. 5(1)(a) through (h) — the prohibited categories listed in the regulation.
-- **Out of scope**: risk-tier classification for non-prohibited systems (route to [eu-ai-act-article-6-classification](eu-ai-act-article-6-classification.md)). Provider/deployer role determination (route to [eu-ai-act-operator-roles](eu-ai-act-operator-roles.md)).
+- **Out of scope**: risk-tier classification for non-prohibited systems (route to [eu-ai-act-article-6-classification](../eu-ai-act-article-6-classification/SKILL.md)). Provider/deployer role determination (route to [eu-ai-act-operator-roles](../eu-ai-act-operator-roles/SKILL.md)).
 
 ## Regulation scope
 
@@ -66,7 +66,7 @@ Ask in this order. Stop at the first `yes` with citation.
      objective, and documented safeguards.
 ```
 
-If every step is `no`, the system is not prohibited under Art. 5. Route to [eu-ai-act-article-6-classification](eu-ai-act-article-6-classification.md) to determine if it is high-risk.
+If every step is `no`, the system is not prohibited under Art. 5. Route to [eu-ai-act-article-6-classification](../eu-ai-act-article-6-classification/SKILL.md) to determine if it is high-risk.
 
 ## What to do
 
@@ -104,10 +104,10 @@ Infringement of Art. 5 prohibitions carries the highest fine tier under Art. 99(
 
 ## Cross-references
 
-- [eu-ai-act-article-6-classification](eu-ai-act-article-6-classification.md) — if not prohibited, is it high-risk?
-- [eu-ai-act-operator-roles](eu-ai-act-operator-roles.md) — who bears the obligation
-- [eu-ai-act-penalties](eu-ai-act-penalties.md) — full Art. 99 fine structure
-- [eu-ai-act-timeline](eu-ai-act-timeline.md) — Art. 5 applies from 2 February 2025
+- [eu-ai-act-article-6-classification](../eu-ai-act-article-6-classification/SKILL.md) — if not prohibited, is it high-risk?
+- [eu-ai-act-operator-roles](../eu-ai-act-operator-roles/SKILL.md) — who bears the obligation
+- [eu-ai-act-penalties](../eu-ai-act-penalties/SKILL.md) — full Art. 99 fine structure
+- [eu-ai-act-timeline](../eu-ai-act-timeline/SKILL.md) — Art. 5 applies from 2 February 2025
 
 ## Source of truth
 

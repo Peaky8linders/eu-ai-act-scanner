@@ -20,7 +20,7 @@ Assemble and maintain the Art. 11 technical documentation for a high-risk AI sys
 
 - Providers of high-risk AI systems under Art. 6.
 - **In scope**: the nine Annex IV items and their interaction with Art. 11(1) (SME simplified form per Art. 11(1) second subparagraph is noted but scoped).
-- **Out of scope**: Annex XI (GPAI technical documentation — route to [eu-ai-act-gpai-classification](eu-ai-act-gpai-classification.md)). Annex V declaration of conformity (separate document).
+- **Out of scope**: Annex XI (GPAI technical documentation — route to [eu-ai-act-gpai-classification](../eu-ai-act-gpai-classification/SKILL.md)). Annex V declaration of conformity (separate document).
 
 ## Regulation scope
 
@@ -67,7 +67,7 @@ Per Annex IV.2:
 
 ### 5. Description of the risk management system per Art. 9
 
-Cross-reference the Art. 9 RMS documentation. See [eu-ai-act-reference](eu-ai-act-reference.md) and existing risk register.
+Cross-reference the Art. 9 RMS documentation. See [eu-ai-act-reference](../eu-ai-act-reference/SKILL.md) and existing risk register.
 
 ### 6. Description of relevant changes made by the provider through the lifecycle
 
@@ -130,9 +130,9 @@ The `tech_docs` dimension of the scanner (`scanner/analyzers/documentation.py`) 
 
 ## Cross-references
 
-- [eu-ai-act-article-6-classification](eu-ai-act-article-6-classification.md) — Annex IV applies only to high-risk systems
-- [eu-ai-act-reference](eu-ai-act-reference.md) — Art. 11 in the broader map
-- [eu-ai-act-gpai-classification](eu-ai-act-gpai-classification.md) — GPAI models follow Annex XI, not Annex IV
+- [eu-ai-act-article-6-classification](../eu-ai-act-article-6-classification/SKILL.md) — Annex IV applies only to high-risk systems
+- [eu-ai-act-reference](../eu-ai-act-reference/SKILL.md) — Art. 11 in the broader map
+- [eu-ai-act-gpai-classification](../eu-ai-act-gpai-classification/SKILL.md) — GPAI models follow Annex XI, not Annex IV
 - `/ai-act-scan --article art11` — scanner's view of documentation evidence
 
 ## Source of truth

@@ -129,10 +129,10 @@ Example: A company with €5 billion worldwide turnover in breach of Art. 5 face
 
 ## Cross-references
 
-- [eu-ai-act-article-5-prohibited](eu-ai-act-article-5-prohibited.md) — highest-tier penalty exposure
-- [eu-ai-act-gpai-classification](eu-ai-act-gpai-classification.md) — Art. 101 GPAI-specific fines
-- [eu-ai-act-operator-roles](eu-ai-act-operator-roles.md) — role determines which Art. 99 subsection applies
-- [eu-ai-act-timeline](eu-ai-act-timeline.md) — when penalty regimes activate
+- [eu-ai-act-article-5-prohibited](../eu-ai-act-article-5-prohibited/SKILL.md) — highest-tier penalty exposure
+- [eu-ai-act-gpai-classification](../eu-ai-act-gpai-classification/SKILL.md) — Art. 101 GPAI-specific fines
+- [eu-ai-act-operator-roles](../eu-ai-act-operator-roles/SKILL.md) — role determines which Art. 99 subsection applies
+- [eu-ai-act-timeline](../eu-ai-act-timeline/SKILL.md) — when penalty regimes activate
 
 ## Source of truth
 

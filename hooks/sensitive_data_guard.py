@@ -17,7 +17,9 @@ What it blocks:
 * ``Write`` / ``Edit`` / ``MultiEdit`` whose new content holds a live-looking
   credential (OpenAI/Anthropic ``sk-`` keys, AWS ``AKIA`` keys, GitHub, GitLab
   and Slack tokens, PEM private keys);
-* ``Bash`` ``git commit`` when the staged diff adds such a credential.
+* ``Bash`` ``git commit`` when the staged diff adds such a credential — and,
+  for ``git add … && git commit`` / ``git commit -a``, the unstaged and
+  untracked changes the same command is about to stage.
 
 It fails open: malformed input or a missing ``git`` never blocks your work.
 Standard library only, nothing leaves the machine.
@@ -53,6 +55,14 @@ _PLACEHOLDER_RE = re.compile(
     re.IGNORECASE,
 )
 _GIT_COMMIT_RE = re.compile(r"\bgit\b[^;&|]*\bcommit\b")
+# Commands that stage content *as part of* the call: the hook runs before the
+# command, so `git add -A && git commit` or `git commit -a` would otherwise be
+# checked against a staged diff that does not yet hold the new secret.
+_STAGES_CONTENT_RE = re.compile(
+    r"\bgit\b[^;&|]*\badd\b|\bcommit\b[^;&|]*(?:\s-[A-Za-z]*a[A-Za-z]*\b|\s--all\b)"
+)
+_MAX_UNTRACKED_FILES = 200
+_MAX_UNTRACKED_BYTES = 1024 * 1024
 
 
 def _find_secret(text: str) -> str | None:
@@ -68,7 +78,7 @@ def _find_secret(text: str) -> str | None:
 
 def _new_content(tool_input: dict) -> str:
     parts: list[str] = []
-    for key in ("content", "new_string"):
+    for key in ("content", "new_string", "new_source"):
         value = tool_input.get(key)
         if isinstance(value, str):
             parts.append(value)
@@ -98,24 +108,52 @@ def _check_file_write(tool_input: dict) -> str | None:
     return None
 
 
+def _git(args: list[str]) -> str:
+    try:
+        return subprocess.run(
+            ["git", *args],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=20,
+            check=False,
+        ).stdout or ""
+    except (OSError, subprocess.SubprocessError):
+        return ""
+
+
+def _added_lines(diff: str) -> list[str]:
+    return [
+        line[1:] for line in diff.splitlines()
+        if line.startswith("+") and not line.startswith("+++")
+    ]
+
+
+def _untracked_lines() -> list[str]:
+    """Text of untracked, non-ignored files that `git add` is about to stage."""
+    lines: list[str] = []
+    names = [n for n in _git(["ls-files", "--others", "--exclude-standard", "-z"]).split("\0") if n]
+    for name in names[:_MAX_UNTRACKED_FILES]:
+        try:
+            with open(name, "rb") as handle:
+                raw = handle.read(_MAX_UNTRACKED_BYTES)
+        except OSError:
+            continue
+        if b"\0" in raw:  # binary file
+            continue
+        lines.extend(raw.decode("utf-8", errors="replace").splitlines())
+    return lines
+
+
 def _check_git_commit(command: str) -> str | None:
     if not _GIT_COMMIT_RE.search(command):
         return None
-    try:
-        diff = subprocess.run(
-            ["git", "diff", "--cached", "--diff-filter=ACM", "-U0"],
-            capture_output=True,
-            text=True,
-            timeout=20,
-            check=False,
-        ).stdout
-    except (OSError, subprocess.SubprocessError):
-        return None
-    added = "\n".join(
-        line[1:] for line in diff.splitlines()
-        if line.startswith("+") and not line.startswith("+++")
-    )
-    found = _find_secret(added)
+    added = _added_lines(_git(["diff", "--cached", "--diff-filter=ACM", "-U0"]))
+    if _STAGES_CONTENT_RE.search(command):
+        added += _added_lines(_git(["diff", "--diff-filter=ACM", "-U0"]))
+        added += _untracked_lines()
+    found = _find_secret("\n".join(added))
     if found:
         return (
             f"BLOCKED: the staged diff adds a hardcoded credential ({found}). "

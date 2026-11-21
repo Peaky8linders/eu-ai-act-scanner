@@ -111,5 +111,5 @@ To keep PR reviews high-signal and noise-free, run every candidate finding throu
 
 ## Notes
 
-- Install from this repository: `/plugin install Peaky8linders/eu-ai-act-scanner` and `pip install -e ".[mcp]"`.
+- Install from this repository: `/plugin marketplace add Peaky8linders/eu-ai-act-scanner` then `/plugin install eu-ai-act-scanner@eu-ai-act-scanner` and `pip install -e ".[mcp]"`.
 - Strictly local and defensive — never executes untrusted code or exfiltrates repository contents.

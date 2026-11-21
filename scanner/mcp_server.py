@@ -686,7 +686,7 @@ def tool_ingest_claude_ecosystem(
         )
         validated_cs = _validate_input_file_list(
             claude_security_paths,
-            allowed_suffixes=(".sarif", ".json", ".md", ".markdown", ".txt"),
+            allowed_suffixes=(".sarif", ".json", ".jsonl", ".ndjson", ".md", ".markdown", ".txt"),
             root_dir=resolved,
             field_name="claude_security_paths",
         )

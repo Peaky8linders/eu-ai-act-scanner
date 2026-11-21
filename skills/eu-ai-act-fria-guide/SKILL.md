@@ -20,7 +20,7 @@ Determine whether a FRIA is required, and if so, structure one that meets Art. 2
 - Classification of whether Art. 27 applies to a specific deployer + system combination.
 - Structuring the FRIA document against Art. 27(1) contents.
 - **In scope**: the Art. 27 obligation and its interaction with GDPR Art. 35 DPIA.
-- **Out of scope**: provider-side obligations (Art. 9, 11, 13 etc.), risk-tier classification (route to [eu-ai-act-article-6-classification](eu-ai-act-article-6-classification.md)).
+- **Out of scope**: provider-side obligations (Art. 9, 11, 13 etc.), risk-tier classification (route to [eu-ai-act-article-6-classification](../eu-ai-act-article-6-classification/SKILL.md)).
 
 ## Regulation scope
 
@@ -58,7 +58,7 @@ A FRIA must contain:
 
 Walk the trigger conditions above with the user. Ask:
 
-1. Is this AI system high-risk under Art. 6(2)? If unsure, route to [eu-ai-act-article-6-classification](eu-ai-act-article-6-classification.md).
+1. Is this AI system high-risk under Art. 6(2)? If unsure, route to [eu-ai-act-article-6-classification](../eu-ai-act-article-6-classification/SKILL.md).
 2. Which Annex III point? If not 5(a), 5(b), or 5(c) — Art. 27 does not apply (but other deployer obligations under Art. 26 still do).
 3. Who is the deployer? Public body, private public-service provider, or insurance/credit operator? If none of these — Art. 27 does not apply.
 
@@ -104,10 +104,10 @@ Art. 27(2): if any of the elements listed in (a)-(g) change during use, the depl
 
 ## Cross-references
 
-- [eu-ai-act-article-6-classification](eu-ai-act-article-6-classification.md) — is the system high-risk?
-- [eu-ai-act-operator-roles](eu-ai-act-operator-roles.md) — am I a deployer?
-- [eu-ai-act-reference](eu-ai-act-reference.md) — Art. 27 context in the broader map
-- [eu-ai-act-penalties](eu-ai-act-penalties.md) — deployer-side penalty exposure
+- [eu-ai-act-article-6-classification](../eu-ai-act-article-6-classification/SKILL.md) — is the system high-risk?
+- [eu-ai-act-operator-roles](../eu-ai-act-operator-roles/SKILL.md) — am I a deployer?
+- [eu-ai-act-reference](../eu-ai-act-reference/SKILL.md) — Art. 27 context in the broader map
+- [eu-ai-act-penalties](../eu-ai-act-penalties/SKILL.md) — deployer-side penalty exposure
 
 ## Source of truth
 

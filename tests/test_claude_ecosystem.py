@@ -598,8 +598,8 @@ def test_fetch_claude_compliance_strict_url_and_token_validation() -> None:
     [
         "commands/ai-act-quickstart.md",
         "commands/ai-act-security-review.md",
-        "skills/claude-code-security-hardening.md",
-        "skills/founder-startup-triage.md",
+        "skills/claude-code-security-hardening/SKILL.md",
+        "skills/founder-startup-triage/SKILL.md",
     ],
 )
 def test_docs_reference_claude_security_and_compliance_api(rel_path: str) -> None:

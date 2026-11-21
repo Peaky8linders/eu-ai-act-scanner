@@ -120,11 +120,11 @@ Every step upstream blocks every step downstream. Waiting until the final two qu
 
 ## Cross-references
 
-- [eu-ai-act-article-5-prohibited](eu-ai-act-article-5-prohibited.md) — live since 2 Feb 2025
-- [eu-ai-act-article-6-classification](eu-ai-act-article-6-classification.md) — determines which 2026/2027 track applies
-- [eu-ai-act-gpai-classification](eu-ai-act-gpai-classification.md) — GPAI timeline
-- [eu-ai-act-fria-guide](eu-ai-act-fria-guide.md) — FRIA deadlines for deployers
-- [eu-ai-act-penalties](eu-ai-act-penalties.md) — penalty dates (Art. 101 applies from 2 Aug 2026 except as noted)
+- [eu-ai-act-article-5-prohibited](../eu-ai-act-article-5-prohibited/SKILL.md) — live since 2 Feb 2025
+- [eu-ai-act-article-6-classification](../eu-ai-act-article-6-classification/SKILL.md) — determines which 2026/2027 track applies
+- [eu-ai-act-gpai-classification](../eu-ai-act-gpai-classification/SKILL.md) — GPAI timeline
+- [eu-ai-act-fria-guide](../eu-ai-act-fria-guide/SKILL.md) — FRIA deadlines for deployers
+- [eu-ai-act-penalties](../eu-ai-act-penalties/SKILL.md) — penalty dates (Art. 101 applies from 2 Aug 2026 except as noted)
 
 ## Source of truth
 

@@ -6,7 +6,7 @@ user_invocable: true
 
 # Using the EU AI Act Scanner
 
-Orchestrates the scanner for users asking to "scan my AI system", "check EU AI Act compliance", "audit this repo", or "am I ready for the conformity assessment". Primarily serves engineers who run scans and compliance officers who consume the output. Legal counsel can use the scan as evidence input but should read the [interpreting-findings](interpreting-findings.md) skill before drawing conclusions.
+Orchestrates the scanner for users asking to "scan my AI system", "check EU AI Act compliance", "audit this repo", or "am I ready for the conformity assessment". Primarily serves engineers who run scans and compliance officers who consume the output. Legal counsel can use the scan as evidence input but should read the [interpreting-findings](../interpreting-findings/SKILL.md) skill before drawing conclusions.
 
 ## When to invoke
 
@@ -20,7 +20,7 @@ Orchestrates the scanner for users asking to "scan my AI system", "check EU AI A
 
 - Any local codebase the user has read access to.
 - **In scope**: static analysis of source code, configuration, IaC, documentation files.
-- **Out of scope**: live-system probing, production log analysis, compliance verdicts. If the user asks "is this compliant", route to [interpreting-findings](interpreting-findings.md) so the non-verdict nature of the scan is explained.
+- **Out of scope**: live-system probing, production log analysis, compliance verdicts. If the user asks "is this compliant", route to [interpreting-findings](../interpreting-findings/SKILL.md) so the non-verdict nature of the scan is explained.
 
 ## Regulation scope
 
@@ -44,8 +44,8 @@ Invoke `/ai-act-scan` with the target path. The command shells out to `python -m
 1. Lead with the **overall compliance percentage and file count**. This anchors expectations before any dimension scores.
 2. Show the **three lowest-scoring dimensions** with their article references. This is what the user acts on.
 3. Do NOT dump the full JSON. Summarise and offer drill-down via `/ai-act-article`.
-4. If the user asks "what does this mean", route to [interpreting-findings](interpreting-findings.md).
-5. If the user names an article, route to `/ai-act-article` or [eu-ai-act-reference](eu-ai-act-reference.md).
+4. If the user asks "what does this mean", route to [interpreting-findings](../interpreting-findings/SKILL.md).
+5. If the user names an article, route to `/ai-act-article` or [eu-ai-act-reference](../eu-ai-act-reference/SKILL.md).
 
 ## Decision tree — routing intent
 
@@ -53,13 +53,13 @@ Invoke `/ai-act-scan` with the target path. The command shells out to `python -m
 |---|---|
 | "scan", "audit", "check compliance" | `/ai-act-scan` |
 | "fix the gaps", "make me compliant" | `/ai-act-scan-fix` |
-| "tell me about Art. X", names an article | `/ai-act-article X` + [eu-ai-act-reference](eu-ai-act-reference.md) |
-| "what does this finding mean" | [interpreting-findings](interpreting-findings.md) |
-| "why does my score matter" | [interpreting-findings](interpreting-findings.md) |
-| "are we compliant" | [interpreting-findings](interpreting-findings.md), then explain the scan is evidence not verdict |
-| "do I need an FRIA" | [eu-ai-act-fria-guide](eu-ai-act-fria-guide.md) |
-| "is my system high-risk" | [eu-ai-act-article-6-classification](eu-ai-act-article-6-classification.md) |
-| "is my use case prohibited" | [eu-ai-act-article-5-prohibited](eu-ai-act-article-5-prohibited.md) |
+| "tell me about Art. X", names an article | `/ai-act-article X` + [eu-ai-act-reference](../eu-ai-act-reference/SKILL.md) |
+| "what does this finding mean" | [interpreting-findings](../interpreting-findings/SKILL.md) |
+| "why does my score matter" | [interpreting-findings](../interpreting-findings/SKILL.md) |
+| "are we compliant" | [interpreting-findings](../interpreting-findings/SKILL.md), then explain the scan is evidence not verdict |
+| "do I need an FRIA" | [eu-ai-act-fria-guide](../eu-ai-act-fria-guide/SKILL.md) |
+| "is my system high-risk" | [eu-ai-act-article-6-classification](../eu-ai-act-article-6-classification/SKILL.md) |
+| "is my use case prohibited" | [eu-ai-act-article-5-prohibited](../eu-ai-act-article-5-prohibited/SKILL.md) |
 
 ## Escalation criteria
 
@@ -73,19 +73,19 @@ That disclaimer protects the user from treating scanner output as a compliance g
 
 | Excuse | Rebuttal |
 |---|---|
-| "The scanner said we passed, so we're compliant." | The scanner surfaces evidence of technical controls. Compliance is a legal determination under Art. 43. For high-risk systems (Art. 6), a notified body may be required. Route to [interpreting-findings](interpreting-findings.md) before drawing any verdict. |
+| "The scanner said we passed, so we're compliant." | The scanner surfaces evidence of technical controls. Compliance is a legal determination under Art. 43. For high-risk systems (Art. 6), a notified body may be required. Route to [interpreting-findings](../interpreting-findings/SKILL.md) before drawing any verdict. |
 | "80% is great — we can ship." | An 80% dimension score means broad evidence for that dimension. It says nothing about the dimensions not scored (most governance articles), and nothing about whether the evidence was genuine or theatrical. |
 | "We don't need to scan the IaC repo — the AI Act is about models." | Art. 15 explicitly requires accuracy, robustness, and cybersecurity "throughout the lifecycle". IaC misconfigurations (public S3 buckets holding training data, unauthenticated inference endpoints) are Art. 15 failures. Include the IaC repo. |
-| "The user didn't specify a risk tier, so I'll assume limited-risk to avoid being pushy." | Unknown risk tier is a gap, not an assumption. Ask. Or route to [eu-ai-act-article-6-classification](eu-ai-act-article-6-classification.md). Classifying as limited-risk without evidence skips Art. 9/10/11/14/15/17 obligations and is a compliance fraud risk. |
-| "GPAI obligations don't apply — we're just using OpenAI's API." | That makes you a *deployer* of a GPAI (Art. 3(63)), not a provider. Deployer obligations (Art. 26) and the downstream transparency duties (Art. 50) still apply. Route to [eu-ai-act-operator-roles](eu-ai-act-operator-roles.md). |
+| "The user didn't specify a risk tier, so I'll assume limited-risk to avoid being pushy." | Unknown risk tier is a gap, not an assumption. Ask. Or route to [eu-ai-act-article-6-classification](../eu-ai-act-article-6-classification/SKILL.md). Classifying as limited-risk without evidence skips Art. 9/10/11/14/15/17 obligations and is a compliance fraud risk. |
+| "GPAI obligations don't apply — we're just using OpenAI's API." | That makes you a *deployer* of a GPAI (Art. 3(63)), not a provider. Deployer obligations (Art. 26) and the downstream transparency duties (Art. 50) still apply. Route to [eu-ai-act-operator-roles](../eu-ai-act-operator-roles/SKILL.md). |
 
 ## Cross-references
 
-- [interpreting-findings](interpreting-findings.md) — after a scan, how to read dimension scores and prioritise fixes
-- [eu-ai-act-reference](eu-ai-act-reference.md) — article → dimension → analyzer map
-- [eu-ai-act-article-5-prohibited](eu-ai-act-article-5-prohibited.md) — prohibited practices classification
-- [eu-ai-act-article-6-classification](eu-ai-act-article-6-classification.md) — high-risk classification
-- [eu-ai-act-fria-guide](eu-ai-act-fria-guide.md) — when an FRIA is required
+- [interpreting-findings](../interpreting-findings/SKILL.md) — after a scan, how to read dimension scores and prioritise fixes
+- [eu-ai-act-reference](../eu-ai-act-reference/SKILL.md) — article → dimension → analyzer map
+- [eu-ai-act-article-5-prohibited](../eu-ai-act-article-5-prohibited/SKILL.md) — prohibited practices classification
+- [eu-ai-act-article-6-classification](../eu-ai-act-article-6-classification/SKILL.md) — high-risk classification
+- [eu-ai-act-fria-guide](../eu-ai-act-fria-guide/SKILL.md) — when an FRIA is required
 
 ## Source of truth
 

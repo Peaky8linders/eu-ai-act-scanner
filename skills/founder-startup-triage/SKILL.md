@@ -112,11 +112,11 @@ Hand off vendor MSAs/DPAs to **Anthropic's official Legal Plugin** using the bun
 
 ## Cross-references
 
-- [interpreting-findings](interpreting-findings.md) — detailed scoring model and audit caveats
-- [claude-code-security-hardening](claude-code-security-hardening.md) — hardening `.claude/settings.json`, `.mcp.json`, and PR reviews
-- [eu-ai-act-timeline](eu-ai-act-timeline.md) — full Art. 113 & Digital Omnibus schedule
-- [eu-ai-act-operator-roles](eu-ai-act-operator-roles.md) — deep dive into NLF operator roles
+- [interpreting-findings](../interpreting-findings/SKILL.md) — detailed scoring model and audit caveats
+- [claude-code-security-hardening](../claude-code-security-hardening/SKILL.md) — hardening `.claude/settings.json`, `.mcp.json`, and PR reviews
+- [eu-ai-act-timeline](../eu-ai-act-timeline/SKILL.md) — full Art. 113 & Digital Omnibus schedule
+- [eu-ai-act-operator-roles](../eu-ai-act-operator-roles/SKILL.md) — deep dive into NLF operator roles
 
 ## Source of truth
 
-EU Regulation 2024/1689 (EU AI Act) & Regulation (EU) 2026/1744 (Digital Omnibus). Install from this repo with `/plugin install Peaky8linders/eu-ai-act-scanner` and `pip install -e ".[mcp]"`.
+EU Regulation 2024/1689 (EU AI Act) & Regulation (EU) 2026/1744 (Digital Omnibus). Install from this repo with `/plugin marketplace add Peaky8linders/eu-ai-act-scanner`, then `/plugin install eu-ai-act-scanner@eu-ai-act-scanner`, and `pip install -e ".[mcp]"`.

@@ -19,7 +19,7 @@ Determine which Art. 50 transparency duty applies, and to whom. Art. 50 is the l
 ## Applies to
 
 - **In scope**: the four limited-risk transparency duties in Art. 50(1)–(4), and the actor (provider vs deployer) that bears each.
-- **Out of scope**: high-risk transparency *to deployers* under Art. 13 (a high-risk obligation, different actor and trigger). GPAI provider documentation duties under Art. 53 (route to [eu-ai-act-gpai-classification](eu-ai-act-gpai-classification.md)). Whether a system is high-risk at all (route to [eu-ai-act-article-6-classification](eu-ai-act-article-6-classification.md)). Prohibited emotion recognition in workplaces/education (route to [eu-ai-act-article-5-prohibited](eu-ai-act-article-5-prohibited.md) — Art. 5(1)(f) bans it outright; Art. 50(3) only governs disclosure where the practice is otherwise lawful).
+- **Out of scope**: high-risk transparency *to deployers* under Art. 13 (a high-risk obligation, different actor and trigger). GPAI provider documentation duties under Art. 53 (route to [eu-ai-act-gpai-classification](../eu-ai-act-gpai-classification/SKILL.md)). Whether a system is high-risk at all (route to [eu-ai-act-article-6-classification](../eu-ai-act-article-6-classification/SKILL.md)). Prohibited emotion recognition in workplaces/education (route to [eu-ai-act-article-5-prohibited](../eu-ai-act-article-5-prohibited/SKILL.md) — Art. 5(1)(f) bans it outright; Art. 50(3) only governs disclosure where the practice is otherwise lawful).
 
 ## Regulation scope — the four duties by actor
 
@@ -38,8 +38,8 @@ Disclosure must be clear and distinguishable, provided at the latest at the firs
 
 ## What to do
 
-1. **Classify the system first.** Establish risk tier before asserting any duty. A general-purpose chatbot answering general queries is **limited-risk**: its only transparency duty is Art. 50(1). Do not stack Art. 13 high-risk transparency on top unless the system is *independently* high-risk (an Annex III use case or a safety component — confirm via [eu-ai-act-article-6-classification](eu-ai-act-article-6-classification.md)).
-2. **Identify the operator role.** Art. 50(1)/(2) are provider duties; Art. 50(3)/(4) are deployer duties. The same organisation can be both — split the analysis. Confirm via [eu-ai-act-operator-roles](eu-ai-act-operator-roles.md).
+1. **Classify the system first.** Establish risk tier before asserting any duty. A general-purpose chatbot answering general queries is **limited-risk**: its only transparency duty is Art. 50(1). Do not stack Art. 13 high-risk transparency on top unless the system is *independently* high-risk (an Annex III use case or a safety component — confirm via [eu-ai-act-article-6-classification](../eu-ai-act-article-6-classification/SKILL.md)).
+2. **Identify the operator role.** Art. 50(1)/(2) are provider duties; Art. 50(3)/(4) are deployer duties. The same organisation can be both — split the analysis. Confirm via [eu-ai-act-operator-roles](../eu-ai-act-operator-roles/SKILL.md).
 3. **Map the system's behaviour to the paragraphs.** Direct interaction → 50(1). Generates synthetic content → 50(2). Emotion recognition / biometric categorisation → 50(3). Deep fakes or public-interest text → 50(4). A single system can trigger several (e.g. a generative chatbot triggers 50(1) and 50(2)).
 4. **For a GPAI system, check the dual trigger.** A GPAI model that generates synthetic content is covered by Art. 50(2) directly; if it also interacts with natural persons, Art. 50(1) also applies; and the GPAI provider separately carries the Art. 53 documentation duties. Cite all that apply.
 5. **State evidence, not verdicts.** "Art. 50(1) requires interaction disclosure; the chat UI shows no AI-interaction notice — evidence of the disclosure is absent." Let a human decide.
@@ -75,12 +75,12 @@ of public interest?
 
 ## Cross-references
 
-- [eu-ai-act-article-6-classification](eu-ai-act-article-6-classification.md) — classify risk tier before asserting any transparency duty
-- [eu-ai-act-operator-roles](eu-ai-act-operator-roles.md) — provider vs deployer, which paragraph is whose
-- [eu-ai-act-gpai-classification](eu-ai-act-gpai-classification.md) — GPAI + Art. 50 dual trigger and Art. 53 duties
-- [eu-ai-act-article-5-prohibited](eu-ai-act-article-5-prohibited.md) — emotion recognition in work/education is prohibited (Art. 5(1)(f)), not merely disclosed
-- [eu-ai-act-penalties](eu-ai-act-penalties.md) — Art. 50 breaches fall in the Art. 99(4) tier (up to €15M or 3% of turnover), not the Art. 5 7% tier
-- [eu-ai-act-timeline](eu-ai-act-timeline.md) — Art. 50 applies from 2 August 2026
+- [eu-ai-act-article-6-classification](../eu-ai-act-article-6-classification/SKILL.md) — classify risk tier before asserting any transparency duty
+- [eu-ai-act-operator-roles](../eu-ai-act-operator-roles/SKILL.md) — provider vs deployer, which paragraph is whose
+- [eu-ai-act-gpai-classification](../eu-ai-act-gpai-classification/SKILL.md) — GPAI + Art. 50 dual trigger and Art. 53 duties
+- [eu-ai-act-article-5-prohibited](../eu-ai-act-article-5-prohibited/SKILL.md) — emotion recognition in work/education is prohibited (Art. 5(1)(f)), not merely disclosed
+- [eu-ai-act-penalties](../eu-ai-act-penalties/SKILL.md) — Art. 50 breaches fall in the Art. 99(4) tier (up to €15M or 3% of turnover), not the Art. 5 7% tier
+- [eu-ai-act-timeline](../eu-ai-act-timeline/SKILL.md) — Art. 50 applies from 2 August 2026
 
 ## Common rationalizations
 

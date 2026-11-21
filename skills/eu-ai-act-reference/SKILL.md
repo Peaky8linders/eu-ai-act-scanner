@@ -58,16 +58,16 @@ Trace from regulation article → compliance dimension → scanner analyzer → 
 
 The scanner does not check the following. They require document review, organisational audit, or legal analysis. Surface them explicitly when the user asks — do not pretend they are covered by any dimension.
 
-- **Art. 5** — prohibited practices. Requires semantic review of the use case. Route to [eu-ai-act-article-5-prohibited](eu-ai-act-article-5-prohibited.md).
-- **Art. 6 + Annex III** — high-risk classification. Requires reading the system purpose. Route to [eu-ai-act-article-6-classification](eu-ai-act-article-6-classification.md).
+- **Art. 5** — prohibited practices. Requires semantic review of the use case. Route to [eu-ai-act-article-5-prohibited](../eu-ai-act-article-5-prohibited/SKILL.md).
+- **Art. 6 + Annex III** — high-risk classification. Requires reading the system purpose. Route to [eu-ai-act-article-6-classification](../eu-ai-act-article-6-classification/SKILL.md).
 - **Art. 40** — harmonised standards. Organisational adoption, not code-observable. **EN 18286:2026** (cited in OJ L, 2026/2274, 14 October 2026) confers presumption of conformity for **Art. 17(1)** and the **first sentence of Art. 11(1)** only; CEN-CENELEC JTC 21 technical standards (`prEN 18228`, `prEN 18229-1`, `prEN 18229-2`, `prEN 18282`, `prEN 18283`, `prEN 18284`) remain drafts.
 - **Art. 52** — notification of conformity assessment bodies. Administrative.
 - **Art. 56** — Code of Practice for GPAI. Organisational commitment.
 - **Art. 64–70** — governance (AI Office, Board, panels, authorities). Not developers' concern.
 - **Art. 73** — serious incident reporting. Requires an incident, a report, and a procedure — only part of which is code-observable.
 - **Art. 85–94** — market surveillance, penalties. Regulator side.
-- **Art. 99** — penalties. Not code. Route to [eu-ai-act-penalties](eu-ai-act-penalties.md) if that skill exists.
-- **Art. 113** — entry into force and application timeline. Route to [eu-ai-act-timeline](eu-ai-act-timeline.md).
+- **Art. 99** — penalties. Not code. Route to [eu-ai-act-penalties](../eu-ai-act-penalties/SKILL.md) if that skill exists.
+- **Art. 113** — entry into force and application timeline. Route to [eu-ai-act-timeline](../eu-ai-act-timeline/SKILL.md).
 
 ## Annex reference
 
@@ -75,7 +75,7 @@ The scanner does not check the following. They require document review, organisa
 |---|---|---|
 | Annex I | List of Union harmonised legislation | — (cross-reference only) |
 | Annex II | List of criminal offences for biometric identification exemption | — (Art. 5 scoping) |
-| Annex III | High-risk use cases | **User must classify** — route to [eu-ai-act-article-6-classification](eu-ai-act-article-6-classification.md) |
+| Annex III | High-risk use cases | **User must classify** — route to [eu-ai-act-article-6-classification](../eu-ai-act-article-6-classification/SKILL.md) |
 | Annex IV | Technical documentation contents | **Partial** — `tech_docs` checks for README / model card but cannot verify Annex IV completeness |
 | Annex V | EU declaration of conformity | Partial — `conformity_assessment` looks for declaration files |
 | Annex VI | Conformity assessment based on internal control | — (procedure) |
@@ -99,45 +99,45 @@ Art. 5(1) lists prohibited practices. The ones most likely to be misread as matc
 - Art. 5(1)(b): exploitation of vulnerabilities (age, disability, social/economic situation) to materially distort behaviour and cause significant harm
 - Art. 5(1)(c): social-scoring AI by public or private actors that leads to detrimental/unfavourable treatment
 
-A typical customer-service chatbot is not in these categories. But: a chatbot designed to manipulate purchase decisions from vulnerable populations could trigger Art. 5(1)(b). Route to [eu-ai-act-article-5-prohibited](eu-ai-act-article-5-prohibited.md) for the decision tree.
+A typical customer-service chatbot is not in these categories. But: a chatbot designed to manipulate purchase decisions from vulnerable populations could trigger Art. 5(1)(b). Route to [eu-ai-act-article-5-prohibited](../eu-ai-act-article-5-prohibited/SKILL.md) for the decision tree.
 
 ### "Do I need CE marking?"
 
-CE marking under Art. 48 applies to high-risk AI systems only. Whether your system is high-risk is determined by Art. 6 + Annex III. If the system is not high-risk, Art. 48 does not apply. If the system is high-risk, CE marking is required after conformity assessment (Art. 43). Route to [eu-ai-act-article-6-classification](eu-ai-act-article-6-classification.md) to determine risk tier.
+CE marking under Art. 48 applies to high-risk AI systems only. Whether your system is high-risk is determined by Art. 6 + Annex III. If the system is not high-risk, Art. 48 does not apply. If the system is high-risk, CE marking is required after conformity assessment (Art. 43). Route to [eu-ai-act-article-6-classification](../eu-ai-act-article-6-classification/SKILL.md) to determine risk tier.
 
 ### "What's an FRIA?"
 
-Fundamental Rights Impact Assessment (Art. 27). Required for **deployers** of **high-risk AI systems** in the domains listed in Annex III points 5(b), 5(c) (education access/assessment with risk of harm), 7 (employment decisions), 8(a) (access to essential public/private services). Providers do not perform FRIAs — deployers do. Route to [eu-ai-act-fria-guide](eu-ai-act-fria-guide.md) for the required contents and process.
+Fundamental Rights Impact Assessment (Art. 27). Required for **deployers** of **high-risk AI systems** in the domains listed in Annex III points 5(b), 5(c) (education access/assessment with risk of harm), 7 (employment decisions), 8(a) (access to essential public/private services). Providers do not perform FRIAs — deployers do. Route to [eu-ai-act-fria-guide](../eu-ai-act-fria-guide/SKILL.md) for the required contents and process.
 
 ### "Is my model a GPAI?"
 
-A General-Purpose AI model (Art. 3(63)) is trained on broad data at scale for generality and can competently perform a wide range of distinct tasks. If you trained a foundation model yourself, Art. 53 provider obligations apply. If you use someone else's foundation model, you are a deployer — Art. 26 applies, Art. 53 does not. Systemic risk (additional obligations under Art. 55) is triggered when training compute is ≥10^25 FLOPs per Art. 51(2); the threshold may be adjusted by delegated act under Art. 51(3). Route to [eu-ai-act-gpai-classification](eu-ai-act-gpai-classification.md).
+A General-Purpose AI model (Art. 3(63)) is trained on broad data at scale for generality and can competently perform a wide range of distinct tasks. If you trained a foundation model yourself, Art. 53 provider obligations apply. If you use someone else's foundation model, you are a deployer — Art. 26 applies, Art. 53 does not. Systemic risk (additional obligations under Art. 55) is triggered when training compute is ≥10^25 FLOPs per Art. 51(2); the threshold may be adjusted by delegated act under Art. 51(3). Route to [eu-ai-act-gpai-classification](../eu-ai-act-gpai-classification/SKILL.md).
 
 ### "When do the obligations apply?"
 
-Art. 113 (as amended by Digital Omnibus Regulation (EU) 2026/1744) sets staggered application dates: Art. 4 & Art. 5(1)(a)-(h) from **2 Feb 2025**; GPAI & governance from **2 Aug 2025**; Art. 50 transparency & Art. 101 GPAI fines from **2 Aug 2026** (with Art. 111(4) grace to **2 Dec 2026** for pre-2-Aug-2026 Art. 50(2) synthetic systems); Art. 5(1)(ba)-(bb) NCII/CSAM prohibitions from **2 Dec 2026**; Annex III high-risk from **2 Dec 2027**; and Annex I high-risk from **2 Aug 2028**. Route to [eu-ai-act-timeline](eu-ai-act-timeline.md).
+Art. 113 (as amended by Digital Omnibus Regulation (EU) 2026/1744) sets staggered application dates: Art. 4 & Art. 5(1)(a)-(h) from **2 Feb 2025**; GPAI & governance from **2 Aug 2025**; Art. 50 transparency & Art. 101 GPAI fines from **2 Aug 2026** (with Art. 111(4) grace to **2 Dec 2026** for pre-2-Aug-2026 Art. 50(2) synthetic systems); Art. 5(1)(ba)-(bb) NCII/CSAM prohibitions from **2 Dec 2026**; Annex III high-risk from **2 Dec 2027**; and Annex I high-risk from **2 Aug 2028**. Route to [eu-ai-act-timeline](../eu-ai-act-timeline/SKILL.md).
 
 ## Common rationalizations
 
 | Excuse | Rebuttal |
 |---|---|
 | "Art. 6(3) says preparatory tasks are exempt, so our classifier is fine." | Art. 6(3) exempts only narrow categories (preparatory, narrow procedural, decision-pattern detection without replacing decisions, human-oversight-assistive). Profiling of natural persons is always high-risk (Art. 6(3) final paragraph). Check whether the classifier profiles individuals. |
-| "Art. 50 only applies to deepfakes, we have a chatbot." | Art. 50(1) applies to any AI system *intended to interact directly with natural persons* — users must be informed they're interacting with AI unless obvious. Chatbots fall under Art. 50(1). Art. 50(2-4) covers generated content. Both subsections can apply to the same system. Route to [eu-ai-act-article-50-transparency](eu-ai-act-article-50-transparency.md) for the per-paragraph provider/deployer split. |
+| "Art. 50 only applies to deepfakes, we have a chatbot." | Art. 50(1) applies to any AI system *intended to interact directly with natural persons* — users must be informed they're interacting with AI unless obvious. Chatbots fall under Art. 50(1). Art. 50(2-4) covers generated content. Both subsections can apply to the same system. Route to [eu-ai-act-article-50-transparency](../eu-ai-act-article-50-transparency/SKILL.md) for the per-paragraph provider/deployer split. |
 | "We registered an LLM-based customer service tool in the EU database." | Art. 49 EU database registration is required for providers of high-risk AI (Art. 6) and *deployers* that are public authorities. Non-public-authority deployers of limited-risk chatbots do not register. Registering a non-high-risk system is not harmful but suggests a misclassification — verify risk tier. |
 | "The Commission hasn't published standards, so Art. 15 is not enforceable." | **EN 18286:2026** was cited in the OJ on **14 October 2026** (OJ L, 2026/2274) for **Art. 17(1)** and the **first sentence of Art. 11(1)** only. While Art. 15's JTC 21 deliverables (`prEN 18229-2`, `prEN 18282`) remain drafts, Art. 15 is directly applicable once its statutory date hits — harmonised standards confer presumption of conformity, and their absence does not suspend the obligation. |
 
 ## Cross-references
 
-- [using-eu-ai-act-scanner](using-eu-ai-act-scanner.md) — when to scan and how
-- [interpreting-findings](interpreting-findings.md) — how to read dimension scores
-- [eu-ai-act-article-5-prohibited](eu-ai-act-article-5-prohibited.md)
-- [eu-ai-act-article-6-classification](eu-ai-act-article-6-classification.md)
-- [eu-ai-act-article-50-transparency](eu-ai-act-article-50-transparency.md)
-- [eu-ai-act-fria-guide](eu-ai-act-fria-guide.md)
-- [eu-ai-act-operator-roles](eu-ai-act-operator-roles.md)
-- [eu-ai-act-gpai-classification](eu-ai-act-gpai-classification.md)
-- [eu-ai-act-annex-iv-guide](eu-ai-act-annex-iv-guide.md)
-- [eu-ai-act-timeline](eu-ai-act-timeline.md)
+- [using-eu-ai-act-scanner](../using-eu-ai-act-scanner/SKILL.md) — when to scan and how
+- [interpreting-findings](../interpreting-findings/SKILL.md) — how to read dimension scores
+- [eu-ai-act-article-5-prohibited](../eu-ai-act-article-5-prohibited/SKILL.md)
+- [eu-ai-act-article-6-classification](../eu-ai-act-article-6-classification/SKILL.md)
+- [eu-ai-act-article-50-transparency](../eu-ai-act-article-50-transparency/SKILL.md)
+- [eu-ai-act-fria-guide](../eu-ai-act-fria-guide/SKILL.md)
+- [eu-ai-act-operator-roles](../eu-ai-act-operator-roles/SKILL.md)
+- [eu-ai-act-gpai-classification](../eu-ai-act-gpai-classification/SKILL.md)
+- [eu-ai-act-annex-iv-guide](../eu-ai-act-annex-iv-guide/SKILL.md)
+- [eu-ai-act-timeline](../eu-ai-act-timeline/SKILL.md)
 
 ## Source of truth
 

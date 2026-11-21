@@ -61,7 +61,8 @@ Run a 60-second, jargon-free EU AI Act & AI security triage designed for founder
 Install as a Claude Code plugin + local MCP server from this repository:
 
 ```bash
-/plugin install Peaky8linders/eu-ai-act-scanner
+/plugin marketplace add Peaky8linders/eu-ai-act-scanner
+/plugin install eu-ai-act-scanner@eu-ai-act-scanner
 pip install -e ".[mcp]"
 ```
 
