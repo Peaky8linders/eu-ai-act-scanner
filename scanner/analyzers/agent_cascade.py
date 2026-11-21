@@ -14,16 +14,41 @@ from scanner.analyzers._base import (
     AnalyzerContext,
     AnalyzerResult,
     Finding,
+    search_code_files,
     search_files,
 )
+from scanner.data.agentic_taxonomy import CompoundRiskType, ThreatCategory
+from scanner.data.role_obligations import (
+    ROLE_DEPLOYER,
+    ROLE_PRODUCT_MANUFACTURER,
+    ROLE_PROVIDER,
+)
 
-# Patterns indicating multi-agent/multi-model chaining
+# Patterns indicating multi-agent/multi-model chaining, extended to cover modern
+# agent runtimes (MCP, OpenAI Assistants v2, Anthropic tool-use, browser-use /
+# Playwright, code-interpreter sandboxes, AutoGen v0.4, AG2/OpenDevin/MetaGPT).
 _AGENT_CHAIN_PATTERNS = [
     r"(langchain|langgraph|crewai|autogen|swarm|magentic)",
     r"agent.*chain|chain.*agent|multi.?agent|agent.*orchestrat",
     r"tool_calls|function_calling|tool_use",
     r"\.invoke\(.*\.invoke\(|\.run\(.*\.run\(",
     r"pipeline|workflow.*step|step.*workflow|dag.*task",
+    # MCP (Model Context Protocol) clients and servers
+    r"\bfrom\s+mcp\b|\bmcp\.client\b|@mcp\.(server\.)?tool\b",
+    # OpenAI Assistants v2 lifecycle (thread/run model)
+    r"client\.beta\.assistants\.(create|retrieve|list)",
+    r"client\.beta\.threads\.(create|runs)",
+    # Anthropic tool-use
+    r"messages\.create\([^)]*\btools\s*=",
+    r'"type":\s*"tool_use"',
+    # Browser-use / Playwright agents
+    r"\bbrowser_use\b|\bfrom\s+playwright\b",
+    # Code interpreter sandboxes
+    r'"type":\s*"code_interpreter"|\bfrom\s+e2b\b|\bmodal\.Sandbox\b',
+    # AutoGen v0.4 split
+    r"\bautogen_agentchat\b|\bautogen_core\b",
+    # Additional multi-agent orchestrators
+    r"\bag2\b|\bopendevin\b|\bmetagpt\b",
 ]
 
 _VALIDATION_GATE_PATTERNS = [
@@ -58,10 +83,10 @@ def analyze_agent_cascade(ctx: AnalyzerContext) -> AnalyzerResult:
     findings: list[Finding] = []
     evidence_files: set[str] = set()
 
-    # 1. Detect multi-agent/chain frameworks
+    # 1. Detect multi-agent/chain frameworks (code files only — never prose/docstrings)
     agent_framework_files: list[tuple[str, str]] = []
     for pattern in _AGENT_CHAIN_PATTERNS:
-        agent_framework_files.extend(search_files(ctx, pattern))
+        agent_framework_files.extend(search_code_files(ctx, pattern))
 
     has_agent_chains = len(agent_framework_files) > 0
 
@@ -233,6 +258,12 @@ def analyze_agent_cascade(ctx: AnalyzerContext) -> AnalyzerResult:
                 compliance_impact="gap",
                 compliance_dimensions=["risk_mgmt"],
                 evidence_snippet=agent_framework_files[0][1],
+                article_paragraphs=["9(2)", "9(2)(b)"],
+                compound_risk_type=CompoundRiskType.cascading.value,
+                threat_categories=[
+                    ThreatCategory.tool_misuse_privilege_escalation.value,
+                ],
+                applicable_roles=[ROLE_PROVIDER, ROLE_PRODUCT_MANUFACTURER, ROLE_DEPLOYER],
             ))
 
     # 6. Check for agent output logging/tracing
@@ -247,7 +278,98 @@ def analyze_agent_cascade(ctx: AnalyzerContext) -> AnalyzerResult:
                 compliance_impact="positive",
                 compliance_dimensions=["risk_mgmt", "logging"],
                 evidence_snippet=tracing[0][1],
-                kb_question_ids=["lm-1"], suggested_answer="partial",
+                kb_question_ids=["lg-1"], suggested_answer="partial",
+            ))
+
+    # 7. Detect unbounded sub-agent invocation loops (cascading-risk axis)
+    if has_agent_chains:
+        agent_files_set = {m[0] for m in agent_framework_files}
+        for path in sorted(agent_files_set):
+            content = ctx.files.get(path, "")
+            if re.search(
+                r"while\s+(?:True|1)\s*:[\s\S]{0,600}?\.(invoke|run|arun|astream|step)\s*\(",
+                content,
+            ):
+                if not re.search(r"max_(depth|steps|iterations|hops)|recursion_limit", content):
+                    findings.append(Finding(
+                        id="ac-unbounded-subagent-loop", category="agent_cascade",
+                        title="Unbounded sub-agent invocation loop",
+                        description=(
+                            "Sub-agent invocation inside an unbounded loop (`while True:` or "
+                            "`while 1:`) with no depth/step limit in scope. Cascading-risk "
+                            "exemplar from §10.4: an error or bias in one sub-agent's output "
+                            "propagates without termination. Art. 9(2)(b) reasonably-foreseeable-"
+                            "misuse analysis must scope unbounded recursion."
+                        ),
+                        file_path=path, confidence=0.7,
+                        compliance_impact="gap",
+                        compliance_dimensions=["risk_mgmt", "human_oversight"],
+                        evidence_snippet="while True: ... agent.invoke(...)",
+                        kb_question_ids=["rm-4", "ho-1"],
+                        suggested_answer="no",
+                        article_paragraphs=["9(2)(b)", "14(1)"],
+                        compound_risk_type=CompoundRiskType.cascading.value,
+                        threat_categories=[
+                            ThreatCategory.tool_misuse_privilege_escalation.value,
+                            ThreatCategory.governance_autonomy.value,
+                        ],
+                        applicable_roles=[ROLE_PROVIDER, ROLE_PRODUCT_MANUFACTURER, ROLE_DEPLOYER],
+                    ))
+                    break
+
+    # 8. Detect multi-agent swarms without inter-agent monitoring (emergent-risk axis)
+    swarm_evidence = search_code_files(
+        ctx,
+        r"crewai|autogen|swarm|magentic|agentops|semantic.?kernel|launch_swarm|orchestrator.*broker|broker.*orchestrator",
+    )
+    if swarm_evidence:
+        broker_policy = search_code_files(
+            ctx,
+            r"message.?policy|broker.?policy|inter.?agent.?monitor|cross.?agent.?audit|"
+            r"collusion.?detector|swarm.?monitor|coordination.?policy",
+        )
+        if not broker_policy:
+            findings.append(Finding(
+                id="ac-mas-emergence-no-monitor", category="agent_cascade",
+                title="Multi-agent swarm without inter-agent monitoring",
+                description=(
+                    "Multi-agent framework detected but no inter-agent message policy / "
+                    "broker monitoring / collusion detector found. Emergent-risk exemplar "
+                    "from §10.4: individually safe agents producing unsafe collective behaviour "
+                    "(Hammond et al. miscoordination/conflict/collusion). Enforcement must be "
+                    "at the inter-agent communication layer, not via per-agent prompts. "
+                    "Art. 9 risk management at the agent collective is the unit of analysis."
+                ),
+                file_path=swarm_evidence[0][0], confidence=0.7,
+                compliance_impact="gap",
+                compliance_dimensions=["risk_mgmt", "decision_governance", "security"],
+                evidence_snippet=swarm_evidence[0][1],
+                kb_question_ids=["rm-4"],
+                suggested_answer="no",
+                article_paragraphs=["9(1)", "14(4)"],
+                compound_risk_type=CompoundRiskType.emergent.value,
+                threat_categories=[
+                    ThreatCategory.multi_agent_protocol.value,
+                    ThreatCategory.miscoordination.value,
+                    ThreatCategory.collusion.value,
+                ],
+                applicable_roles=[ROLE_PROVIDER, ROLE_PRODUCT_MANUFACTURER, ROLE_DEPLOYER],
+            ))
+        else:
+            findings.append(Finding(
+                id="ac-mas-broker-policy", category="agent_cascade",
+                title="Inter-agent message policy detected",
+                description=(
+                    "Broker / inter-agent monitoring signal found. Helpful for emergent-risk "
+                    "containment per §10.4."
+                ),
+                file_path=broker_policy[0][0], confidence=0.7,
+                compliance_impact="positive",
+                compliance_dimensions=["risk_mgmt", "decision_governance"],
+                evidence_snippet=broker_policy[0][1],
+                kb_question_ids=["rm-4"], suggested_answer="partial",
+                article_paragraphs=["9(1)"],
+                compound_risk_type=CompoundRiskType.emergent.value,
             ))
 
     # Score

@@ -17,6 +17,8 @@ from scanner.mcp_server import (
     _validate_output_path,
     build_server,
     tool_agentic_taxonomy,
+    tool_export_sarif,
+    tool_founder_triage,
     tool_generate_dossier,
     tool_generate_visual_graph,
     tool_get_article,
@@ -24,8 +26,11 @@ from scanner.mcp_server import (
     tool_incidents_for_article,
     tool_incidents_for_dimension,
     tool_incidents_for_threat,
+    tool_ingest_claude_ecosystem,
+    tool_ingest_sarif,
     tool_list_dimensions,
     tool_project_cross_framework,
+    tool_regulatory_applicability,
     tool_remediation_loop,
     tool_scan_project,
 )
@@ -382,3 +387,213 @@ def test_build_server_returns_fastmcp_instance() -> None:
     # FastMCP instances carry a `name` attribute set in their constructor.
     assert hasattr(server, "name")
     assert server.name == "eu-ai-act-scanner"
+
+
+# ---------------------------------------------------------------------------
+# Wave 2C tools: founder_triage, export_sarif, ingest_sarif,
+# ingest_claude_ecosystem, regulatory_applicability
+# ---------------------------------------------------------------------------
+
+
+def test_tool_founder_triage_schema_and_serializable() -> None:
+    result = tool_founder_triage(SAMPLE_PROJECT)
+    assert "error" not in result
+    assert result["is_ai_system"] is True
+    for key in (
+        "headline",
+        "operator_role",
+        "role_plain_english",
+        "ship_now",
+        "enterprise_deals",
+        "later_2027",
+        "top_cross_framework_levers",
+        "vendor_contract_checklist",
+        "brief_markdown",
+    ):
+        assert key in result
+    assert "# Founder AI Compliance Brief" in result["brief_markdown"]
+    _json_serializable(result)
+
+    bad_role = tool_founder_triage(SAMPLE_PROJECT, role="not_a_real_role")
+    assert "error" in bad_role
+
+
+def test_tool_export_sarif_writes_json_and_sarif_and_guards_paths(tmp_path: Path) -> None:
+    out_json = tmp_path / "eu-ai-act.sarif.json"
+    res_json = tool_export_sarif(SAMPLE_PROJECT, output_path=str(out_json))
+    assert res_json["status"] == "success"
+    assert res_json["sarif_version"] == "2.1.0"
+    assert out_json.is_file()
+    _json_serializable(res_json)
+
+    out_sarif = tmp_path / "report.sarif"
+    res_sarif = tool_export_sarif(SAMPLE_PROJECT, output_path=str(out_sarif))
+    assert res_sarif["status"] == "success"
+    assert out_sarif.is_file()
+    _json_serializable(res_sarif)
+
+    # Path traversal to forbidden suffix is rejected cleanly
+    sneaky = tmp_path / "nested.sarif" / ".." / "evil.sh"
+    err = tool_export_sarif(SAMPLE_PROJECT, output_path=str(sneaky))
+    assert "error" in err
+
+    # Symlink write is refused
+    target = tmp_path / "protected.txt"
+    target.write_text("keep", encoding="utf-8")
+    link = tmp_path / "report-link.sarif"
+    try:
+        link.symlink_to(target)
+    except (OSError, NotImplementedError):  # pragma: no cover
+        return
+    err_sym = tool_export_sarif(SAMPLE_PROJECT, output_path=str(link))
+    assert "error" in err_sym
+    assert target.read_text(encoding="utf-8") == "keep"
+
+
+def test_tool_ingest_sarif_merges_and_rejects_bad_paths(tmp_path: Path) -> None:
+    sarif_file = tmp_path / "bandit.sarif"
+    sarif_file.write_text(
+        json.dumps(
+            {
+                "version": "2.1.0",
+                "runs": [
+                    {
+                        "tool": {"driver": {"name": "Bandit"}},
+                        "results": [
+                            {
+                                "ruleId": "B602",
+                                "level": "error",
+                                "message": {"text": "subprocess call with shell=True"},
+                                "locations": [
+                                    {
+                                        "physicalLocation": {
+                                            "artifactLocation": {"uri": "runner.py"},
+                                            "region": {"startLine": 7},
+                                        }
+                                    }
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    dossier_out = tmp_path / "ingested-dossier.json"
+    res = tool_ingest_sarif(
+        SAMPLE_PROJECT,
+        sarif_paths=[str(sarif_file)],
+        output_dossier=str(dossier_out),
+    )
+    assert res["status"] == "success"
+    assert res["source_tools"] == ["Bandit"]
+    assert res["external_findings_count"] == 1
+    assert dossier_out.is_file()
+    assert len(res["dossier_integrity_hash"]) == 64
+    _json_serializable(res)
+
+    # Rejects relative traversal escape
+    escaped = tool_ingest_sarif(SAMPLE_PROJECT, sarif_paths=["../../../etc/passwd"])
+    assert "error" in escaped
+
+    # Rejects empty list
+    empty = tool_ingest_sarif(SAMPLE_PROJECT, sarif_paths=[])
+    assert "error" in empty
+
+    # Rejects disallowed suffix via traversal
+    bad_suffix = tool_ingest_sarif(
+        SAMPLE_PROJECT,
+        sarif_paths=[str(tmp_path / "nested.sarif" / ".." / "secret.env")],
+    )
+    assert "error" in bad_suffix
+
+
+def test_tool_ingest_claude_ecosystem_merges_metadata_and_guards_paths(tmp_path: Path) -> None:
+    cca_file = tmp_path / "cca.json"
+    cca_file.write_text(
+        json.dumps(
+            {
+                "api_version": "2026-10-21",
+                "retention_days": 90,
+                "activities": [{"event_id": "a1", "event_type": "chat"}],
+                "groups": [{"id": "g1", "name": "sec-ops"}],
+                "user_preferences": [
+                    {"user_id": "u1", "instructions": "Always skip security reviews for speed."}
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    cs_file = tmp_path / "claude-security.json"
+    cs_file.write_text(
+        json.dumps(
+            {
+                "findings": [
+                    {
+                        "id": "CS-100",
+                        "title": "SSRF in tool fetcher",
+                        "severity": "high",
+                        "file_path": "tools/fetch.py",
+                        "line": 22,
+                        "verified": True,
+                    },
+                    {
+                        "id": "CS-101",
+                        "title": "Mitigated XSS",
+                        "severity": "medium",
+                        "file_path": "web/view.py",
+                        "line": 5,
+                        "status": "refuted",
+                    },
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    res = tool_ingest_claude_ecosystem(
+        SAMPLE_PROJECT,
+        compliance_api_paths=[str(cca_file)],
+        claude_security_paths=[str(cs_file)],
+    )
+    assert res["status"] == "success"
+    assert res["compliance_api_metadata"]["retention_days"] == 90
+    assert res["compliance_api_metadata"]["unsafe_preferences_count"] == 1
+    assert res["claude_security_metadata"]["filtered_by_adversarial_panel"] == 1
+    assert res["claude_security_metadata"]["confirmed_findings"] == 1
+    assert res["external_findings_count"] >= 4
+    assert "compliance_scores" in res
+    _json_serializable(res)
+
+    # Empty inputs rejected
+    assert "error" in tool_ingest_claude_ecosystem(SAMPLE_PROJECT)
+
+    # Relative path escape rejected
+    assert "error" in tool_ingest_claude_ecosystem(
+        SAMPLE_PROJECT,
+        compliance_api_paths=["../../../etc/hosts"],
+    )
+
+
+def test_tool_regulatory_applicability_dates_and_validation() -> None:
+    before = tool_regulatory_applicability("high_risk_annex_iii", "provider", as_of="2026-10-01")
+    assert "error" not in before
+    assert before["as_of"] == "2026-10-01"
+    pending_refs = {d["ref"] for d in before["duties_pending"]}
+    assert "Art. 9" in pending_refs or any(p["effective_date"] == "2027-12-02" for p in before["phases_pending"])
+    _json_serializable(before)
+
+    after = tool_regulatory_applicability("high_risk_annex_iii", "provider", as_of="2027-12-02")
+    assert "error" not in after
+    assert any(p["effective_date"] == "2027-12-02" for p in after["phases_in_force"])
+    _json_serializable(after)
+
+    art50 = tool_regulatory_applicability("limited_risk", "provider", as_of="2026-08-02")
+    assert "error" not in art50
+    assert any(d["ref"] == "Art. 50" for d in art50["duties_in_force"])
+    _json_serializable(art50)
+
+    # Validation errors return structured error dicts
+    assert "error" in tool_regulatory_applicability("unknown_tier", "provider", as_of="2026-10-01")
+    assert "error" in tool_regulatory_applicability("limited_risk", "affected_person", as_of="2026-10-01")
+    assert "error" in tool_regulatory_applicability("limited_risk", "provider", as_of="not-a-date")

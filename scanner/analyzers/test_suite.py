@@ -7,6 +7,8 @@ Uses AST to count actual test functions and compute test-to-source ratio.
 
 from __future__ import annotations
 
+import re
+
 from scanner.analyzers._base import (
     AnalyzerContext,
     AnalyzerResult,
@@ -30,7 +32,7 @@ def analyze_test_suite(ctx: AnalyzerContext) -> AnalyzerResult:
         ("hypothesis", r"from\s+hypothesis|@given\("),
         ("doctest", r"import\s+doctest|>>>"),
     ]:
-        matches = search_files(ctx, pat)
+        matches = search_files(ctx, pat, include_non_product=True)
         if matches:
             frameworks_found.append(name)
             evidence_files.add(matches[0][0])
@@ -45,8 +47,19 @@ def analyze_test_suite(ctx: AnalyzerContext) -> AnalyzerResult:
                 kb_question_ids=["rm-3"], suggested_answer="yes",
             ))
 
-    # 2. Test file ratio
-    test_files = has_file(ctx, r"test[_s]?[/\\]|_test\.py$|test_\w+\.py$")
+    # 2. Test file ratio — count actual test source files, never fixture data
+    # (e.g. tests/fixtures/k8s_bad.yaml must not inflate test coverage).
+    _test_code_exts = (
+        ".py", ".js", ".ts", ".tsx", ".jsx", ".mjs", ".cjs",
+        ".go", ".rs", ".java", ".rb", ".cs", ".php", ".swift", ".kt",
+    )
+    _fixture_seg_re = re.compile(r"(^|/)fixtures?(/|$)", re.IGNORECASE)
+    raw_test_files = has_file(ctx, r"test[_s]?[/\\]|_test\.py$|test_\w+\.py$|\.(test|spec)\.[cm]?[jt]sx?$")
+    test_files = [
+        p for p in raw_test_files
+        if p.lower().endswith(_test_code_exts)
+        and not _fixture_seg_re.search(p.replace("\\", "/"))
+    ]
     source_files = [p for p in ctx.file_list if p.endswith(".py") and "test" not in p.lower()]
     if source_files:
         ratio = len(test_files) / len(source_files) if source_files else 0
@@ -102,7 +115,7 @@ def analyze_test_suite(ctx: AnalyzerContext) -> AnalyzerResult:
         (r"prediction.*distribut|output.*distribut", "Prediction distribution tests"),
     ]
     for pat, desc in ml_test_patterns:
-        matches = search_files(ctx, pat)
+        matches = search_files(ctx, pat, include_non_product=True)
         test_matches = [(p, s) for p, s in matches if "test" in p.lower()]
         if test_matches:
             findings.append(Finding(
@@ -116,7 +129,11 @@ def analyze_test_suite(ctx: AnalyzerContext) -> AnalyzerResult:
             ))
 
     # 4. Integration tests
-    integ_matches = search_files(ctx, r"TestClient|httpx\.Client|requests\.(get|post)|app\.test_client")
+    integ_matches = search_files(
+        ctx,
+        r"TestClient|httpx\.Client|requests\.(get|post)|app\.test_client",
+        include_non_product=True,
+    )
     integ_in_tests = [(p, s) for p, s in integ_matches if "test" in p.lower()]
     if integ_in_tests:
         findings.append(Finding(
@@ -142,7 +159,11 @@ def analyze_test_suite(ctx: AnalyzerContext) -> AnalyzerResult:
         ))
 
     # 6. CI test runner
-    ci_test_patterns = search_files(ctx, r"pytest|python\s+-m\s+pytest|npm\s+test|jest|mocha")
+    ci_test_patterns = search_files(
+        ctx,
+        r"pytest|python\s+-m\s+pytest|npm\s+test|jest|mocha",
+        include_non_product=True,
+    )
     ci_files = [(p, s) for p, s in ci_test_patterns
                 if any(ci in p.lower() for ci in [".github", "gitlab-ci", "jenkins", "circle", ".yml", ".yaml"])]
     if ci_files:
@@ -158,7 +179,11 @@ def analyze_test_suite(ctx: AnalyzerContext) -> AnalyzerResult:
         ))
 
     # 7. Benchmark tests
-    bench_matches = search_files(ctx, r"@pytest\.mark\.benchmark|benchmark|perf_counter|timeit|locust|k6")
+    bench_matches = search_files(
+        ctx,
+        r"@pytest\.mark\.benchmark|benchmark|perf_counter|timeit|locust|k6",
+        include_non_product=True,
+    )
     bench_in_tests = [(p, s) for p, s in bench_matches if "test" in p.lower() or "bench" in p.lower()]
     if bench_in_tests:
         findings.append(Finding(

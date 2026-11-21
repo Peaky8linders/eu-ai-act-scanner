@@ -20,7 +20,7 @@ Determine whether an AI system is classified as high-risk under Art. 6. High-ris
 
 - A single AI system whose purpose and use context are known.
 - **In scope**: classification under Art. 6(1), Art. 6(2) + Annex III, and the Art. 6(3) derogation.
-- **Out of scope**: prohibited-practice analysis (route to [eu-ai-act-article-5-prohibited](eu-ai-act-article-5-prohibited.md)), GPAI-specific obligations (route to [eu-ai-act-gpai-classification](eu-ai-act-gpai-classification.md)).
+- **Out of scope**: prohibited-practice analysis (route to [eu-ai-act-article-5-prohibited](../eu-ai-act-article-5-prohibited/SKILL.md)), GPAI-specific obligations (route to [eu-ai-act-gpai-classification](../eu-ai-act-gpai-classification/SKILL.md)).
 
 ## Regulation scope
 
@@ -152,11 +152,11 @@ In practice: Art. 6(3) is not a free pass. It is a documented legal judgement wi
 
 ## Cross-references
 
-- [eu-ai-act-article-5-prohibited](eu-ai-act-article-5-prohibited.md) — is it prohibited rather than merely high-risk?
-- [eu-ai-act-operator-roles](eu-ai-act-operator-roles.md) — once high-risk, which role is the user
-- [eu-ai-act-fria-guide](eu-ai-act-fria-guide.md) — deployer-specific FRIA obligation for Annex III.5/.7/.8
-- [eu-ai-act-annex-iv-guide](eu-ai-act-annex-iv-guide.md) — Art. 11 technical documentation
-- [eu-ai-act-timeline](eu-ai-act-timeline.md) — high-risk obligations apply 24 months after entry into force, with some product-embedded cases at 36 months
+- [eu-ai-act-article-5-prohibited](../eu-ai-act-article-5-prohibited/SKILL.md) — is it prohibited rather than merely high-risk?
+- [eu-ai-act-operator-roles](../eu-ai-act-operator-roles/SKILL.md) — once high-risk, which role is the user
+- [eu-ai-act-fria-guide](../eu-ai-act-fria-guide/SKILL.md) — deployer-specific FRIA obligation for Annex III.5/.7/.8
+- [eu-ai-act-annex-iv-guide](../eu-ai-act-annex-iv-guide/SKILL.md) — Art. 11 technical documentation
+- [eu-ai-act-timeline](../eu-ai-act-timeline/SKILL.md) — high-risk obligations apply 24 months after entry into force, with some product-embedded cases at 36 months
 
 ## Source of truth
 

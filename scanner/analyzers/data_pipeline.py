@@ -19,6 +19,7 @@ def analyze_data_pipeline(ctx: AnalyzerContext) -> AnalyzerResult:
     evidence_files: set[str] = set()
 
     # 1. Data loading
+    data_lib_detected = False
     for name, pat in [
         ("pandas", r"import\s+pandas|from\s+pandas"),
         ("polars", r"import\s+polars|from\s+polars"),
@@ -27,13 +28,16 @@ def analyze_data_pipeline(ctx: AnalyzerContext) -> AnalyzerResult:
     ]:
         matches = search_files(ctx, pat)
         if matches:
+            data_lib_detected = True
             evidence_files.add(matches[0][0])
             findings.append(Finding(
                 id=f"dp-load-{name[:8].lower()}", category="data_pipeline",
                 title=f"Data loading: {name}",
                 description=f"Data handling library '{name}' detected.",
                 file_path=matches[0][0], confidence=0.85,
-                compliance_impact="positive",
+                # Neutral, not positive: importing pandas proves data is handled,
+                # not that it is governed under Art. 10.
+                compliance_impact="neutral",
                 compliance_dimensions=["data_gov"],
                 evidence_snippet=matches[0][1],
             ))
@@ -137,6 +141,44 @@ def analyze_data_pipeline(ctx: AnalyzerContext) -> AnalyzerResult:
             evidence_snippet=quality_matches[0][1],
             kb_question_ids=["dg-3"], suggested_answer="partial",
         ))
+
+    # 8. Art. 10 gaps — when data libraries are detected without versioning
+    # or quality controls, emit explicit gaps rather than letting neutral data
+    # imports pass Art. 10 unchecked.
+    if data_lib_detected:
+        if not any(f.id.startswith(("dp-versioning", "dp-lineage")) for f in findings):
+            findings.append(Finding(
+                id="dp-no-versioning", category="data_pipeline",
+                title="No dataset versioning or lineage tooling detected",
+                description=(
+                    "Data libraries detected without DVC, LakeFS, or lineage instrumentation. "
+                    "Art. 10(2) requires documented data governance covering collection, "
+                    "preparation and provenance of training, validation and test sets."
+                ),
+                file_path=next(iter(sorted(evidence_files)), ""),
+                confidence=0.7,
+                compliance_impact="gap",
+                compliance_dimensions=["data_gov"],
+                kb_question_ids=["dg-1"], suggested_answer="no",
+                article_paragraphs=["10(2)"],
+            ))
+        has_quality = bool(quality_matches) or any(f.id.startswith("dp-schema-") for f in findings)
+        if not has_quality:
+            findings.append(Finding(
+                id="dp-no-quality-checks", category="data_pipeline",
+                title="No data quality or validation checks detected",
+                description=(
+                    "Data libraries detected without null checks, schema validation, or "
+                    "profiling. Art. 10(3) requires training, validation and testing data sets "
+                    "to be relevant, sufficiently representative, and free of errors."
+                ),
+                file_path=next(iter(sorted(evidence_files)), ""),
+                confidence=0.7,
+                compliance_impact="gap",
+                compliance_dimensions=["data_gov"],
+                kb_question_ids=["dg-3"], suggested_answer="no",
+                article_paragraphs=["10(3)"],
+            ))
 
     positive = [f for f in findings if f.compliance_impact == "positive"]
     gaps = [f for f in findings if f.compliance_impact == "gap"]

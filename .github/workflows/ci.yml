@@ -35,6 +35,9 @@ jobs:
       - name: Lint
         run: ruff check .
 
+      - name: Type-check
+        run: mypy scanner
+
       - name: Test
         run: pytest -v
 
@@ -43,7 +46,9 @@ jobs:
       - name: Adversarial / prompt-injection regression tests
         run: pytest tests/test_adversarial.py tests/test_incident_grounding.py -q
 
-      - name: Smoke-test CLI
+      - name: Smoke-test CLI & accuracy benchmark
         run: |
           eu-ai-act-scan tests/fixtures/sample_project --markdown
+          eu-ai-act-scan tests/fixtures/sample_project --founder
           eu-ai-act-scan tests/fixtures/sample_project --article art14
+          eu-ai-act-scan --benchmark

@@ -11,6 +11,7 @@ from scanner.analyzers._base import (
     Finding,
     any_file_contains,
     has_file,
+    is_non_product_path,
     search_files,
 )
 
@@ -19,9 +20,9 @@ def analyze_configuration(ctx: AnalyzerContext) -> AnalyzerResult:
     findings: list[Finding] = []
     evidence_files: set[str] = set()
 
-    # 1. Containerization
-    dockerfiles = has_file(ctx, r"Dockerfile|dockerfile")
-    compose_files = has_file(ctx, r"docker-compose|compose\.ya?ml")
+    # 1. Containerization (exclude test fixtures)
+    dockerfiles = [p for p in has_file(ctx, r"Dockerfile|dockerfile") if not is_non_product_path(p)]
+    compose_files = [p for p in has_file(ctx, r"docker-compose|compose\.ya?ml") if not is_non_product_path(p)]
     if dockerfiles:
         evidence_files.add(dockerfiles[0])
         content = ctx.files.get(dockerfiles[0], "")
@@ -45,11 +46,11 @@ def analyze_configuration(ctx: AnalyzerContext) -> AnalyzerResult:
             compliance_dimensions=["infra_mlops"],
         ))
 
-    # 2. Orchestration
-    k8s_files = has_file(ctx, r"\.ya?ml$")
+    # 2. Orchestration (exclude test fixtures so e.g. tests/fixtures/k8s_bad.yaml never counts as prod infra)
+    k8s_files = [p for p in has_file(ctx, r"\.ya?ml$") if not is_non_product_path(p)]
     k8s_content = [(p, ctx.files.get(p, "")) for p in k8s_files if "kind:" in ctx.files.get(p, "") and "apiVersion:" in ctx.files.get(p, "")]
     has_file(ctx, r"Chart\.ya?ml|values\.ya?ml|templates/")
-    terraform_files = has_file(ctx, r"\.tf$|terraform")
+    terraform_files = [p for p in has_file(ctx, r"\.tf$|terraform") if not is_non_product_path(p)]
     if k8s_content:
         findings.append(Finding(
             id="cfg-k8s", category="configuration",

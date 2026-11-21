@@ -5,6 +5,46 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added — founder triage, Claude Code security posture, ecosystem ingestion
+
+- `--founder` / `founder_triage` 3-bucket brief (ship now / enterprise deals /
+  2 Dec 2027 roadmap), `mcp_toolchain` and `claude_code_security` analyzers,
+  AST-gated Art. 50 analyzer, SARIF 2.1.0 export + ingestion, local baselines
+  (`--save-baseline` / `--diff-baseline`), offline accuracy benchmark, and
+  ingestion of Claude Compliance API exports and `/claude-security` /
+  `/security-review` reports (CLI and MCP; the MCP server now has 17 tools).
+
+### Fixed — the plugin installs, and real integration outputs ingest correctly
+
+- **Claude Code plugin was not installable.** Added `.claude-plugin/plugin.json`
+  and `.claude-plugin/marketplace.json` (`claude plugin validate .` passes) and
+  moved the 16 skills to `skills/<name>/SKILL.md`, the only layout Claude Code
+  loads. Install with `/plugin marketplace add Peaky8linders/eu-ai-act-scanner`
+  then `/plugin install eu-ai-act-scanner@eu-ai-act-scanner`.
+- `claude-security@claude-plugins-official` writes
+  `CLAUDE-SECURITY-RESULTS.jsonl`; ingesting it failed with "Malformed JSON".
+  JSONL (including one-finding files) is now parsed, and the MCP tool accepts
+  `.jsonl` / `.ndjson`.
+- `anthropics/claude-code-security-review` findings have no `title`; every one
+  was labelled "Security finding". Titles now come from `category` plus the
+  description, and the exploit scenario is kept. The founder brief uses the
+  tool's own recommendation as the fix hint. `info` severity maps to `low`.
+- A raw `/v1/compliance/groups` page was counted as activity events (false
+  "audit trail verified" evidence), and a groups- or preferences-only export
+  raised a false high-severity "empty activity trail" gap.
+- `scripts/fetch_claude_compliance.py` now follows all three Compliance API
+  pagination schemes: `after_id=<last_id>` for activities, `page=<next_page>`
+  for groups / user_preferences, and `next_page` without `has_more` for
+  session messages (previously truncated after page 1 or repeated page 1).
+- The secret-guard hook missed `git add -A && git commit` and `git commit -a`
+  (it ran before staging) and ignored NotebookEdit's `new_source`.
+- SARIF severity keywords match whole tokens (`retrieval` no longer hits
+  `eval`, `execution` no longer hits `exec`).
+- `--founder --diff-baseline` printed only the brief; the diff is now appended
+  (or nested under `baseline_diff` with `--json`).
+
 ## [0.11.3] - 2026-10-20
 
 ### Fixed — a project under an excluded directory is scanned, not reported empty

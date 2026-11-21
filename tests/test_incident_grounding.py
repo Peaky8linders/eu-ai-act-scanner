@@ -374,7 +374,8 @@ class TestIncidentGroundingIntegration:
     """End-to-end: analyzer pipeline + orchestrator wiring."""
 
     @pytest.fixture(scope="class")
-    def all_findings(self):
+    @classmethod
+    def all_findings(cls):
         ctx = _load_fixture_ctx()
         results = run_all_analyzers(ctx)
         return [f for r in results for f in r.findings]

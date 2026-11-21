@@ -14,6 +14,9 @@ security, and risk standards:
 - SOC 2 Trust Services Criteria
 - ISO/IEC 27002:2022 (Information Security Controls)
 - NIST SP 800-53 Rev. 5
+- CEN-CENELEC JTC 21 Harmonised Standards (EN 18286:2026 OJ-cited 14 Oct 2026
+  for Art. 17(1) and the first sentence of Art. 11(1) only; prEN drafts carry
+  no Art. 40 presumption of conformity until OJ citation)
 
 Provides the "Satisfy Once, Comply Everywhere" foundation so teams can prove
 compliance across multiple international regulatory frameworks from a single scan.
@@ -25,7 +28,7 @@ from typing import Final
 
 from pydantic import BaseModel, Field
 
-CROSSWALK_CATALOGUE_VERSION: Final[str] = "2026.10.v2"
+CROSSWALK_CATALOGUE_VERSION: Final[str] = "2026.10.v3"
 
 # Canonical framework IDs. Older call sites used variant spellings
 # ("owasp_llm_top10" vs "owasp_llm_2025" vs "owasp_llm"); normalize everything
@@ -33,7 +36,7 @@ CROSSWALK_CATALOGUE_VERSION: Final[str] = "2026.10.v2"
 CANONICAL_FRAMEWORK_IDS: Final[tuple[str, ...]] = (
     "nist_ai_rmf", "iso_42001", "owasp_llm", "owasp_agentic",
     "mitre_atlas", "nist_ai_600_1", "csa_aicm", "gdpr",
-    "soc2", "iso_27002", "nist_sp_800_53",
+    "soc2", "iso_27002", "nist_sp_800_53", "cen_cenelec_jtc21",
 )
 
 FW_ID_ALIASES: Final[dict[str, str]] = {
@@ -41,6 +44,8 @@ FW_ID_ALIASES: Final[dict[str, str]] = {
     "owasp_llm_2025": "owasp_llm",
     "owasp_agentic_top10": "owasp_agentic",
     "owasp_agentic": "owasp_agentic",
+    "cen_cenelec": "cen_cenelec_jtc21",
+    "jtc21": "cen_cenelec_jtc21",
 }
 
 
@@ -87,6 +92,7 @@ FRAMEWORK_LABELS: dict[str, str] = {
     "soc2": "SOC 2 Type II",
     "iso_27002": "ISO/IEC 27002:2022",
     "nist_sp_800_53": "NIST SP 800-53 Rev. 5",
+    "cen_cenelec_jtc21": "CEN-CENELEC JTC 21 Harmonised Standards",
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -113,6 +119,7 @@ DIMENSION_CROSSWALK: dict[str, dict[str, list[str]]] = {
         "csa_aicm": ["GRC-02", "GRC-10"],
         "soc2": ["CC3.1", "CC3.2"],
         "gdpr": ["Art. 35(1)", "Art. 35(7)"],
+        "cen_cenelec_jtc21": ["prEN 18228 (draft)"],
     },
     "data_gov": {
         "nist_ai_rmf": ["MP-3.4", "MS-2.6", "MG-2.2"],
@@ -125,6 +132,7 @@ DIMENSION_CROSSWALK: dict[str, dict[str, list[str]]] = {
         "nist_sp_800_53": ["SI-10", "MP-2"],
         "soc2": ["PI1.1", "CC6.1"],
         "gdpr": ["Art. 5(1)(b)", "Art. 5(1)(c)", "Art. 5(1)(d)", "Art. 25(1)", "Art. 25(2)", "Art. 30(1)"],
+        "cen_cenelec_jtc21": ["prEN 18283 (draft)", "prEN 18284 (draft)"],
     },
     "tech_docs": {
         "nist_ai_rmf": ["GV-4.1", "MP-1.1", "MP-4.1"],
@@ -134,6 +142,9 @@ DIMENSION_CROSSWALK: dict[str, dict[str, list[str]]] = {
         "csa_aicm": ["MDS-03"],
         "soc2": ["CC2.1"],
         "gdpr": ["Art. 30(1)", "Art. 24(1)"],
+        # EN 18286:2026 (OJ L, 2026/2274, 14 Oct 2026) presumption covers
+        # Art. 17(1) and the first sentence of Art. 11(1) only.
+        "cen_cenelec_jtc21": ["EN 18286:2026"],
     },
     "logging": {
         "nist_ai_rmf": ["GV-1.5", "MS-3.1", "MS-3.2"],
@@ -144,6 +155,7 @@ DIMENSION_CROSSWALK: dict[str, dict[str, list[str]]] = {
         "nist_sp_800_53": ["AU-2", "AU-3", "AU-6"],
         "soc2": ["CC7.2", "CC7.3"],
         "gdpr": ["Art. 30(1)", "Art. 5(2)"],
+        "cen_cenelec_jtc21": ["prEN 18229-1 (draft)"],
     },
     "transparency": {
         "nist_ai_rmf": ["GV-3.1", "GV-5.1", "MP-1.1", "MS-2.3"],
@@ -152,6 +164,7 @@ DIMENSION_CROSSWALK: dict[str, dict[str, list[str]]] = {
         "owasp_agentic": ["ASI09"],
         "soc2": ["CC2.2", "CC2.3"],
         "gdpr": ["Art. 12(1)", "Art. 13(1)", "Art. 14(1)"],
+        "cen_cenelec_jtc21": ["prEN 18229-1 (draft)"],
     },
     "content_transparency": {
         "nist_ai_rmf": ["MS-2.3", "GV-1.4"],
@@ -171,6 +184,7 @@ DIMENSION_CROSSWALK: dict[str, dict[str, list[str]]] = {
         "csa_aicm": ["GRC-15"],
         "soc2": ["CC5.2"],
         "gdpr": ["Art. 22(1)", "Art. 22(3)"],
+        "cen_cenelec_jtc21": ["prEN 18229-1 (draft)"],
     },
     "security": {
         "nist_ai_rmf": ["MS-2.5", "MG-2.1", "MG-3.2"],
@@ -184,12 +198,17 @@ DIMENSION_CROSSWALK: dict[str, dict[str, list[str]]] = {
         "nist_sp_800_53": ["SI-3", "SI-4", "SC-7"],
         "soc2": ["CC6.1", "CC6.6", "CC7.1"],
         "gdpr": ["Art. 32(1)"],
+        "cen_cenelec_jtc21": ["prEN 18229-2 (draft)", "prEN 18282 (draft)"],
     },
     "quality_management": {
         "nist_ai_rmf": ["GV-1.1", "GV-1.2", "MS-4.1"],
         "iso_42001": ["4.4", "5.1", "9.2", "9.3", "10.1", "10.2"],
         "soc2": ["CC5.1", "CC5.3"],
         "gdpr": ["Art. 24(1)", "Art. 25(1)"],
+        # First AI Act harmonised standard cited in the OJ (Commission
+        # Implementing Decision (EU) 2026/2274, 14 Oct 2026) — Art. 17(1)
+        # plus first sentence of Art. 11(1) only.
+        "cen_cenelec_jtc21": ["EN 18286:2026"],
     },
     "conformity_assessment": {
         "nist_ai_rmf": ["GV-1.1", "MS-2.1"],
@@ -319,6 +338,7 @@ ARTICLE_FRAMEWORK_CROSSWALK: dict[str, dict[str, list[str]]] = {
         "mitre_atlas": ["AML.T0040", "AML.T0043"],
         "csa_aicm": ["GRC-02", "GRC-10"],
         "gdpr": ["Art. 35"],
+        "cen_cenelec_jtc21": ["prEN 18228 (draft)"],
     },
     "Art. 10": {
         "nist_ai_rmf": ["MP-3.4", "MS-2.6", "MG-2.2"],
@@ -326,29 +346,35 @@ ARTICLE_FRAMEWORK_CROSSWALK: dict[str, dict[str, list[str]]] = {
         "owasp_llm": ["LLM03:2025", "LLM08:2025"],
         "mitre_atlas": ["AML.T0018", "AML.T0115"],
         "gdpr": ["Art. 5(1)(d)", "Art. 25"],
+        "cen_cenelec_jtc21": ["prEN 18283 (draft)", "prEN 18284 (draft)"],
     },
     "Art. 11": {
         "nist_ai_rmf": ["GV-4.1", "MP-1.1", "MP-4.1"],
         "iso_42001": ["7.5", "8.4", "A.7.2"],
         "csa_aicm": ["MDS-03"],
         "gdpr": ["Art. 30"],
+        # EN 18286:2026 OJ citation (14 Oct 2026) covers first sentence of Art. 11(1) only.
+        "cen_cenelec_jtc21": ["EN 18286:2026"],
     },
     "Art. 12": {
         "nist_ai_rmf": ["GV-1.5", "MS-3.1", "MS-3.2"],
         "iso_42001": ["9.1", "A.7.4"],
         "owasp_agentic": ["ASI08"],
         "gdpr": ["Art. 30", "Art. 5(2)"],
+        "cen_cenelec_jtc21": ["prEN 18229-1 (draft)"],
     },
     "Art. 13": {
         "nist_ai_rmf": ["GV-3.1", "MP-1.1", "MS-2.3"],
         "iso_42001": ["7.4", "8.4", "A.7.1", "A.7.3"],
         "gdpr": ["Art. 13", "Art. 14"],
+        "cen_cenelec_jtc21": ["prEN 18229-1 (draft)"],
     },
     "Art. 14": {
         "nist_ai_rmf": ["GV-2.1", "MS-2.1", "MG-2.1"],
         "iso_42001": ["5.3", "A.5.4"],
         "owasp_agentic": ["ASI02", "ASI05"],
         "gdpr": ["Art. 22"],
+        "cen_cenelec_jtc21": ["prEN 18229-1 (draft)"],
     },
     "Art. 15": {
         "nist_ai_rmf": ["MS-2.5", "MG-2.1", "MG-3.2"],
@@ -358,11 +384,14 @@ ARTICLE_FRAMEWORK_CROSSWALK: dict[str, dict[str, list[str]]] = {
         "mitre_atlas": ["AML.T0015", "AML.T0051"],
         "nist_ai_600_1": ["MS-2.5-001", "MS-2.7-001"],
         "gdpr": ["Art. 32"],
+        "cen_cenelec_jtc21": ["prEN 18229-2 (draft)", "prEN 18282 (draft)"],
     },
     "Art. 17": {
         "nist_ai_rmf": ["GV-1.1", "GV-1.2", "MS-4.1"],
         "iso_42001": ["4.4", "5.1", "9.2", "9.3", "10.1", "10.2"],
         "gdpr": ["Art. 24", "Art. 25"],
+        # EN 18286:2026 OJ-cited 14 Oct 2026 (OJ L 2026/2274) for Art. 17(1).
+        "cen_cenelec_jtc21": ["EN 18286:2026"],
     },
     "Art. 26": {
         "nist_ai_rmf": ["GV-1.1", "MP-4.1", "MS-3.1"],

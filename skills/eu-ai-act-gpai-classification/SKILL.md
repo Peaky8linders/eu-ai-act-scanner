@@ -21,7 +21,7 @@ Determine whether an AI model is a General-Purpose AI model under Art. 3(63), wh
 - Classification of whether an AI model is GPAI, and whether it is systemic-risk GPAI.
 - Mapping of Art. 53 and Art. 55 obligations to the GPAI provider role.
 - **In scope**: Art. 3(63), Art. 3(64) generality, Art. 51-55.
-- **Out of scope**: Art. 6-15 high-risk *AI system* obligations (separate track — route to [eu-ai-act-article-6-classification](eu-ai-act-article-6-classification.md)). Note that an AI system built on a GPAI model can simultaneously be high-risk under Art. 6 AND downstream-use a GPAI.
+- **Out of scope**: Art. 6-15 high-risk *AI system* obligations (separate track — route to [eu-ai-act-article-6-classification](../eu-ai-act-article-6-classification/SKILL.md)). Note that an AI system built on a GPAI model can simultaneously be high-risk under Art. 6 AND downstream-use a GPAI.
 
 ## Regulation scope
 
@@ -121,11 +121,11 @@ A company that fine-tunes a GPAI model may cross a threshold. Under Art. 25(1)(b
 
 ## Cross-references
 
-- [eu-ai-act-operator-roles](eu-ai-act-operator-roles.md) — GPAI provider vs. downstream AI system provider
-- [eu-ai-act-article-6-classification](eu-ai-act-article-6-classification.md) — a downstream product can still be high-risk
-- [eu-ai-act-article-50-transparency](eu-ai-act-article-50-transparency.md) — a GPAI that generates synthetic content (Art. 50(2)) or interacts with natural persons (Art. 50(1)) owes Art. 50 in addition to Art. 53
-- [eu-ai-act-annex-iv-guide](eu-ai-act-annex-iv-guide.md) — for downstream high-risk AI systems using GPAI
-- [eu-ai-act-timeline](eu-ai-act-timeline.md) — GPAI obligations applied from 2 August 2025
+- [eu-ai-act-operator-roles](../eu-ai-act-operator-roles/SKILL.md) — GPAI provider vs. downstream AI system provider
+- [eu-ai-act-article-6-classification](../eu-ai-act-article-6-classification/SKILL.md) — a downstream product can still be high-risk
+- [eu-ai-act-article-50-transparency](../eu-ai-act-article-50-transparency/SKILL.md) — a GPAI that generates synthetic content (Art. 50(2)) or interacts with natural persons (Art. 50(1)) owes Art. 50 in addition to Art. 53
+- [eu-ai-act-annex-iv-guide](../eu-ai-act-annex-iv-guide/SKILL.md) — for downstream high-risk AI systems using GPAI
+- [eu-ai-act-timeline](../eu-ai-act-timeline/SKILL.md) — GPAI obligations applied from 2 August 2025
 
 ## Source of truth
 

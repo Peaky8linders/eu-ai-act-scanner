@@ -27,9 +27,13 @@ from typing import Any
 
 from scanner.data.frameworks import DIMENSION_CROSSWALK, FRAMEWORK_LABELS
 from scanner.data.incident_corpus import get_incident
+from scanner.data.omnibus import live_phase
+from scanner.data.ontology import PHASE_REGISTRY
 from scanner.fix_loop import _DIMENSION_TO_FIXER, DETERMINISTIC_FIXERS
 from scanner.kb import DIMENSIONS
 from scanner.models import ScanResult
+from scanner.refs import parse as parse_ref
+from scanner.refs import split_dimension_articles
 
 
 @lru_cache(maxsize=1)
@@ -66,18 +70,102 @@ def _build_node_fix(dim_id: str, dummy_root: Path) -> dict[str, str] | None:
     return None
 
 
+def _fmt_date(phase_id: str) -> str:
+    d = live_phase(phase_id).effective_date
+    return f"{d.day} {d.strftime('%B %Y')}"
+
+
+def _timeline_bucket(article_ref: str) -> tuple[str, str]:
+    """Return ``(bucket_key, human_label)`` for one canonical ``"Art. N"`` ref."""
+    num = parse_ref(article_ref).article_number
+    if num is None:
+        return ("general", "Phased compliance 2025–2028 under Regulation (EU) 2024/1689 & Digital Omnibus Regulation (EU) 2026/1744")
+    if num == 4:
+        return (
+            "art4",
+            f"In Force since {_fmt_date('phase_2025_02_02')} (AI literacy — amended by Digital Omnibus Regulation (EU) 2026/1744)",
+        )
+    if num == 5:
+        return (
+            "art5",
+            f"In Force since {_fmt_date('phase_2025_02_02')} (prohibitions; NCII/CSAM Art. 5(1)(ba)-(bb) apply {_fmt_date('phase_omnibus_2026_12_02')} under Digital Omnibus Regulation (EU) 2026/1744)",
+        )
+    if num == 3:
+        return (
+            "art3",
+            f"In Force since {_fmt_date('phase_2025_02_02')} (Chapter I definitions)",
+        )
+    if num == 50:
+        return (
+            "art50",
+            f"In Force since {_fmt_date('phase_2026_08_02_transparency')} — Not deferred by Digital Omnibus Regulation (EU) 2026/1744",
+        )
+    if 51 <= num <= 56:
+        return (
+            "gpai",
+            f"In Force since {_fmt_date('phase_2025_08_02')} (Chapter V GPAI obligations; pre-existing models by 2 August 2027)",
+        )
+    if num == 95:
+        return (
+            "voluntary",
+            f"Voluntary Codes of Conduct (non-mandatory; general application {_fmt_date('phase_2026_08_02_transparency')})",
+        )
+    if num in (26, 27):
+        return (
+            "deployer_hr",
+            f"Applies {_fmt_date('phase_omnibus_2027_12_02')} (High-Risk Annex III deployer obligation — deferred by Digital Omnibus Regulation (EU) 2026/1744)",
+        )
+    if (6 <= num <= 49) or num in (72, 73):
+        return (
+            "high_risk",
+            f"Applies {_fmt_date('phase_omnibus_2027_12_02')} for Annex III / {_fmt_date('phase_omnibus_2028_08_02')} for Annex I (deferred by Digital Omnibus Regulation (EU) 2026/1744)",
+        )
+    if num in (64, 65, 99) or f"Art. {num}" in PHASE_REGISTRY["phase_2025_08_02"].articles:
+        return (
+            "gov_penalties",
+            f"In Force since {_fmt_date('phase_2025_08_02')} (Governance & Chapter XII penalties)",
+        )
+    return (
+        "general",
+        f"Applies from {_fmt_date('phase_2026_08_02_transparency')} under Regulation (EU) 2024/1689 & Digital Omnibus Regulation (EU) 2026/1744",
+    )
+
+
 def _get_omnibus_timeline(article: str) -> str:
-    """Return enacted statutory timeline under Digital Omnibus Regulation (EU) 2026/1744."""
-    art = article.lower()
-    if "50" in art:
-        return "In Force (Live since 2 August 2026) — Not deferred by Digital Omnibus"
-    if "27" in art or "fria" in art:
-        return "Applies 2 December 2027 (Annex III deployer obligation per Reg 2026/1744)"
-    if any(a in art for a in ("9", "10", "11", "12", "13", "14", "15", "17")):
-        return "High-Risk Annex III deferred to 2 December 2027 (Digital Omnibus Reg 2026/1744)"
-    if "5" in art:
-        return "In Force (Prohibitions active since 2 Feb 2025; NCII/CSAM 2 Dec 2026)"
-    return "Phased compliance 2026-2028 under Regulation (EU) 2026/1744"
+    """Return enacted statutory timeline under Digital Omnibus Regulation (EU) 2026/1744.
+
+    Parses EU AI Act articles via :func:`scanner.refs.split_dimension_articles`
+    so framework numerals (e.g. ``ISO 27002``, ``NIST SP 800-53``) never trigger
+    substring collisions, and compound fields with distinct effective dates
+    (e.g. ``"Art. 13 & 50"``) surface every applicable date without conflation.
+    """
+    parsed = split_dimension_articles(article or "")
+    if not parsed:
+        if "fria" in (article or "").lower():
+            return _timeline_bucket("Art. 27")[1]
+        return "Phased compliance 2025–2028 under Regulation (EU) 2024/1689 & Digital Omnibus Regulation (EU) 2026/1744"
+
+    # When substantive articles accompany Art. 3 (definitions), resolve on the
+    # substantive duties rather than Chapter I definitions.
+    substantive = [ref for ref in parsed if ref != "Art. 3"]
+    targets = substantive or parsed
+
+    grouped: dict[str, tuple[list[str], str]] = {}
+    for ref in targets:
+        bucket, label = _timeline_bucket(ref)
+        if bucket not in grouped:
+            grouped[bucket] = ([ref], label)
+        else:
+            grouped[bucket][0].append(ref)
+
+    if len(grouped) == 1:
+        return next(iter(grouped.values()))[1]
+
+    parts = [
+        f"{', '.join(refs_in_bucket)}: {label}"
+        for refs_in_bucket, label in grouped.values()
+    ]
+    return "; ".join(parts)
 
 
 def build_graph_data(scan_result: ScanResult, root_path: Path | None = None) -> dict[str, Any]:

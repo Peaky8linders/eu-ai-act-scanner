@@ -13,6 +13,7 @@ import json
 import logging
 import sys
 from pathlib import Path
+from typing import Literal
 
 import structlog
 
@@ -268,6 +269,32 @@ def _format_qa(result) -> str:
     return "\n".join(lines)
 
 
+def _format_benchmark(report) -> str:
+    """Render an offline deterministic benchmark summary as Markdown."""
+    lines = [
+        "# EU AI Act Scanner — Accuracy Benchmark",
+        "",
+        f"- **Corpus size**: {report.corpus_size} ({report.positive_samples} positive, {report.negative_samples} negative)",
+        f"- **TP / FP / FN / TN**: {report.true_positives} / {report.false_positives} / {report.false_negatives} / {report.true_negatives}",
+        f"- **Precision**: {report.precision:.4f}",
+        f"- **Recall**: {report.recall:.4f}",
+        f"- **F1**: {report.f1:.4f}",
+        f"- **Reproducible**: {report.reproducible} (`{report.inputs_digest[:16]}...`)",
+        "",
+        "## Per-analyzer breakdown",
+        "",
+        "| Analyzer | TP | FP | FN | TN | Precision | Recall | F1 |",
+        "|---|---:|---:|---:|---:|---:|---:|---:|",
+    ]
+    for row in report.per_analyzer:
+        lines.append(
+            f"| `{row.analyzer_id}` | {row.true_positives} | {row.false_positives} | "
+            f"{row.false_negatives} | {row.true_negatives} | "
+            f"{row.precision:.4f} | {row.recall:.4f} | {row.f1:.4f} |"
+        )
+    return "\n".join(lines)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="eu-ai-act-scan",
@@ -366,6 +393,60 @@ def main(argv: list[str] | None = None) -> int:
         help="Include a semantic-review pointer for your host Claude Code / MCP client.",
     )
     parser.add_argument(
+        "--founder",
+        action="store_true",
+        help="Emit the plain-English 3-bucket Founder/Startup Triage brief (or JSON with --json).",
+    )
+    parser.add_argument(
+        "--startup",
+        action="store_true",
+        help="Use startup priority profile with --fix (live Art. 50 + security blockers ahead of Dec 2027 Annex III docs).",
+    )
+    parser.add_argument(
+        "--sarif",
+        nargs="?",
+        const="eu-ai-act.sarif.json",
+        metavar="FILE",
+        help="Export offline SARIF 2.1.0 report (default: eu-ai-act.sarif.json).",
+    )
+    parser.add_argument(
+        "--ingest-sarif",
+        action="append",
+        metavar="FILE",
+        help="Ingest external local SARIF 2.1.0 files (Semgrep, Bandit, Snyk, CodeQL, GHAS). Repeatable.",
+    )
+    parser.add_argument(
+        "--ingest-compliance-api",
+        action="append",
+        metavar="FILE",
+        help="Ingest local Anthropic Claude Compliance API export files (/v1/compliance/*). Repeatable.",
+    )
+    parser.add_argument(
+        "--ingest-claude-security",
+        action="append",
+        metavar="FILE",
+        help="Ingest local /claude-security or /security-review reports (JSONL, JSON, Markdown, or SARIF). Repeatable.",
+    )
+    parser.add_argument(
+        "--save-baseline",
+        nargs="?",
+        const=".eu-ai-act-baseline.json",
+        metavar="FILE",
+        help="Save a local per-repo baseline snapshot (default: .eu-ai-act-baseline.json).",
+    )
+    parser.add_argument(
+        "--diff-baseline",
+        nargs="?",
+        const=".eu-ai-act-baseline.json",
+        metavar="FILE",
+        help="Compare scan results against a saved local baseline (default: .eu-ai-act-baseline.json).",
+    )
+    parser.add_argument(
+        "--benchmark",
+        action="store_true",
+        help="Run the offline deterministic analyzer precision/recall/F1 benchmark (no codebase scan).",
+    )
+    parser.add_argument(
         "--dossier",
         nargs="?",
         const="compliance-dossier.json",
@@ -377,10 +458,16 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Run the autonomous scan-fix remediation pipeline.",
     )
-    parser.add_argument(
+    apply_group = parser.add_mutually_exclusive_group()
+    apply_group.add_argument(
         "--apply",
         action="store_true",
         help="Apply remediation patches to disk (dry-run preview by default).",
+    )
+    apply_group.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Preview remediation patches without writing (the default; explicit for scripts).",
     )
     parser.add_argument(
         "--graph",
@@ -395,6 +482,17 @@ def main(argv: list[str] | None = None) -> int:
         version=f"%(prog)s {__version__}",
     )
     args = parser.parse_args(argv)
+
+    # Offline deterministic accuracy benchmark — no codebase scan.
+    if args.benchmark:
+        from scanner.benchmark import run_scanner_benchmark
+
+        report = run_scanner_benchmark()
+        if args.json:
+            print(report.model_dump_json(indent=2))
+        else:
+            print(_format_benchmark(report))
+        return 0
 
     # Settings persistence — no codebase scan.
     if args.set:
@@ -432,7 +530,6 @@ def main(argv: list[str] | None = None) -> int:
     # Grounded Q&A over the bundled knowledge base — no codebase scan.
     if args.ask:
         from scanner.qa import answer_question
-        from scanner.settings import load_settings
 
         qa_result = answer_question(args.ask, top_k=max(1, args.top_k))
         if args.json:
@@ -455,13 +552,18 @@ def main(argv: list[str] | None = None) -> int:
     # Remediation pipeline execution
     if args.fix:
         from scanner.fix_loop import run_fix_loop
-        fix_res = run_fix_loop(path, apply=args.apply)
+
+        fix_profile: Literal["regulatory", "startup"] = (
+            "startup" if args.startup else "regulatory"
+        )
+        fix_res = run_fix_loop(path, apply=args.apply, profile=fix_profile)
         if args.json:
             print(fix_res.model_dump_json(indent=2))
         else:
             lines = [
                 f"# EU AI Act Remediation — {fix_res.project_name}",
                 "",
+                f"- **Profile**: {fix_profile}",
                 f"- **Iterations**: {fix_res.iterations}",
                 f"- **Baseline overall**: {fix_res.baseline_overall:.1f}%",
                 f"- **Final overall**: {fix_res.final_overall:.1f}% (+{fix_res.overall_delta:.1f}%)",
@@ -487,22 +589,80 @@ def main(argv: list[str] | None = None) -> int:
             file=sys.stderr,
         )
 
+    # Collect optional offline external findings (SARIF, Compliance API, Claude Security)
+    external_findings = []
+    external_sources: list[str] = []
+    seen_sources: set[str] = set()
+
+    def _add_source(label: str) -> None:
+        if label and label not in seen_sources:
+            seen_sources.add(label)
+            external_sources.append(label)
+
+    try:
+        if args.ingest_sarif:
+            from scanner.sarif import ingest_sarif_files
+
+            sarif_findings, sarif_tools = ingest_sarif_files(args.ingest_sarif)
+            external_findings.extend(sarif_findings)
+            for tool_name in sarif_tools:
+                _add_source(tool_name)
+
+        if args.ingest_compliance_api:
+            from scanner.claude_ecosystem import ingest_compliance_api_export
+
+            cca_findings, cca_meta = ingest_compliance_api_export(args.ingest_compliance_api)
+            external_findings.extend(cca_findings)
+            _add_source(str(cca_meta.get("source") or "anthropic_claude_compliance_api"))
+
+        if args.ingest_claude_security:
+            from scanner.claude_ecosystem import ingest_claude_security_report
+
+            cs_findings, cs_meta = ingest_claude_security_report(args.ingest_claude_security)
+            external_findings.extend(cs_findings)
+            for tool_name in cs_meta.get("source_tools") or ["claude-security"]:
+                _add_source(str(tool_name))
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
     try:
         result = scan_project(
             path,
             project_name=args.name,
             role=args.role,
             deep=args.deep,
-            cross_framework=args.cross_framework,
+            cross_framework=args.cross_framework or args.founder,
+            external_findings=external_findings or None,
+            external_sources=external_sources or None,
         )
     except ValueError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
 
-    # Artefact writers (dossier, graph) are additive: passing both must write
-    # both. They suppress the default JSON dump only when no other output mode
-    # was requested (an early return used to silently drop the second one).
+    # Compute baseline diff BEFORE --save-baseline can overwrite the same file.
+    baseline_diff = None
+    if args.diff_baseline:
+        from scanner.baseline import diff_baseline
+
+        try:
+            baseline_diff = diff_baseline(result, args.diff_baseline)
+        except (FileNotFoundError, ValueError) as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
+
+    # Artefact writers (dossier, graph, sarif, baseline) are additive: passing
+    # several writes all of them. They suppress the default JSON dump only when
+    # no other stdout output mode was requested.
     wrote_artefact = False
+    has_stdout_mode = bool(
+        args.json
+        or args.markdown
+        or args.article
+        or args.cross_framework
+        or args.founder
+        or args.diff_baseline
+    )
 
     # Cryptographic dossier generation
     if args.dossier:
@@ -513,7 +673,7 @@ def main(argv: list[str] | None = None) -> int:
             f"Sealed cryptographic compliance dossier written to: {dossier_path} "
             f"(Integrity SHA-256: {dossier.dossier_integrity_hash[:16]}...)"
         )
-        if args.json or args.markdown:
+        if has_stdout_mode:
             print(message, file=sys.stderr)
         else:
             print(message)
@@ -525,13 +685,64 @@ def main(argv: list[str] | None = None) -> int:
         graph_path = Path(args.graph)
         generate_visual_graph(result, output_path=graph_path, root_path=path)
         message = f"Interactive context graph visual written to: {graph_path}"
-        if args.json or args.markdown:
+        if has_stdout_mode:
             print(message, file=sys.stderr)
         else:
             print(message)
         wrote_artefact = True
 
-    if wrote_artefact and not (args.json or args.markdown or args.article or args.cross_framework):
+    # Offline SARIF 2.1.0 report export
+    if args.sarif:
+        from scanner.sarif import write_sarif
+        sarif_path = write_sarif(result, args.sarif)
+        message = f"SARIF 2.1.0 report written to: {sarif_path}"
+        if has_stdout_mode:
+            print(message, file=sys.stderr)
+        else:
+            print(message)
+        wrote_artefact = True
+
+    # Local per-repo baseline snapshot
+    if args.save_baseline:
+        from scanner.baseline import save_baseline
+        baseline_path = save_baseline(result, args.save_baseline)
+        message = f"Baseline snapshot saved to: {baseline_path}"
+        if has_stdout_mode:
+            print(message, file=sys.stderr)
+        else:
+            print(message)
+        wrote_artefact = True
+
+    if wrote_artefact and not has_stdout_mode:
+        return 0
+
+    if args.founder:
+        from scanner.founder_triage import build_founder_triage, format_founder_brief
+
+        triage = build_founder_triage(result)
+        if args.json:
+            if baseline_diff is not None:
+                founder_payload = triage.model_dump()
+                founder_payload["baseline_diff"] = baseline_diff
+                print(json.dumps(founder_payload, indent=2, default=str))
+            else:
+                print(triage.model_dump_json(indent=2))
+        else:
+            brief = format_founder_brief(triage)
+            if baseline_diff is not None:
+                from scanner.baseline import format_baseline_diff
+
+                brief += "\n\n" + format_baseline_diff(baseline_diff)
+            print(brief)
+        return 0
+
+    if baseline_diff is not None:
+        from scanner.baseline import format_baseline_diff
+
+        if args.json:
+            print(json.dumps(baseline_diff, indent=2, default=str))
+        else:
+            print(format_baseline_diff(baseline_diff))
         return 0
 
     if args.article:

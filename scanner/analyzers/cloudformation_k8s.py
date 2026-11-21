@@ -19,6 +19,7 @@ from scanner.analyzers._base import (
     AnalyzerContext,
     AnalyzerResult,
     Finding,
+    product_files,
 )
 
 
@@ -244,7 +245,7 @@ def _analyze_k8s_docs(docs: list[dict], path: str) -> list[Finding]:
 def analyze_cloudformation_k8s(ctx: AnalyzerContext) -> AnalyzerResult:
     findings: list[Finding] = []
     yaml_files = [
-        (p, c) for p, c in ctx.files.items()
+        (p, c) for p, c in product_files(ctx)
         if p.endswith((".yml", ".yaml", ".json"))
     ]
     file_count = 0

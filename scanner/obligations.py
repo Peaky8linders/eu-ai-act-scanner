@@ -41,7 +41,7 @@ import structlog
 from pydantic import BaseModel, Field
 
 from scanner import grounding, refs
-from scanner.analyzers._base import AnalyzerContext, Finding
+from scanner.analyzers._base import AnalyzerContext, Finding, search_code_files
 from scanner.data.role_obligations import (
     CANONICAL_ROLE_IDS,
     ROLE_DEPLOYER,
@@ -60,6 +60,7 @@ __all__ = [
     "infer_role_profile",
     "infer_roles",
     "obligations_for_finding",
+    "compute_role_scope",
     "enrich_findings",
 ]
 
@@ -262,18 +263,6 @@ class RoleProfile(BaseModel):
     signals_matched: dict[str, list[str]] = Field(default_factory=dict)
 
 
-def _scan_source(ctx: AnalyzerContext) -> str:
-    """Concatenate all text file contents into one corpus for signal scanning.
-
-    File paths are included too so build-manifest filenames (``setup.py``,
-    ``Dockerfile``, ``pyproject.toml``) themselves count as distributable-artifact
-    evidence even when their content carries no other signal.
-    """
-    parts: list[str] = list(ctx.file_list)
-    parts.extend(ctx.files.values())
-    return "\n".join(parts)
-
-
 def infer_role_profile(ctx: AnalyzerContext) -> RoleProfile:
     """Infer the operator-role profile from a scanned codebase.
 
@@ -291,17 +280,15 @@ def infer_role_profile(ctx: AnalyzerContext) -> RoleProfile:
     GPAI-provider always implies provider as well (training a GPAI model is a
     provider activity), so the two are returned together when GPAI signals fire.
     """
-    corpus = _scan_source(ctx)
     matched: dict[str, list[str]] = {}
 
-    for role_id, patterns in _compiled_role_signals():
+    for role_id, _patterns in _compiled_role_signals():
         hits: list[str] = []
-        # Pair each compiled pattern back to its source signal string for the
-        # traceability record.
-        for pattern, source in zip(
-            patterns, ROLE_SIGNALS[role_id], strict=True
-        ):
-            if pattern.search(corpus):
+        # Search live source/config lines only. README claims, examples,
+        # fixtures, comments, and this module's own signal table are not proof
+        # that the scanned operator occupies a role.
+        for source in ROLE_SIGNALS[role_id]:
+            if search_code_files(ctx, source):
                 hits.append(source)
         if hits:
             matched[role_id] = hits
@@ -405,20 +392,85 @@ def obligations_for_finding(finding: Finding) -> dict:
     }
 
 
+_TIER_ALIASES: dict[str, str] = {
+    "limited": "limited",
+    "limited_risk": "limited",
+    "minimal": "minimal",
+    "minimal_risk": "minimal",
+    "high": "high_risk_annex_iii",
+    "high_risk": "high_risk_annex_iii",
+    "high_risk_annex_iii": "high_risk_annex_iii",
+    "annex_iii": "high_risk_annex_iii",
+    "high_risk_annex_i": "high_risk_annex_i",
+    "annex_i": "high_risk_annex_i",
+    "prohibited": "prohibited",
+    "unacceptable": "prohibited",
+    "gpai": "gpai",
+    "gpai_systemic": "gpai_systemic",
+}
+
+
+def _normalise_risk_tier(risk_tier: str | None) -> str | None:
+    if not risk_tier or not risk_tier.strip():
+        return None
+    key = risk_tier.strip().lower().replace("-", "_").replace(" ", "_")
+    return _TIER_ALIASES.get(key, key)
+
+
+def _article_allowed_for_tier(article_ref: str, tier: str | None) -> bool:
+    """Return True iff ``article_ref`` is structurally applicable at ``tier``.
+
+    Chapter III (Arts. 6–49) and high-risk post-market duties (Arts. 72–73)
+    apply only to high-risk AI systems, so they never leak into ``"limited"``
+    or ``"minimal"`` scope — even when a KB dimension combines Chapter III
+    with Chapter IV (e.g. ``"Art. 13 & 50"``).
+    """
+    if tier is None:
+        return True
+    num = refs.parse(article_ref).article_number
+    if num is None:
+        return True
+    if tier in ("limited", "minimal"):
+        if 6 <= num <= 49 or num in (51, 52, 53, 54, 55, 56, 72, 73):
+            return False
+        if tier == "minimal" and num == 50:
+            return False
+        return True
+    if tier == "prohibited":
+        return num in (4, 5)
+    if tier == "high_risk_annex_i":
+        return num not in (27, 49)
+    if tier in ("gpai", "gpai_systemic"):
+        return num in (51, 52, 53, 54, 55, 56, 95)
+    return True
+
+
 def compute_role_scope(
     roles: list[str],
     compliance_scores: dict[str, float],
     *,
     explicit: bool,
+    risk_tier: str | None = None,
 ) -> dict:
     """Map effective operator role(s) to the obligations and dimensions they owe.
 
     A dimension is *owed* when it is listed in a role's registry ``kb_dimensions``
     or any article that feeds it (via :func:`_dimension_to_articles`) is owed by
-    one of ``roles``. Dimensions with
-    no article mapping are conservatively treated as owed. The result is
-    informational unless ``explicit`` is True, in which case the caller may drop
+    one of ``roles``. Dimensions with no article mapping are conservatively
+    treated as owed when ``risk_tier`` is ``None``. The result is informational
+    unless ``explicit`` is True, in which case the caller may drop
     ``out_of_scope_dimensions`` from its recommendations.
+
+    When ``risk_tier`` is provided:
+
+    * **Chapter III tier floor**: for ``"limited"`` and ``"minimal"`` tiers,
+      Chapter III articles (``Art. 6–49``, including ``Art. 13`` inside
+      composite ``"Art. 13 & 50"``) and high-risk-only monitoring duties
+      (``Art. 72–73``) never leak into applicable scope.
+    * **Known-role duty floor**: ``primary_articles`` explicitly surfaces the
+      tier-applicable primary duties owed by ``roles`` (e.g. ``Art. 26``,
+      ``Art. 27``, ``Art. 50`` for a high-risk deployer; ``Art. 50`` for a
+      limited-risk deployer).
 
     Pure and deterministic.
     """
@@ -428,31 +480,62 @@ def compute_role_scope(
         get_role_obligation,
     )
 
+    tier = _normalise_risk_tier(risk_tier)
     registry_dims: set[str] = set()
     for role_id in roles:
         entry = get_role_obligation(role_id)
         if entry:
             registry_dims.update(entry.get("kb_dimensions", []))
+
+    primary_articles: list[str] = []
     articles: list[str] = []
     for role_id in roles:
-        for ref in articles_for_role(role_id):
-            if ref not in articles:
+        for ref in articles_for_role(role_id, include_secondary=False):
+            if _article_allowed_for_tier(ref, tier):
+                if ref not in primary_articles:
+                    primary_articles.append(ref)
+                if ref not in articles:
+                    articles.append(ref)
+        for ref in articles_for_role(role_id, include_secondary=True):
+            if _article_allowed_for_tier(ref, tier) and ref not in articles:
                 articles.append(ref)
+
     dim_map = _dimension_to_articles()
     owed: list[str] = []
     out_of_scope: list[str] = []
     for dim_id in compliance_scores:
         dim_articles = dim_map.get(dim_id, ())
-        if not dim_articles or dim_id in registry_dims or any(
-            applies_to_role(ref, r) for ref in dim_articles for r in roles
-        ):
+        if tier is None:
+            is_owed = (
+                not dim_articles
+                or dim_id in registry_dims
+                or any(applies_to_role(ref, r) for ref in dim_articles for r in roles)
+            )
+        else:
+            tier_dim_articles = tuple(
+                ref for ref in dim_articles if _article_allowed_for_tier(ref, tier)
+            )
+            if dim_articles:
+                is_owed = bool(tier_dim_articles) and (
+                    dim_id in registry_dims
+                    or any(
+                        applies_to_role(ref, r)
+                        for ref in tier_dim_articles
+                        for r in roles
+                    )
+                )
+            else:
+                is_owed = dim_id in registry_dims
+        if is_owed:
             owed.append(dim_id)
         else:
             out_of_scope.append(dim_id)
     return {
         "roles": list(roles),
         "source": "explicit" if explicit else "inferred",
+        "risk_tier": tier,
         "articles": sorted(articles, key=_article_sort_key),
+        "primary_articles": sorted(primary_articles, key=_article_sort_key),
         "owed_dimensions": owed,
         "out_of_scope_dimensions": out_of_scope,
     }

@@ -144,6 +144,25 @@ class TestObligationTextCoverage:
         assert "private deployers" not in text
         assert "public services" not in text
 
+    def test_art_4_reflects_post_omnibus_wording(self):
+        """Digital Omnibus Reg. (EU) 2026/1744 softened Art. 4 from 'ensure' to
+        'support the development of' with no guarantee of a specific level."""
+        text = OBLIGATION_TEXT["Art. 4"]
+        assert "support the development of" in text
+        assert "guarantee" in text
+        assert "2026/1744" in text
+
+    def test_every_provider_primary_and_enforcement_timeline_article_grounds(self):
+        """Every ROLE_PROVIDER primary article plus core enforcement/timeline
+        provisions must resolve non-empty obligation text."""
+        from scanner.data.role_obligations import ROLE_PROVIDER, articles_for_role
+
+        for ref in articles_for_role(ROLE_PROVIDER, include_secondary=False):
+            assert obligation_text(ref).strip(), f"provider primary article {ref!r} ungrounded"
+
+        for ref in ("Art. 18", "Art. 19", "Art. 20", "Art. 21", "Art. 99", "Art. 101", "Art. 111", "Art. 113"):
+            assert obligation_text(ref).strip(), f"core article {ref!r} ungrounded"
+
 
 class TestObligationTextLookup:
     def test_accepts_canonical_form(self):

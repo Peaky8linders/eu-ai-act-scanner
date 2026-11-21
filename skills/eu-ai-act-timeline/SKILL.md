@@ -35,7 +35,7 @@ Art. 113 sets entry into force and staggered application of the regulation's pro
 | **2 Feb 2025** | Chapters I (general provisions) and II (Art. 5 prohibited practices) | Art. 113(a) |
 | **2 Aug 2025** | Chapters III Sec 4 (notifying authorities, notified bodies), V (GPAI obligations — Art. 53-55), VII (governance), Chapter XII (penalties), Art. 78 (confidentiality) | Art. 113(b) |
 | **2 Aug 2026** | **Transparency obligations (Art. 50)**: Chatbot interaction disclosures (50(1)), synthetic media C2PA marking (50(2)), emotion notices (50(3)), deepfake labelling (50(4)). **IN FORCE.** | Chapter IV / Art. 113 |
-| **2 Dec 2026** | **New Prohibitions**: Art. 5(1)(ba) NCII and Art. 5(1)(bb) CSAM generation | Reg. 2026/1744 Art. 1(7) |
+| **2 Dec 2026** | **New Prohibitions + Art. 111(4) grace end**: Art. 5(1)(ba) NCII and Art. 5(1)(bb) CSAM generation; transitional deadline for pre-2-Aug-2026 synthetic content systems to comply with Art. 50(2) | Reg. 2026/1744 Art. 1(7), Art. 1(39)(b) |
 | **2 Dec 2027** | **Annex III High-Risk Obligations**: Chapter III Sec 1, 2, 3 (Art. 9-15, 17, 26, 27 FRIA). _(Deferred from 2 Aug 2026 by Omnibus)._ | Reg. 2026/1744 Art. 1(40)(b) |
 | **2 Aug 2028** | **Annex I Safety-Component Products**: High-risk AI embedded in products covered by Annex I Section A (machinery, medical devices, toys). _(Deferred from 2 Aug 2027 by Omnibus)._ | Reg. 2026/1744 Art. 1(40)(b) |
 | **End 2030** | Art. 111(1) large-scale EU IT system AI systems placed on market before 2 Aug 2027 must achieve compliance by **31 Dec 2030** | Art. 111(1) |
@@ -63,6 +63,7 @@ Art. 111 addresses systems already on the market. Read precisely — the transit
 - **Art. 111(1)**: AI systems that are components of large-scale EU IT systems listed in Annex X, placed on market or put into service before 2 Aug 2027, must achieve compliance **by 31 December 2030**.
 - **Art. 111(2)**: Operators of high-risk AI systems placed on the market or put into service before 2 Aug 2026 are subject to the regulation **only if those systems are subject to significant changes in design** after that date. Public authority deployers must achieve compliance by **2 Aug 2030** regardless.
 - **Art. 111(3)**: GPAI providers that placed models on market before 2 Aug 2025 must take necessary steps to comply with Art. 53-55 by **2 Aug 2027**.
+- **Art. 111(4)** _(inserted by Reg. (EU) 2026/1744, Art. 1(39)(b))_: providers of AI systems (including GPAI systems) generating synthetic audio, image, video, or text placed on the market **before 2 Aug 2026** have a transitional grace period until **2 December 2026** to comply with Art. 50(2) machine-readable marking. Systems placed on the market on or after 2 Aug 2026 receive no grace period.
 
 **"Significant changes in design"** is not defined precisely — Commission guidance expected. Substantial modification under Art. 3(23) is a useful proxy but not identical.
 
@@ -104,27 +105,27 @@ Post-market monitoring (Art. 72)                    ← from first use onwards
 Deployer FRIA (Art. 27, if in scope)                ← before first use by deployer
 ```
 
-Every step upstream blocks every step downstream. Starting at the conformity-assessment stage in Q2 2026 for an Aug 2026 deadline is almost certainly too late.
+Every step upstream blocks every step downstream. Waiting until the final two quarters before the **2 December 2027** Annex III deadline to start conformity assessment, QMS setup, and Annex IV documentation is almost certainly too late.
 
 ## Common rationalizations
 
 | Excuse | Rebuttal |
 |---|---|
-| "The Act doesn't apply until 2026, so we have time." | Prohibitions (Art. 5) apply since 2 Feb 2025. GPAI obligations (Art. 53-55) since 2 Aug 2025. Transparency (Art. 50) since 2 Aug 2026. High-risk Annex III is 2 Dec 2027, but the preparation time dwarfs the runway. |
+| "The Act doesn't apply until 2026, so we have time." | Prohibitions (Art. 5) apply since 2 Feb 2025. GPAI obligations (Art. 53-55) since 2 Aug 2025. Transparency (Art. 50) and Art. 101 GPAI fines since 2 Aug 2026 (with Art. 111(4) grace only to 2 Dec 2026 for pre-2-Aug-2026 Art. 50(2) synthetic systems). High-risk Annex III is 2 Dec 2027 and Annex I is 2 Aug 2028, but preparation time dwarfs the runway. |
 | "We placed our system on the market before 2 Aug 2026, so we're grandfathered." | Art. 111(2) is narrow. You are out of scope only until you make significant changes in design. For most products in active development, significant changes occur within 12-24 months. Also, public-authority deployers must comply by 2 Aug 2030 regardless. |
-| "We'll wait for harmonised standards before we start." | Harmonised standards provide presumption of conformity. Their absence does not suspend obligations. Art. 9-15 apply by 2 Dec 2027 (Annex III) with or without harmonised standards — state-of-the-art engineering practice is the baseline. |
+| "We'll wait for harmonised standards before we start." | **EN 18286:2026** was cited in the Official Journal on **14 October 2026** (Commission Implementing Decision (EU) 2026/2274, OJ L 2026/2274), conferring Art. 40 presumption of conformity for **Art. 17(1)** (QMS) and the **first sentence of Art. 11(1)** only. The remaining CEN-CENELEC JTC 21 deliverables (`prEN 18228`, `prEN 18229-1`, `prEN 18229-2`, `prEN 18282`, `prEN 18283`, `prEN 18284`) remain drafts — and the absence of standards for Art. 9–15 does not suspend the 2 Dec 2027 (Annex III) or 2 Aug 2028 (Annex I) statutory deadlines. |
 | "The AI Office hasn't published guidance on X, so we can't plan." | True of some areas (Art. 6(3) derogation, simplified SME form). Not a reason to delay the bulk of compliance work (RMS, data governance, documentation, logging, QMS) which has clear requirements in the text. |
 | "Our GPAI model is from before August 2025, so Art. 53 doesn't apply." | Art. 111(3) gives pre-existing GPAI providers until **2 Aug 2027** to achieve compliance. Not an exemption — a deferred deadline. |
 | "We're a deployer — providers carry the weight." | Deployers have their own obligations under Art. 26 and, in Annex III domains, FRIA under Art. 27 (both applicable 2 Dec 2027 for high-risk). Free-riding on provider compliance is not a legal position. |
 
 ## Cross-references
 
-- [eu-ai-act-article-5-prohibited](eu-ai-act-article-5-prohibited.md) — live since 2 Feb 2025
-- [eu-ai-act-article-6-classification](eu-ai-act-article-6-classification.md) — determines which 2026/2027 track applies
-- [eu-ai-act-gpai-classification](eu-ai-act-gpai-classification.md) — GPAI timeline
-- [eu-ai-act-fria-guide](eu-ai-act-fria-guide.md) — FRIA deadlines for deployers
-- [eu-ai-act-penalties](eu-ai-act-penalties.md) — penalty dates (Art. 101 applies from 2 Aug 2026 except as noted)
+- [eu-ai-act-article-5-prohibited](../eu-ai-act-article-5-prohibited/SKILL.md) — live since 2 Feb 2025
+- [eu-ai-act-article-6-classification](../eu-ai-act-article-6-classification/SKILL.md) — determines which 2026/2027 track applies
+- [eu-ai-act-gpai-classification](../eu-ai-act-gpai-classification/SKILL.md) — GPAI timeline
+- [eu-ai-act-fria-guide](../eu-ai-act-fria-guide/SKILL.md) — FRIA deadlines for deployers
+- [eu-ai-act-penalties](../eu-ai-act-penalties/SKILL.md) — penalty dates (Art. 101 applies from 2 Aug 2026 except as noted)
 
 ## Source of truth
 
-EU Regulation 2024/1689, Art. 113, Art. 111, published in the Official Journal of the European Union, 12 July 2024.
+EU Regulation (EU) 2024/1689, Art. 113, Art. 111 (OJ L, 12 July 2024), as amended by Digital Omnibus on AI Regulation (EU) 2026/1744 (OJ L, 2026/1744, 24 July 2026), and Commission Implementing Decision (EU) 2026/2274 (OJ L, 2026/2274, 14 October 2026) citing EN 18286:2026.

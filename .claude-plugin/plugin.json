@@ -1,0 +1,13 @@
+{
+  "name": "eu-ai-act-scanner",
+  "version": "0.11.3",
+  "description": "EU AI Act (Reg. 2024/1689) + Digital Omnibus (Reg. 2026/1744) compliance harness for Claude Code: 24 offline analyzers (incl. MCP toolchain and Claude Code security), founder 3-bucket triage, SARIF 2.1.0 and Claude Compliance API / claude-security ingestion, release dossier, and a 17-tool MCP server. Requires the local engine: pip install -e \".[mcp]\" from this repository.",
+  "author": {
+    "name": "Andrei Bacu",
+    "url": "https://github.com/Peaky8linders"
+  },
+  "homepage": "https://github.com/Peaky8linders/eu-ai-act-scanner",
+  "repository": "https://github.com/Peaky8linders/eu-ai-act-scanner",
+  "license": "Apache-2.0",
+  "keywords": ["eu-ai-act", "compliance", "security", "mcp", "sarif", "founder", "regulation-2024-1689"]
+}

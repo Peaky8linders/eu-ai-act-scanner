@@ -11,11 +11,12 @@ from __future__ import annotations
 
 import ast
 import re
+import warnings
 from pathlib import Path
 from typing import Literal
 
 import structlog
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, PrivateAttr
 
 logger = structlog.get_logger(__name__)
 
@@ -58,6 +59,10 @@ class Finding(BaseModel):
     # ``scanner.incident_grounding`` — empty when the finding has no
     # crosswalkable threat/dimension signal, or for positive evidence.
     related_incidents: list[str] = Field(default_factory=list, max_length=8)
+    # ── Violation-map grounding ──────────────────────────────────────────
+    line_number: int | None = Field(default=None, ge=1)
+    matched_pattern: str = Field(default="", max_length=200)
+    severity: str = Field(default="", max_length=16)
 
 
 class AnalyzerResult(BaseModel):
@@ -81,24 +86,116 @@ class AnalyzerContext(BaseModel):
     file_list: list[str] = Field(default_factory=list, description="All paths including binary")
     binary_files: dict[str, int] = Field(default_factory=dict, description="path → size")
     languages: dict[str, int] = Field(default_factory=dict, description="lang → count")
+    agent_config_files: dict[str, str] = Field(
+        default_factory=dict,
+        description="Agent configuration files (.claude/*, etc.) → content",
+    )
+    extracted_role: str | None = Field(
+        default=None,
+        description="Optional declared OperatorRole value, e.g. 'deployer'",
+    )
+
+    # Per-scan AST parse cache (path → parsed Module | None). PrivateAttr so it
+    # never serialises into JSON outputs. Populated lazily by parse_python_*
+    # helpers via _cached_ast so each Python file is parsed at most once per scan.
+    _ast_cache: dict = PrivateAttr(default_factory=dict)
+    # Per-scan preprocessed code-line cache for search_code_files keyed by
+    # (path, mask_strings) so docstring blanking and string/comment stripping
+    # run at most once per file per scan instead of once per pattern call.
+    _code_search_cache: dict = PrivateAttr(default_factory=dict)
+
+
+# ─── Test-fixture exclusion (use/mention discipline) ────────────────────
+
+_FIXTURE_SEGMENTS = frozenset({"test", "tests", "__tests__", "fixture", "fixtures"})
+_FIXTURE_FILE_RE = re.compile(
+    r"(^|/)(test_[^/]+|conftest)\.py$|[^/]*\.(spec|test)\.[jt]sx?$", re.IGNORECASE
+)
+
+
+def is_non_product_path(path: str) -> bool:
+    """True when ``path`` is a test fixture or test file — a file that simulates
+    another system for testing, not the scanned product's own code.
+
+    Deliberately narrow: keys on token-boundary path segments + test-file naming
+    so ``docs/``, ``examples/``, ``scripts/`` stay eligible for analyzers that
+    legitimately inspect them, while ``tests/fixtures/iac/k8s_bad.yaml`` and
+    ``test_app.py`` are excluded.
+    """
+    low = path.lower().replace("\\", "/")
+    if _FIXTURE_FILE_RE.search(low):
+        return True
+    return any(seg in _FIXTURE_SEGMENTS for seg in low.split("/")[:-1])
+
+
+def product_files(ctx: AnalyzerContext) -> list[tuple[str, str]]:
+    """``ctx.files`` items with test fixtures / test files removed."""
+    return [(p, c) for p, c in ctx.files.items() if not is_non_product_path(p)]
 
 
 # ─── Helpers for analyzers ──────────────────────────────────────────────
 
 
-def search_files(ctx: AnalyzerContext, pattern: str, flags: int = re.IGNORECASE) -> list[tuple[str, str]]:
-    """Search all text files for a regex pattern. Returns [(file_path, matched_line)]."""
+def search_files(
+    ctx: AnalyzerContext,
+    pattern: str,
+    flags: int = re.IGNORECASE,
+    include_non_product: bool = False,
+) -> list[tuple[str, str]]:
+    """Search text files for a regex pattern. Returns [(file_path, matched_line)].
+
+    Test fixtures / test files are excluded by default. Analyzers whose subject
+    IS the test surface (e.g. ``test_suite``) pass ``include_non_product=True``.
+    """
     try:
         compiled = re.compile(pattern, flags)
     except re.error:
         logger.warning("search_files_bad_pattern", pattern=pattern[:50])
         return []
     results = []
-    for path, content in ctx.files.items():
+    items = ctx.files.items() if include_non_product else product_files(ctx)
+    for path, content in items:
         for line in content.split("\n"):
             if compiled.search(line):
                 results.append((path, line.strip()[:200]))
                 break  # one match per file is enough
+    return results
+
+
+def search_files_with_lines(
+    ctx: AnalyzerContext,
+    pattern: str,
+    flags: int = re.IGNORECASE,
+    max_matches_per_file: int = 5,
+    include_non_product: bool = False,
+) -> list[tuple[str, int, str, str]]:
+    """Line-aware search variant returning ``[(file_path, line_number, matched_text, pattern), ...]``.
+
+    ``line_number`` is 1-indexed and ``matched_text`` is the stripped source line
+    (with soft-wrap continuation for short lines) truncated to 200 chars.
+    """
+    try:
+        compiled = re.compile(pattern, flags)
+    except re.error:
+        logger.warning("search_files_with_lines_bad_pattern", pattern=pattern[:50])
+        return []
+    results: list[tuple[str, int, str, str]] = []
+    items = ctx.files.items() if include_non_product else product_files(ctx)
+    for path, content in items:
+        per_file = 0
+        file_lines = content.split("\n")
+        for idx, line in enumerate(file_lines):
+            line_no = idx + 1
+            if compiled.search(line):
+                ctx_line = line.strip()
+                if len(ctx_line) < 150 and idx + 1 < len(file_lines):
+                    nxt = file_lines[idx + 1].strip()
+                    if nxt and len(ctx_line) + 1 + len(nxt) <= 200:
+                        ctx_line = ctx_line + " " + nxt
+                results.append((path, line_no, ctx_line[:200], pattern))
+                per_file += 1
+                if per_file >= max_matches_per_file:
+                    break
     return results
 
 
@@ -138,12 +235,68 @@ _STR_LITERAL_RE = re.compile(r"[rR]?(\"[^\"\n]*\"|'[^'\n]*')")
 _TRIPLE_QUOTED_RE = re.compile(r'"""[\s\S]*?"""|\'\'\'[\s\S]*?\'\'\'')
 
 
+def _preprocessed_code_lines(
+    ctx: AnalyzerContext,
+    path: str,
+    content: str,
+    mask_strings: bool,
+) -> list[tuple[int, str, str]]:
+    """Return cached ``[(line_no, raw_line, searchable_line)]`` for a code file.
+
+    Docstring blanking and comment/detector filtering run once per file
+    (cached under ``(path, None)``), and string-literal masking + trailing
+    comment stripping run at most once per ``(path, mask_strings)`` pair.
+    """
+    cache = ctx._code_search_cache
+    key = (path, mask_strings)
+    cached: list[tuple[int, str, str]] | None = cache.get(key)
+    if cached is not None:
+        return cached
+
+    suffix = Path(path).suffix.lower()
+    base_key = (path, None)
+    base_lines: list[tuple[int, str, str]] | None = cache.get(base_key)
+    if base_lines is None:
+        masked = _TRIPLE_QUOTED_RE.sub(
+            lambda m: "\n" * m.group(0).count("\n"), content
+        )
+        base_lines = []
+        for line_no, (line, mline) in enumerate(
+            zip(content.split("\n"), masked.split("\n"), strict=True), start=1
+        ):
+            stripped = mline.strip()
+            if not stripped:
+                continue
+            if stripped.startswith("#") or stripped.startswith("//"):
+                continue
+            if "search_files(" in mline:
+                continue
+            if _DETECTOR_DEF_RE.search(mline):
+                continue
+            base_lines.append((line_no, line, mline))
+        cache[base_key] = base_lines
+
+    out: list[tuple[int, str, str]] = []
+    for line_no, raw_line, mline in base_lines:
+        probe = (
+            _STR_LITERAL_RE.sub(lambda m: " " * len(m.group(0)), mline)
+            if mask_strings
+            else mline
+        )
+        probe = _strip_trailing_comment(probe, suffix)
+        if probe:
+            out.append((line_no, raw_line, probe))
+    cache[key] = out
+    return out
+
+
 def search_code_files(
     ctx: AnalyzerContext,
     pattern: str,
     flags: int = re.IGNORECASE,
     *,
     mask_strings: bool = True,
+    include_non_product: bool = False,
 ) -> list[tuple[str, str]]:
     """Search code/config files for a regex pattern — prose- and self-match-free.
 
@@ -151,6 +304,8 @@ def search_code_files(
 
     * only source/config extensions (``_CODE_EXTENSIONS``) — README/CHANGELOG/
       vendored-JSON prose never counts as code evidence;
+    * test fixtures / test files are excluded by default via :func:`product_files`
+      unless ``include_non_product=True``;
     * full-line comments (``#``, ``//``) are skipped — a heuristic description
       is not an implementation;
     * trailing comments are stripped too (extension-aware: ``#`` for
@@ -166,38 +321,22 @@ def search_code_files(
     except re.error:
         logger.warning("search_code_files_bad_pattern", pattern=pattern[:50])
         return []
+    # Patterns that themselves look inside string content (they contain a
+    # quote) match against the unmasked line — e.g. `model = "gpt-4"` literals.
+    # All other patterns match against the literal-masked line so detector-table
+    # strings never count as code evidence.
+    effective_mask = mask_strings and '"' not in pattern and "'" not in pattern
     results = []
-    for path, content in ctx.files.items():
+    items = ctx.files.items() if include_non_product else product_files(ctx)
+    for path, content in items:
         suffix = Path(path).suffix.lower()
         if suffix not in _CODE_EXTENSIONS:
             continue
-        masked = _TRIPLE_QUOTED_RE.sub(
-            lambda m: "\n" * m.group(0).count("\n"), content
-        )
-        for line, mline in zip(content.split("\n"), masked.split("\n"), strict=True):
-            stripped = mline.strip()
-            if not stripped:
-                continue
-            if stripped.startswith("#") or stripped.startswith("//"):
-                continue
-            if "search_files(" in mline:
-                continue
-            if _DETECTOR_DEF_RE.search(mline):
-                continue
-            # Patterns that themselves look inside string content (they contain
-            # a quote) match against the raw line — e.g. `model = "gpt-4"`
-            # literals. All other patterns match against the literal-masked
-            # line so detector-table strings never count as code evidence.
-            # Table self-match stays impossible either way: tables spell
-            # patterns with regex escapes (`\\s`), which never satisfy the
-            # live pattern adjacent to the quote.
-            if not mask_strings or '"' in pattern or "'" in pattern:
-                probe = mline
-            else:
-                probe = _STR_LITERAL_RE.sub(lambda m: " " * len(m.group(0)), mline)
-            probe = _strip_trailing_comment(probe, suffix)
-            if compiled.search(probe):
-                results.append((path, line.strip()[:200]))
+        for _line_no, raw_line, searchable_line in _preprocessed_code_lines(
+            ctx, path, content, effective_mask
+        ):
+            if compiled.search(searchable_line):
+                results.append((path, raw_line.strip()[:200]))
                 break
     return results
 
@@ -261,12 +400,12 @@ _PROMPT_ASSET_RE = re.compile(
 
 def is_test_path(path: str) -> bool:
     """True for test/spec/fixture paths (synthetic code, not runtime evidence)."""
-    return bool(_TEST_PATH_RE.search(path or ""))
+    return bool(_TEST_PATH_RE.search((path or "").replace("\\", "/")))
 
 
 def is_prompt_asset(path: str) -> bool:
     """True for prompt/template asset paths (md, txt, jinja, ...)."""
-    return bool(_PROMPT_ASSET_RE.search(path or ""))
+    return bool(_PROMPT_ASSET_RE.search((path or "").replace("\\", "/")))
 
 
 def count_matches(ctx: AnalyzerContext, pattern: str) -> int:
@@ -331,11 +470,25 @@ class PythonClass(BaseModel):
 
 
 def _safe_parse_ast(content: str) -> ast.Module | None:
-    """Parse Python source into AST, returning None on syntax errors."""
+    """Parse Python source into AST, returning None on syntax errors.
+
+    Suppresses ``SyntaxWarning`` (e.g. invalid escape sequences inside scanned
+    user repositories) so stderr is not flooded during scans.
+    """
     try:
-        return ast.parse(content)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", SyntaxWarning)
+            return ast.parse(content)
     except (SyntaxError, ValueError, RecursionError):
         return None
+
+
+def _cached_ast(ctx: AnalyzerContext, path: str, content: str) -> ast.Module | None:
+    """Parse ``content`` at most once per scan, memoised on the AnalyzerContext."""
+    cache = ctx._ast_cache
+    if path not in cache:
+        cache[path] = _safe_parse_ast(content)
+    return cache[path]
 
 
 def parse_python_imports(ctx: AnalyzerContext) -> list[PythonImport]:
@@ -344,7 +497,7 @@ def parse_python_imports(ctx: AnalyzerContext) -> list[PythonImport]:
     for path, content in ctx.files.items():
         if not path.endswith(".py"):
             continue
-        tree = _safe_parse_ast(content)
+        tree = _cached_ast(ctx, path, content)
         if tree is None:
             continue
         for node in ast.walk(tree):
@@ -375,7 +528,7 @@ def parse_python_functions(ctx: AnalyzerContext) -> list[PythonFunction]:
     for path, content in ctx.files.items():
         if not path.endswith(".py"):
             continue
-        tree = _safe_parse_ast(content)
+        tree = _cached_ast(ctx, path, content)
         if tree is None:
             continue
         for node in ast.walk(tree):
@@ -395,6 +548,7 @@ def parse_python_functions(ctx: AnalyzerContext) -> list[PythonFunction]:
                 has_docstring = (
                     isinstance(node.body[0], ast.Expr)
                     and isinstance(node.body[0].value, ast.Constant)
+                    and isinstance(node.body[0].value.value, str)
                     if node.body else False
                 )
 
@@ -417,7 +571,7 @@ def parse_python_classes(ctx: AnalyzerContext) -> list[PythonClass]:
     for path, content in ctx.files.items():
         if not path.endswith(".py"):
             continue
-        tree = _safe_parse_ast(content)
+        tree = _cached_ast(ctx, path, content)
         if tree is None:
             continue
         for node in ast.walk(tree):
@@ -432,6 +586,7 @@ def parse_python_classes(ctx: AnalyzerContext) -> list[PythonClass]:
                 has_docstring = (
                     isinstance(node.body[0], ast.Expr)
                     and isinstance(node.body[0].value, ast.Constant)
+                    and isinstance(node.body[0].value.value, str)
                     if node.body else False
                 )
                 classes.append(PythonClass(
@@ -456,9 +611,18 @@ def get_docstring_coverage(ctx: AnalyzerContext) -> tuple[int, int]:
     return documented, len(public_fns)
 
 
-def get_import_modules(ctx: AnalyzerContext) -> set[str]:
-    """Get the set of all top-level imported module names (e.g. 'torch' not 'torch.nn')."""
+def get_import_modules(
+    ctx: AnalyzerContext, *, include_non_product: bool = False
+) -> set[str]:
+    """Get top-level imports from runtime code (e.g. 'torch', not 'torch.nn').
+
+    Test fixtures describe other projects; they do not make the repository
+    being scanned an AI system or an agent runtime. Callers that specifically
+    assess test coverage can opt in with ``include_non_product=True``.
+    """
     imports = parse_python_imports(ctx)
+    if not include_non_product:
+        imports = [imp for imp in imports if not is_test_path(imp.file_path)]
     return {imp.module.split(".")[0] for imp in imports}
 
 

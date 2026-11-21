@@ -3,7 +3,7 @@
     "eu-ai-act-scanner": {
       "command": "eu-ai-act-scan-mcp",
       "args": [],
-      "description": "EU AI Act (Regulation 2024/1689) code scanner + real-world incident grounding. Tools: scan a codebase, list compliance dimensions, get article detail, and surface GenAI/agentic-AI security incidents (OWASP LLM/ASI, NIST AI RMF, MITRE ATLAS) for a dimension/article/threat."
+      "description": "EU AI Act (Regulation 2024/1689 + Digital Omnibus 2026/1744) offline code scanner & incident grounding MCP server. 17 tools: scan_project, founder_triage, export_sarif, ingest_sarif, ingest_claude_ecosystem (Claude Compliance API & /claude-security), regulatory_applicability, project_cross_framework (12 frameworks incl. EN 18286:2026), generate_dossier, remediation_loop, generate_visual_graph, list_dimensions, get_article, agentic_taxonomy, and GenAI/agentic incident corpus lookups."
     }
   }
 }

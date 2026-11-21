@@ -7,15 +7,95 @@ Uses AST for Pydantic model detection and decorator analysis.
 
 from __future__ import annotations
 
+import ast
+import re
+
 from scanner.analyzers._base import (
     AnalyzerContext,
     AnalyzerResult,
     Finding,
+    _cached_ast,
     any_file_contains,
     has_file,
     parse_python_classes,
+    product_files,
     search_files,
+    search_files_with_lines,
 )
+
+# `timeout = 5` is as valid as `timeout=5`, so the separator is not literal.
+_TIMEOUT_KWARG_RE = re.compile(r"\btimeout\s*=")
+_REQUESTS_CALL_PATTERN = r"requests\.(get|post|put|delete)\("
+_UNSAFE_DESER_MODULES = frozenset({"marshal", "dill"})
+_UNSAFE_DESER_FUNCS = frozenset({"load", "loads"})
+
+
+def _find_unsafe_deserialization(ctx: AnalyzerContext) -> list[tuple[str, int, str, str]]:
+    """AST-based detector for ``marshal.load(s)`` / ``dill.load(s)`` in Python product code."""
+    hits: list[tuple[str, int, str, str]] = []
+    for path, content in product_files(ctx):
+        if not path.endswith(".py"):
+            continue
+        tree = _cached_ast(ctx, path, content)
+        if tree is None:
+            continue
+        # Track aliases: `import dill as d` or `from marshal import loads as mloads`
+        module_aliases: dict[str, str] = {}
+        direct_aliases: dict[str, str] = {}
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    top = alias.name.split(".")[0]
+                    if top in _UNSAFE_DESER_MODULES:
+                        module_aliases[alias.asname or top] = top
+            elif isinstance(node, ast.ImportFrom) and node.module:
+                top = node.module.split(".")[0]
+                if top in _UNSAFE_DESER_MODULES:
+                    for alias in node.names:
+                        if alias.name in _UNSAFE_DESER_FUNCS:
+                            direct_aliases[alias.asname or alias.name] = f"{top}.{alias.name}"
+
+        lines = content.splitlines()
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            call_label = ""
+            if isinstance(node.func, ast.Attribute) and isinstance(node.func.value, ast.Name):
+                mod = module_aliases.get(node.func.value.id)
+                if mod and node.func.attr in _UNSAFE_DESER_FUNCS:
+                    call_label = f"{mod}.{node.func.attr}"
+            elif isinstance(node.func, ast.Name):
+                call_label = direct_aliases.get(node.func.id, "")
+            if call_label:
+                ln = node.lineno
+                snippet = lines[ln - 1].strip()[:200] if 0 < ln <= len(lines) else call_label
+                hits.append((path, ln, snippet, f"ast.Call:{call_label}"))
+                if len(hits) >= 3:
+                    return hits
+    return hits
+
+
+def _call_window_has_timeout(content: str, start_line: int) -> bool:
+    """Check whether the call starting at 1-indexed ``start_line`` specifies ``timeout=``."""
+    lines = content.splitlines()
+    idx = start_line - 1
+    if idx < 0 or idx >= len(lines):
+        return False
+    # Check the call line plus up to 10 continuation lines until closing paren.
+    chunk_lines: list[str] = []
+    depth = 0
+    started = False
+    for line in lines[idx : idx + 11]:
+        chunk_lines.append(line)
+        for ch in line:
+            if ch == "(":
+                depth += 1
+                started = True
+            elif ch == ")":
+                depth -= 1
+        if started and depth <= 0:
+            break
+    return bool(_TIMEOUT_KWARG_RE.search("\n".join(chunk_lines)))
 
 
 def analyze_security_controls(ctx: AnalyzerContext) -> AnalyzerResult:
@@ -145,26 +225,97 @@ def analyze_security_controls(ctx: AnalyzerContext) -> AnalyzerResult:
             kb_question_ids=["sp-2"], suggested_answer="yes",
         ))
 
-    # 8. Hardcoded secrets
+    # 8. Hardcoded secrets — line-aware (up to 3 sites per pattern, redacted snippet).
     secret_patterns = [
         (r"""['"](?:sk-|pk_|AKIA|ghp_|gho_|glpat-)[A-Za-z0-9]{10,}['"]""", "Potential API key literal"),
         (r"""password\s*=\s*['"][^'"]{8,}['"]""", "Hardcoded password"),
         (r"""(?:api_key|secret_key|access_token)\s*=\s*['"][^'"]{8,}['"]""", "Hardcoded secret"),
     ]
     for pat, desc in secret_patterns:
-        matches = search_files(ctx, pat)
-        # Filter out test files and example configs
-        real_matches = [(p, s) for p, s in matches if "test" not in p.lower() and "example" not in p.lower()]
-        if real_matches:
+        line_matches = search_files_with_lines(ctx, pat)
+        real_matches = [
+            m for m in line_matches
+            if "test" not in m[0].lower() and "example" not in m[0].lower()
+        ]
+        for path, line_no, _matched, pattern in real_matches[:3]:
             findings.append(Finding(
-                id=f"sec-hardcoded-{desc[:15].replace(' ', '-').lower()}", category="security_controls",
+                id=f"sec-hardcoded-{desc[:15].replace(' ', '-').lower()}-{line_no}",
+                category="security_controls",
                 title=f"Potential hardcoded secret: {desc}",
-                description="Pattern matching a hardcoded secret found in source (not test/example).",
-                file_path=real_matches[0][0], confidence=0.7,
+                description=(
+                    f"Pattern `{pattern}` matched at {path}:{line_no} (not test/example). "
+                    "Verify the literal is not a production credential."
+                ),
+                file_path=path, confidence=0.7,
                 compliance_impact="gap",
                 compliance_dimensions=["security"],
-                evidence_snippet="[redacted — potential secret]",
+                evidence_snippet="[redacted — potential secret literal at this line]",
+                line_number=line_no,
+                matched_pattern=pattern,
+                article_paragraphs=["Art. 15(3)"],
             ))
+
+    # 9. Unsafe deserialization (code-gated AST check for marshal/dill load(s)).
+    for path, line_no, snippet, matched_pat in _find_unsafe_deserialization(ctx):
+        findings.append(Finding(
+            id=f"sec-unsafe-deserialization-{line_no}",
+            category="security_controls",
+            title=f"Unsafe deserialization ({matched_pat.split(':', 1)[-1]})",
+            description=(
+                f"Untrusted deserialization via `{matched_pat.split(':', 1)[-1]}` at "
+                f"{path}:{line_no} allows arbitrary code execution on attacker-controlled "
+                "payloads. Use safe formats (JSON, safetensors, ONNX). Art. 15(3)-(4)."
+            ),
+            file_path=path,
+            confidence=0.85,
+            compliance_impact="gap",
+            compliance_dimensions=["security"],
+            evidence_snippet=snippet,
+            kb_question_ids=["sc-3"],
+            suggested_answer="no",
+            line_number=line_no,
+            matched_pattern=matched_pat,
+            article_paragraphs=["Art. 15(3)", "Art. 15(4)"],
+        ))
+
+    # 10. Outbound HTTP requests missing explicit timeout= (2-step non-backtracking).
+    # Single-regex negative lookaheads between backtrackable `[^)]*` segments are
+    # no-ops that falsely flag compliant `requests.get(url, timeout=5)` calls.
+    # Step 1 finds the call line; Step 2 checks the call's argument window for `timeout=`.
+    timeout_gaps = 0
+    for path, line_no, text, pattern in search_files_with_lines(
+        ctx, _REQUESTS_CALL_PATTERN, max_matches_per_file=5
+    ):
+        if not path.endswith(".py") or "test" in path.lower():
+            continue
+        stripped = text.lstrip()
+        if stripped.startswith("#") or "search_files" in text or "_PATTERNS" in text:
+            continue
+        content = ctx.files.get(path, "")
+        if _call_window_has_timeout(content, line_no):
+            continue
+        findings.append(Finding(
+            id=f"sec-http-timeout-missing-{line_no}",
+            category="security_controls",
+            title="HTTP request missing explicit timeout=",
+            description=(
+                f"Outbound HTTP call at {path}:{line_no} omits an explicit `timeout=` "
+                "argument. Unbounded blocking network calls can exhaust worker threads "
+                "and cause cascading availability failures (Art. 15(4) resilience)."
+            ),
+            file_path=path,
+            confidence=0.8,
+            compliance_impact="gap",
+            compliance_dimensions=["security", "risk_mgmt"],
+            evidence_snippet=text,
+            suggested_answer="no",
+            line_number=line_no,
+            matched_pattern=pattern,
+            article_paragraphs=["Art. 15(4)"],
+        ))
+        timeout_gaps += 1
+        if timeout_gaps >= 3:
+            break
 
     positive = [f for f in findings if f.compliance_impact == "positive"]
     gaps = [f for f in findings if f.compliance_impact == "gap"]

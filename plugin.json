@@ -1,13 +1,15 @@
 {
   "name": "eu-ai-act-scanner",
   "version": "0.11.3",
-  "description": "EU AI Act (Regulation 2024/1689) and Digital Omnibus (Regulation 2026/1744) compliance harness for Claude Code and Codex. 22 code scanners, interactive visual context graph browser (/ai-act-graph), cryptographic compliance release dossier (/ai-act-dossier), cross-framework projection (/ai-act-cross-framework) mapping to NIST AI RMF, ISO 42001, OWASP LLM 2025, OWASP Agentic Top 10, and GDPR, plus autonomous remediation pipeline (/ai-act-scan-fix) with regression guard. Deep semantic audit mode leverages your active Claude Code or Codex subscription without additional API token costs.",
+  "description": "EU AI Act (Regulation 2024/1689) and Digital Omnibus (Regulation 2026/1744) compliance harness for Claude Code and MCP clients. 24 deterministic analyzers (including MCP toolchain & Claude Code security + AST-gated Art. 50), 60-second Founder/Startup quickstart (/ai-act-quickstart), diff-aware security review (/ai-act-security-review) interoperating with claude-security@claude-plugins-official, Claude Compliance API & SARIF 2.1.0, interactive visual context graph (/ai-act-graph), cryptographic release dossier (/ai-act-dossier), 12-framework projection (/ai-act-cross-framework including EN 18286:2026), and autonomous startup/regulatory remediation (/ai-act-scan-fix).",
   "author": "Andrei Bacu (@Peaky8linders)",
   "license": "Apache-2.0",
   "homepage": "https://github.com/Peaky8linders/eu-ai-act-scanner",
   "regulation": "EU Regulation 2024/1689 & Regulation 2026/1744",
   "commands": [
+    "ai-act-quickstart",
     "ai-act-scan",
+    "ai-act-security-review",
     "ai-act-graph",
     "ai-act-cross-framework",
     "ai-act-dossier",
@@ -18,6 +20,8 @@
     "ai-act-settings"
   ],
   "skills": [
+    "founder-startup-triage",
+    "claude-code-security-hardening",
     "authoring-eu-ai-act-skills",
     "using-eu-ai-act-scanner",
     "interpreting-findings",
@@ -32,6 +36,17 @@
     "eu-ai-act-timeline",
     "eu-ai-act-penalties",
     "eu-ai-act-incident-grounding"
+  ],
+  "hooks_templates": [
+    "hooks/sensitive-data-guard.json",
+    "hooks/sensitive_data_guard.py"
+  ],
+  "templates": [
+    "templates/security-scan-instructions.md",
+    "templates/false-positive-filter.md"
+  ],
+  "playbooks": [
+    "playbooks/ai-act-contract-positions.yaml"
   ],
   "requires": {
     "python": ">=3.11"

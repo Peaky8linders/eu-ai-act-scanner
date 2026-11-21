@@ -147,14 +147,59 @@ _TIE_BREAK_ORDER: list[str] = [
     "logging",
 ]
 
+# Startup / founder-first priority weights (profile="startup"):
+# Live enforcement & immediate security blockers rank highest, ahead of
+# Annex III high-risk obligations deferred to 2 December 2027 under
+# Regulation (EU) 2026/1744 (Digital Omnibus on AI).
+_STARTUP_DIM_WEIGHTS: dict[str, float] = {
+    "content_transparency": 6.0,   # Art. 50 — live since 2 Aug 2026
+    "transparency": 5.9,           # Art. 50 user disclosure — live since 2 Aug 2026
+    "tool_governance": 5.8,        # Live agentic / MCP privilege blocker
+    "security": 5.5,               # Live cybersecurity / prompt-injection blocker
+    "access_control": 5.0,         # Live IAM / secret / agent permissions blocker
+    "supply_chain": 4.8,           # Live unpinned MCP / dependency blocker
+    "logging": 4.5,                # Live operational auditability
+    "ai_literacy": 4.2,            # Art. 4 — live since 2 Feb 2025
+    "human_oversight": 3.5,
+    "risk_mgmt": 3.0,              # Annex III — deferred to 2 Dec 2027
+    "data_gov": 2.8,               # Annex III — deferred to 2 Dec 2027
+    "tech_docs": 2.6,              # Annex III — deferred to 2 Dec 2027
+    "fundamental_rights": 2.5,     # Annex III / Art. 27 — deferred to 2 Dec 2027
+    "deployer_obligations": 2.5,   # Annex III / Art. 26-27 — deferred to 2 Dec 2027
+    "quality_management": 2.5,     # Annex III / Art. 17 — deferred to 2 Dec 2027
+    "conformity_assessment": 2.5,  # Annex III / Art. 43 — deferred to 2 Dec 2027
+    "decision_governance": 3.0,
+}
 
-def _dimension_weight(dim_id: str) -> float:
-    """Return the article-importance weight for a KB dimension.
+_STARTUP_TIE_BREAK_ORDER: list[str] = [
+    "content_transparency",
+    "tool_governance",
+    "security",
+    "access_control",
+    "logging",
+    "risk_mgmt",
+]
 
-    Resolves the dimension's compound ``article`` field to AI Act article
-    numbers (:func:`scanner.refs.split_dimension_articles`) and takes the max
-    per-article weight. Unknown / framework-only dimensions get the default.
+_VALID_PROFILES = frozenset({"regulatory", "startup"})
+
+
+def _dimension_weight(
+    dim_id: str,
+    profile: Literal["regulatory", "startup"] = "regulatory",
+) -> float:
+    """Return the importance weight for a KB dimension under ``profile``.
+
+    Under ``"regulatory"`` (default), resolves the dimension's compound
+    ``article`` field to AI Act article numbers and takes the max per-article
+    weight. Under ``"startup"``, prioritises live Art. 50 transparency and
+    operational security/tool-governance blockers ahead of Annex III dimensions
+    deferred to 2 Dec 2027.
     """
+    if profile == "startup":
+        if dim_id in _STARTUP_DIM_WEIGHTS:
+            return _STARTUP_DIM_WEIGHTS[dim_id]
+        reg = _dimension_weight(dim_id, "regulatory")
+        return min(3.0, reg)
     dim = get_dimension(dim_id)
     if dim is None:
         return _DEFAULT_ARTICLE_WEIGHT
@@ -171,29 +216,45 @@ def _article_number(canonical_ref: str) -> int:
     return int(digits) if digits else -1
 
 
-def _tie_break_key(dim_id: str) -> int:
-    """Tie-break sort key: command-md priority dims first, then alphabetical."""
-    if dim_id in _TIE_BREAK_ORDER:
-        return _TIE_BREAK_ORDER.index(dim_id)
-    return len(_TIE_BREAK_ORDER)
+def _tie_break_key(
+    dim_id: str,
+    profile: Literal["regulatory", "startup"] = "regulatory",
+) -> int:
+    """Tie-break sort key: profile priority dims first, then alphabetical."""
+    order = _STARTUP_TIE_BREAK_ORDER if profile == "startup" else _TIE_BREAK_ORDER
+    if dim_id in order:
+        return order.index(dim_id)
+    return len(order)
 
 
-def rank_gaps(result: ScanResult) -> list[tuple[str, float]]:
+def rank_gaps(
+    result: ScanResult,
+    *,
+    profile: Literal["regulatory", "startup"] = "regulatory",
+) -> list[tuple[str, float]]:
     """Rank actionable (gap / low-score) dimensions, worst-first.
 
     A dimension is actionable when its compliance score is below the
     "broad evidence" band (:data:`_ACTIONABLE_BELOW`). Ranking score is
-    ``(_ACTIONABLE_BELOW - score) x article_weight`` — a low score on a
-    high-weight article (e.g. Art. 9 risk management) ranks highest. Ties are
-    broken by the command-md priority order
-    (risk_mgmt > data_gov > human_oversight > logging > rest), then by lowest
-    raw score, then alphabetically, so the result is fully deterministic.
+    ``(_ACTIONABLE_BELOW - score) x dimension_weight(profile)``.
+
+    * ``profile="regulatory"`` (default): weights by EU AI Act article
+      importance (Art. 9 risk_mgmt > Art. 10 data_gov > Art. 14 human_oversight
+      > Art. 12 logging > rest).
+    * ``profile="startup"``: weights live obligations & security blockers
+      highest (Art. 50 ``content_transparency``, ``tool_governance``,
+      ``security``, ``access_control``, ``logging``) ahead of Annex III
+      dimensions deferred to 2 December 2027.
 
     Returns ``[(dimension_id, raw_score), ...]`` worst-first. A project that is
     not an AI system (EU AI Act Art. 3(1)) has nothing actionable — the
     Regulation does not govern it — so ranking is empty regardless of any
     incidental findings.
     """
+    if profile not in _VALID_PROFILES:
+        raise ValueError(
+            f"Unknown fix-loop profile {profile!r}; expected one of {sorted(_VALID_PROFILES)}"
+        )
     if not result.is_ai_system:
         return []
 
@@ -205,9 +266,9 @@ def rank_gaps(result: ScanResult) -> list[tuple[str, float]]:
 
     def sort_key(item: tuple[str, float]) -> tuple[float, int, float, str]:
         dim_id, score = item
-        rank_score = (_ACTIONABLE_BELOW - score) * _dimension_weight(dim_id)
+        rank_score = (_ACTIONABLE_BELOW - score) * _dimension_weight(dim_id, profile)
         # Negate rank_score so higher rank sorts first under ascending sort.
-        return (-rank_score, _tie_break_key(dim_id), score, dim_id)
+        return (-rank_score, _tie_break_key(dim_id, profile), score, dim_id)
 
     actionable.sort(key=sort_key)
     return actionable
@@ -559,6 +620,124 @@ def _fix_fria(root: Path) -> FixProposal:
     )
 
 
+def _fix_tool_governance(root: Path) -> FixProposal:
+    """Tool-governance & MCP security policy — trips privilege_minimization `pm-permission-registry`."""
+    content = (
+        '"""MCP Tool Governance & URL Host Allowlist Policy (EU AI Act Art. 15(4) / prEN 18282).\n\n'
+        "Enforces execution-layer privilege minimization outside the model:\n"
+        "- Strict host allowlist validation before any outbound tool target.\n"
+        "- Explicit per-tool least-privilege scope registry with `@require_scope`.\n"
+        "- Version-pinned MCP server inventory to prevent upstream rug-pull tampering.\n"
+        '"""\n\n'
+        "from __future__ import annotations\n\n"
+        "from collections.abc import Callable\n"
+        "from functools import wraps\n"
+        "from typing import Any\n"
+        "from urllib.parse import urlparse\n\n"
+        "# Allowlisted hosts permitted for agentic tool targets (SSRF defence, OWASP MCP05).\n"
+        'ALLOWED_HOSTS: frozenset[str] = frozenset({"api.internal.example"})\n\n'
+        "# Explicit least-privilege scope registry per tool (OWASP MCP02 / prEN 18282).\n"
+        "TOOL_SCOPE_REGISTRY: dict[str, tuple[str, ...]] = {\n"
+        '    "read_compliance_report": ("read:compliance",),\n'
+        '    "list_findings": ("read:findings",),\n'
+        "}\n\n"
+        "# Version-pinned MCP server references (OWASP MCP04 supply-chain integrity).\n"
+        "PINNED_MCP_SERVERS: dict[str, str] = {\n"
+        '    "eu-ai-act-scanner": "eu-ai-act-scanner@1.0.0",\n'
+        "}\n\n\n"
+        "def validate_url(url: str) -> bool:\n"
+        '    """Return True only when ``url`` targets an allowlisted host over HTTPS."""\n'
+        "    parsed = urlparse(url)\n"
+        '    return parsed.scheme == "https" and (parsed.hostname in ALLOWED_HOSTS)\n\n\n'
+        "def require_scope(scope: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:\n"
+        '    """Decorator enforcing an explicit API-level capability scope on a tool."""\n'
+        "    def decorator(fn: Callable[..., Any]) -> Callable[..., Any]:\n"
+        "        @wraps(fn)\n"
+        "        def wrapper(*args: Any, granted_scopes: set[str] | None = None, **kwargs: Any) -> Any:\n"
+        "            if granted_scopes is not None and scope not in granted_scopes:\n"
+        '                raise PermissionError(f"Missing required tool scope: {scope}")\n'
+        "            return fn(*args, **kwargs)\n"
+        '        wrapper._required_scope = scope  # type: ignore[attr-defined]\n'
+        "        return wrapper\n"
+        "    return decorator\n\n\n"
+        '@require_scope("read:compliance")\n'
+        "def list_pinned_servers() -> dict[str, str]:\n"
+        '    """Return the version-pinned MCP server catalogue."""\n'
+        "    return dict(PINNED_MCP_SERVERS)\n"
+    )
+    return FixProposal(
+        id="fix-tool-governance",
+        dimension="tool_governance",
+        article="Art. 15",
+        title="Add MCP tool policy (host allowlist, scope registry, version pinning)",
+        rationale=(
+            "Execution-layer tool governance mitigates prompt-injected SSRF, scope overgrant, "
+            "and unpinned MCP rug-pulls (Art. 15(4), prEN 18282, OWASP MCP Top 10)."
+        ),
+        fix_kind="deterministic",
+        target_path=f"{_EVIDENCE_DIR}/mcp_tool_policy.py",
+        content=content,
+        verification="privilege_minimization analyzer detects `@require_scope` -> pm-permission-registry (positive).",
+        grounded_obligation=grounding.obligation_text("Art. 15"),
+    )
+
+
+def _fix_claude_code_security(root: Path) -> FixProposal:
+    """Claude Code Security baseline — least-privilege settings template + PR review checklist."""
+    content = (
+        "# Claude Code Security Baseline\n\n"
+        "> Startup DevSecOps baseline aligned with EU AI Act Art. 15(3)-(4), Art. 9(2), "
+        "and Art. 12(1).\n"
+        "> Review and adapt every `<FILL IN: ...>` entry before committing `.claude/settings.json`.\n\n"
+        "## 1. Least-Privilege `.claude/settings.json` Template\n\n"
+        "```json\n"
+        "{\n"
+        '  "permissions": {\n'
+        '    "allow": ["Read", "Grep", "Glob"],\n'
+        '    "deny": [\n'
+        '      "Read(.env)",\n'
+        '      "Read(.env.*)",\n'
+        '      "Read(**/*.pem)",\n'
+        '      "Read(**/*.key)",\n'
+        '      "Bash(rm -rf*)",\n'
+        '      "Bash(sudo*)"\n'
+        "    ]\n"
+        "  },\n"
+        '  "enableAllProjectMcpServers": false,\n'
+        '  "enabledMcpjsonServers": ["<FILL IN: allowlisted MCP server ids>"],\n'
+        '  "enabledPlugins": {\n'
+        '    "claude-security@claude-plugins-official": true\n'
+        "  },\n"
+        '  "env": {\n'
+        '    "CLAUDE_CODE_ENABLE_TELEMETRY": "1"\n'
+        "  }\n"
+        "}\n"
+        "```\n\n"
+        "## 2. `/claude-security` & PR Security Review Checklist\n\n"
+        "- [ ] Run `/claude-security` locally before opening high-impact PRs.\n"
+        "- [ ] Enable `anthropics/claude-code-security-review` on `pull_request` events with `comment-pr: true`.\n"
+        "- [ ] Maintain `THREAT_MODEL.md` or `.claude/threat-model.md` covering trust boundaries and data flows.\n"
+        "- [ ] Pin all MCP server packages with exact semver or SHA-256 integrity digests.\n"
+        "- [ ] Ingest Claude Code OpenTelemetry or Claude Compliance API activity logs for Art. 12/26 audit trails.\n"
+    )
+    return FixProposal(
+        id="fix-claude-code-security",
+        dimension="access_control",
+        article="Art. 15",
+        title="Add Claude Code Security least-privilege baseline & PR review checklist",
+        rationale=(
+            "Provides a least-privilege `.claude/settings.json` deny-list template, "
+            "official Claude Code Security plugin enablement, and PR security review checklist "
+            "(Art. 15(3)-(4), Art. 9(2))."
+        ),
+        fix_kind="deterministic",
+        target_path=f"{_EVIDENCE_DIR}/claude_security_baseline.md",
+        content=content,
+        verification="Provides auditable least-privilege Claude Code settings template and PR security checklist.",
+        grounded_obligation=grounding.obligation_text("Art. 15"),
+    )
+
+
 DETERMINISTIC_FIXERS: dict[str, Callable[[Path], FixProposal]] = {
     "logging": _fix_logging,
     "human_oversight": _fix_human_oversight,
@@ -570,6 +749,8 @@ DETERMINISTIC_FIXERS: dict[str, Callable[[Path], FixProposal]] = {
     "configuration": _fix_configuration,
     "art50_transparency": _fix_art50_transparency,
     "fria": _fix_fria,
+    "tool_governance": _fix_tool_governance,
+    "claude_code_security": _fix_claude_code_security,
 }
 
 # Maps a ranked KB dimension id to the fixer key that supplies its evidence,
@@ -585,6 +766,7 @@ _DIMENSION_TO_FIXER: dict[str, str] = {
     "security": "configuration",
     "infra_mlops": "configuration",
     "decision_governance": "human_oversight",
+    "access_control": "claude_code_security",
 }
 
 
@@ -691,6 +873,7 @@ def run_fix_loop(
     apply: bool = False,
     use_llm: bool | None = None,
     min_delta: float = 0.1,
+    profile: Literal["regulatory", "startup"] = "regulatory",
     **_ignored: object,
 ) -> FixLoopResult:
     """Run the autonomous scan -> fix -> rescan loop.
@@ -709,11 +892,18 @@ def run_fix_loop(
         min_delta: Minimum overall improvement (in points) for the run to count
             an iteration as "made progress"; used only for the convergence
             signal, not as a revert threshold.
+        profile: Prioritisation profile for :func:`rank_gaps` — ``"regulatory"``
+            (default) or ``"startup"`` (prioritises live Art. 50 transparency
+            and security/tool-governance blockers ahead of Dec 2027 Annex III dims).
 
     Returns:
         A :class:`FixLoopResult` describing the plan (dry-run) or the applied
         deltas (apply mode).
     """
+    if profile not in _VALID_PROFILES:
+        raise ValueError(
+            f"Unknown fix-loop profile {profile!r}; expected one of {sorted(_VALID_PROFILES)}"
+        )
     root_path = Path(root).resolve()
     if not root_path.is_dir():
         raise ValueError(f"Not a directory: {root_path}")
@@ -753,7 +943,7 @@ def run_fix_loop(
 
     for _ in range(max_iterations):
         iterations += 1
-        ranked = rank_gaps(current)
+        ranked = rank_gaps(current, profile=profile)
         if not ranked:
             converged = True
             break
@@ -907,6 +1097,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--apply", action="store_true", help="Write fixes (default: dry-run).")
     parser.add_argument("--top", type=int, default=3, help="Top N gaps to remediate per iteration.")
     parser.add_argument("--max-iter", type=int, default=5, help="Max loop iterations.")
+    parser.add_argument(
+        "--profile",
+        choices=["regulatory", "startup"],
+        default="regulatory",
+        help="Gap ranking profile: regulatory (default) or startup (live Art. 50 + security first).",
+    )
     parser.add_argument("--use-llm", action="store_true", help="Deprecated, ignored (kept for compatibility).")
     parser.add_argument("--json", action="store_true", help="Emit JSON instead of markdown.")
     args = parser.parse_args(argv)
@@ -924,6 +1120,7 @@ def main(argv: list[str] | None = None) -> int:
             max_iterations=args.max_iter,
             apply=args.apply,
             use_llm=True if args.use_llm else None,
+            profile=args.profile,
         )
     except ValueError as exc:
         parser.error(str(exc))

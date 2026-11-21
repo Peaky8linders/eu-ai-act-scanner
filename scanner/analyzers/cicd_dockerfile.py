@@ -20,6 +20,7 @@ from scanner.analyzers._base import (
     AnalyzerContext,
     AnalyzerResult,
     Finding,
+    product_files,
 )
 
 
@@ -196,7 +197,7 @@ def _is_compose(path: str) -> bool:
 def analyze_cicd_dockerfile(ctx: AnalyzerContext) -> AnalyzerResult:
     findings: list[Finding] = []
     file_count = 0
-    for path, content in ctx.files.items():
+    for path, content in product_files(ctx):
         if _is_gh_actions_workflow(path):
             findings.extend(_analyze_gh_actions(path, content))
             file_count += 1

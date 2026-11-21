@@ -206,6 +206,19 @@ def test_runtime_drift_recognises_pinned_model():
     assert result.metadata["model_pinned"] is True
 
 
+def test_runtime_drift_does_not_match_its_own_model_pattern_table():
+    from pathlib import Path
+
+    from scanner.analyzers.runtime_drift import analyze_runtime_drift
+
+    source = Path(__file__).parent.parent / "scanner" / "analyzers" / "runtime_drift.py"
+    result = analyze_runtime_drift(
+        _ctx({"scanner/analyzers/runtime_drift.py": source.read_text(encoding="utf-8")})
+    )
+    assert "rd-model-floating" not in {f.id for f in result.findings}
+    assert result.metadata["model_floating"] is False
+
+
 def test_runtime_drift_flags_inline_prompt():
     from scanner.analyzers.runtime_drift import analyze_runtime_drift
     ctx = _ctx({

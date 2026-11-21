@@ -23,7 +23,7 @@ Connect scanner gaps to real-world and research-demonstrated security incidents 
 
 **In scope**: any scanner finding or KB dimension can be grounded against the incident corpus. The command `/ai-act-incidents` accepts a dimension id (`security`, `risk_mgmt`, `human_oversight`, etc.), a canonical article id (`art9`, `art15`, `art72`), or a threat-category id (`prompt_injection`, `data_exfiltration`, `lethal_trifecta`, etc.).
 
-**Out of scope**: the corpus does not replace a full Art. 9 risk management system, an Art. 43 conformity assessment, or legal review. Incident grounding is evidence *input* to those processes, not a substitute for them. For the full Art. 9 obligation, route to [eu-ai-act-reference](eu-ai-act-reference.md). For Art. 43 conformity, route to [interpreting-findings](interpreting-findings.md).
+**Out of scope**: the corpus does not replace a full Art. 9 risk management system, an Art. 43 conformity assessment, or legal review. Incident grounding is evidence *input* to those processes, not a substitute for them. For the full Art. 9 obligation, route to [eu-ai-act-reference](../eu-ai-act-reference/SKILL.md). For Art. 43 conformity, route to [interpreting-findings](../interpreting-findings/SKILL.md).
 
 ## Regulation scope
 
@@ -113,7 +113,7 @@ Each returned `Incident` is a frozen dataclass with:
 ## What to do
 
 1. Run `/ai-act-scan` on the codebase to obtain the dimension scores and gap findings.
-2. Identify the worst-scoring dimensions or most severe gap findings. Route to [interpreting-findings](interpreting-findings.md) if the user needs help with prioritisation.
+2. Identify the worst-scoring dimensions or most severe gap findings. Route to [interpreting-findings](../interpreting-findings/SKILL.md) if the user needs help with prioritisation.
 3. For each target dimension or finding, run `/ai-act-incidents <dimension_or_article_or_threat>`. Example:
    ```
    /ai-act-incidents security
@@ -200,10 +200,10 @@ User has a scanner gap finding
 
 ## Cross-references
 
-- [interpreting-findings](interpreting-findings.md) — gap prioritisation; how scanner scores map to Art. 43 evidence weight
-- [eu-ai-act-reference](eu-ai-act-reference.md) — article to dimension mapping; use to confirm which articles a dimension covers
-- [eu-ai-act-article-6-classification](eu-ai-act-article-6-classification.md) — confirm whether the system is high-risk before invoking Art. 9 / 15 / 72 obligations
-- [using-eu-ai-act-scanner](using-eu-ai-act-scanner.md) — orchestration; when and how to run the scanner
+- [interpreting-findings](../interpreting-findings/SKILL.md) — gap prioritisation; how scanner scores map to Art. 43 evidence weight
+- [eu-ai-act-reference](../eu-ai-act-reference/SKILL.md) — article to dimension mapping; use to confirm which articles a dimension covers
+- [eu-ai-act-article-6-classification](../eu-ai-act-article-6-classification/SKILL.md) — confirm whether the system is high-risk before invoking Art. 9 / 15 / 72 obligations
+- [using-eu-ai-act-scanner](../using-eu-ai-act-scanner/SKILL.md) — orchestration; when and how to run the scanner
 
 ## Common rationalizations
 
@@ -213,7 +213,7 @@ User has a scanner gap finding
 | "The corpus isn't EU-specific so it doesn't apply to our regulation." | OWASP LLM/ASI Top 10 and MITRE ATLAS are technology-neutral attack taxonomies. Art. 15(4) explicitly requires resilience to prompt injection, adversarial attacks, and data poisoning — the corpus incidents document exactly those attack classes regardless of the jurisdiction in which they occurred. |
 | "Research-demonstrated incidents aren't real risk — no one has actually been harmed." | Art. 9(2)(b) requires foreseeable-misuse analysis. A published, reproducible research demonstration of an attack is direct evidence that the attack is feasible and foreseeable. The regulation does not require prior harm; it requires prior foreseeability. |
 | "We don't need to track incidents post-deployment — that's a support function." | Art. 72(1) requires a post-market monitoring plan as a provider obligation for high-risk AI systems. Art. 72(3) requires collecting and analysing post-deployment data. Treating this as a support-only function rather than a documented compliance obligation is an Art. 72 gap. |
-| "Our system is minimal-risk so Art. 9, 15, and 72 don't apply." | Confirm the risk classification first using [eu-ai-act-article-6-classification](eu-ai-act-article-6-classification.md). Systems touching biometrics, employment, credit, education, law enforcement, or critical infrastructure are likely high-risk under Annex III regardless of self-assessment. Incident grounding is also best practice for minimal-risk systems; it is a legal obligation for high-risk ones. |
+| "Our system is minimal-risk so Art. 9, 15, and 72 don't apply." | Confirm the risk classification first using [eu-ai-act-article-6-classification](../eu-ai-act-article-6-classification/SKILL.md). Systems touching biometrics, employment, credit, education, law enforcement, or critical infrastructure are likely high-risk under Annex III regardless of self-assessment. Incident grounding is also best practice for minimal-risk systems; it is a legal obligation for high-risk ones. |
 | "The dataset is too large to be useful — 7,000+ incidents is noise." | The scanner uses only the reviewed-quality-tier subset relevant to the 23 compliance dimensions. `incidents_for_finding(finding, limit=3)` returns the three most directly relevant incidents for a specific scanner finding. The volume of the source corpus is a feature, not a liability: it means the curated subset is drawn from a comprehensive aggregation rather than a single source. |
 | "We've never been attacked, so there's no incident history for our system." | Art. 9(2)(b) requires consideration of foreseeable misuse, not a record of past attacks against your specific system. The corpus documents attacks against systems with similar architectures, attack surfaces, and deployment contexts. A system that shares architectural characteristics with INC-04853 (autonomous coding agent + database write access) inherits that incident's foreseeable-misuse profile whether or not the specific attack has yet been attempted against it. |
 

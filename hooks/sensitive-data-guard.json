@@ -1,0 +1,17 @@
+{
+  "description": "Opt-in Claude Code PreToolUse guard. Blocks writes to .env / private-key files, writes that add a hardcoded credential, and git commits whose staged diff adds one. Install: copy hooks/sensitive_data_guard.py to .claude/hooks/ and merge the 'hooks' object below into .claude/settings.json (team) or .claude/settings.local.json (just you). On Windows without python3 on PATH, change 'python3' to 'python'.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/sensitive_data_guard.py\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

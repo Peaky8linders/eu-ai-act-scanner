@@ -108,7 +108,18 @@ def analyze_human_oversight(ctx: AnalyzerContext) -> AnalyzerResult:
         ))
 
     # 7. Kill switch / stop
-    kill_matches = search_files(ctx, r"kill.*switch|emergency.*stop|shutdown|disable.*model|circuit.*breaker")
+    # Scope `shutdown` to AI/model/agent/inference/pipeline/prediction or emergency
+    # contexts so bare FastAPI `@app.on_event("shutdown")` lifecycle hooks never
+    # manufacture false Art. 14(4)(e) kill-switch evidence.
+    kill_matches = search_files(
+        ctx,
+        r"kill.*switch"
+        r"|emergency.*(stop|shutdown|halt)"
+        r"|(model|agent|inference|pipeline|prediction)[\s_-]*shutdown"
+        r"|shutdown[\s_-]*(model|agent|inference|pipeline|prediction)"
+        r"|disable.*model"
+        r"|circuit.*breaker",
+    )
     if kill_matches:
         findings.append(Finding(
             id="ho-kill-switch", category="human_oversight",
@@ -118,7 +129,7 @@ def analyze_human_oversight(ctx: AnalyzerContext) -> AnalyzerResult:
             compliance_impact="positive",
             compliance_dimensions=["human_oversight"],
             evidence_snippet=kill_matches[0][1],
-            kb_question_ids=["ho-1"], suggested_answer="yes",
+            kb_question_ids=["ho-1"], suggested_answer="partial",
         ))
 
     if not findings:

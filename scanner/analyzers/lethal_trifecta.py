@@ -105,6 +105,11 @@ _OVERSIGHT_GATE_PATTERNS = [
 ]
 
 
+# Upper bound on individual ungated trifecta findings emitted per scan so one
+# analyzer cannot flood the report while still reporting multi-file breadth.
+_MAX_TRIFECTA_FINDINGS = 25
+
+
 def _has_match(content: str, patterns: list[str]) -> tuple[bool, str]:
     """Return (matched?, first_matching_line)."""
     for pattern in patterns:
@@ -187,8 +192,7 @@ def analyze_lethal_trifecta(ctx: AnalyzerContext) -> AnalyzerResult:
         else:
             trifecta_paths.append((path, a_line, b_line, c_line))
 
-    if trifecta_paths:
-        path, a_line, b_line, c_line = trifecta_paths[0]
+    for path, a_line, b_line, c_line in trifecta_paths[:_MAX_TRIFECTA_FINDINGS]:
         findings.append(Finding(
             id="lt-trifecta-violation",
             category="lethal_trifecta",
@@ -230,11 +234,13 @@ def analyze_lethal_trifecta(ctx: AnalyzerContext) -> AnalyzerResult:
         if gaps and not positives:
             score = max(15.0, 50.0 - len(gaps) * 25)
         elif gaps and positives:
-            score = min(100.0, max(35.0, 65.0 - len(gaps) * 15 + len(positives) * 5))
+            score = max(35.0, 65.0 - len(gaps) * 15 + len(positives) * 5)
         elif positives:
             score = min(95.0, 80.0 + len(positives) * 5)
         else:
             score = 70.0
+
+    score = max(0.0, min(100.0, score))
 
     return AnalyzerResult(
         analyzer_id="lethal_trifecta",

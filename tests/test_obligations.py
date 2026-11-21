@@ -150,6 +150,23 @@ class TestInferRoleProfile:
         assert profile.roles == [ROLE_DEPLOYER]
         assert ROLE_PROVIDER not in profile.roles
 
+    def test_readme_and_test_fixtures_do_not_infer_operator_roles(self):
+        ctx = _ctx(
+            {
+                "README.md": (
+                    "We train and provide general-purpose AI models with OpenAI and Anthropic.\n"
+                ),
+                "tests/fixtures/training.py": (
+                    "from transformers import AutoModelForCausalLM\n"
+                    "trainer.train()\n"
+                ),
+                "src/math.py": "def add(a, b):\n    return a + b\n",
+            }
+        )
+        profile = infer_role_profile(ctx)
+        assert profile.roles == [ROLE_DEPLOYER]
+        assert profile.signals_matched == {}
+
     def test_no_signal_defaults_to_deployer(self):
         """A codebase with no AI signal at all still resolves >=1 role."""
         ctx = _ctx({"readme.md": "# A plain project\nNothing to see here.\n"})
