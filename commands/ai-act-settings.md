@@ -11,15 +11,15 @@ View or change how much the scanner leans on your own Claude Code.
 
 1. To show the current settings:
    ```bash
-   python -m scanner.cli --settings
+   eu-ai-act-scan --settings
    ```
    Reports `mode`, `auto_apply`, where the values came from (`source`), and the
    optional headless LLM-bridge config.
 2. To change a setting, persist it to `.eu-ai-act-scanner.toml` in the project
    root:
    ```bash
-   python -m scanner.cli --set mode=assisted
-   python -m scanner.cli --set auto-apply=true
+   eu-ai-act-scan --set mode=assisted
+   eu-ai-act-scan --set auto-apply=true
    ```
    `--set` is repeatable; invalid values are rejected.
 

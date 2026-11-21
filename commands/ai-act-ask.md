@@ -19,14 +19,14 @@ local "Lexy" retrieval-and-answer path.
 
 1. Run the grounded retriever:
    ```bash
-   python -m scanner.cli --ask "$1"
+   eu-ai-act-scan --ask "$1"
    ```
    It prints the answer, the cited articles, the related compliance dimensions,
    and the grounded source excerpts. It runs **100% locally — no LLM, no
    network** — by default.
 2. Present the answer and ALWAYS keep the citations. Do not add obligations that
    the cited articles do not support.
-3. **In `assisted` mode** (check `python -m scanner.cli --settings`), synthesise a
+3. **In `assisted` mode** (check `eu-ai-act-scan --settings`), synthesise a
    fuller narrative answer yourself over the returned sources — you are the
    user's Claude Code (your existing subscription) — but treat the retrieved
    statute text as ground truth and cite every claim by article. For MCP

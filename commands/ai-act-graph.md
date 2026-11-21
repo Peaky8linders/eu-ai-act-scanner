@@ -15,7 +15,7 @@ Generate and explore a standalone, interactive visual context graph of the audit
 
 Or via CLI:
 ```bash
-python -m scanner.cli [PATH] --graph context-graph.html
+eu-ai-act-scan [PATH] --graph context-graph.html
 ```
 
 ## What it does

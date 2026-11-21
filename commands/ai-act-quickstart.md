@@ -17,10 +17,10 @@ Run a 60-second, jargon-free EU AI Act & AI security triage designed for founder
 1. Run the founder triage via the CLI or MCP server:
    - **CLI**:
      ```bash
-     python -m scanner.cli "$1" --founder
+     eu-ai-act-scan "$1" --founder
      ```
-     (Or request structured JSON with `python -m scanner.cli "$1" --founder --json`.)
-   - **MCP tool**: call `founder_triage(project_path="$1")` if connected to `eu-ai-act-scan-mcp`.
+     (Or request structured JSON with `eu-ai-act-scan "$1" --founder --json`.)
+   - **MCP tool**: call `founder_triage(path="$1")` if connected to `eu-ai-act-scan-mcp`.
    If `$1` is empty, default to `.`.
 2. **Check `is_ai_system` first.**
    - If `is_ai_system` is `false`, print the plain-English headline (`No AI/ML system detected — EU AI Act obligations do not appear to apply to this repository.`) and stop cleanly. Do not invent obligations or compliance scores.
@@ -46,10 +46,11 @@ Run a 60-second, jargon-free EU AI Act & AI security triage designed for founder
    4. **Run a diff-aware security review** — run `/ai-act-security-review` on the current branch, or pair with **Claude Code Security** (`https://code.claude.com/docs/en/claude-security`: `claude-security@claude-plugins-official` -> `/threat-model` for `THREAT_MODEL.md` + `/claude-security` / `/security-review`, then ingest locally with `--ingest-claude-security <report>`).
    5. **Attach Claude org audit evidence (Enterprise / Team)** — pull an opt-in local snapshot from Anthropic's **Claude Compliance API** (`anthropic-version: 2026-10-21`, env `ANTHROPIC_COMPLIANCE_ACCESS_KEY`) and ingest it offline:
       ```bash
-      python scripts/fetch_claude_compliance.py --dry-run
-      python scripts/fetch_claude_compliance.py --output compliance-api-export.json
+      python <scanner-clone>/scripts/fetch_claude_compliance.py --dry-run
+      python <scanner-clone>/scripts/fetch_claude_compliance.py --output compliance-api-export.json
       eu-ai-act-scan . --ingest-compliance-api compliance-api-export.json --dossier release-dossier.json
       ```
+      (`<scanner-clone>` is the folder where you cloned eu-ai-act-scanner; the fetcher is not part of the installed engine.)
 
 ## Claude Ecosystem Fast-Track (Optional)
 

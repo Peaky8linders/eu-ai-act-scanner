@@ -37,7 +37,7 @@ The scanner surfaces evidence and gaps across 19 compliance dimensions mapped to
 
 ### Running the scanner
 
-Invoke `/ai-act-scan` with the target path. The command shells out to `python -m scanner.cli <path> --json` and parses the output.
+Invoke `/ai-act-scan` with the target path. The command shells out to `eu-ai-act-scan <path> --json` and parses the output.
 
 ### After running
 

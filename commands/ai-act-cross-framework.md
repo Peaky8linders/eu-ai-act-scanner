@@ -15,7 +15,7 @@ Evaluate your codebase against international AI governance, security, and data p
 
 Or via CLI:
 ```bash
-python -m scanner.cli [PATH] --cross-framework --markdown
+eu-ai-act-scan [PATH] --cross-framework --markdown
 ```
 
 ## Supported Frameworks

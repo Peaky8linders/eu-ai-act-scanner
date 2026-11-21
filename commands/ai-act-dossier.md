@@ -15,7 +15,7 @@ Produce a mathematically verifiable, tamper-evident compliance dossier binding t
 
 Or via CLI:
 ```bash
-python -m scanner.cli [PATH] --dossier compliance-dossier.json
+eu-ai-act-scan [PATH] --dossier compliance-dossier.json
 ```
 
 ## What it binds

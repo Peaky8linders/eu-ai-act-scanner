@@ -154,6 +154,28 @@ cd eu-ai-act-scanner
 pip install -e ".[mcp]"
 ```
 
+Prefer [pipx](https://pipx.pypa.io) if you do not want to keep a virtualenv
+activated: from the clone, `pipx install --editable ".[mcp]"` puts
+`eu-ai-act-scan`, `eu-ai-act-scan-mcp` and `eu-ai-act-fix` on your `PATH` in
+their own isolated environment. Restart Claude Code after installing.
+
+**Troubleshooting: `/mcp` shows `eu-ai-act-scanner` as "Failed to connect"
+(`CONNECTION_CLOSED`).** Claude Code could not start `eu-ai-act-scan-mcp`
+because it is not on the `PATH` Claude Code was launched with, usually because
+the engine went into a virtualenv that is not active. Check from the same shell
+you start Claude Code from:
+
+```bash
+eu-ai-act-scan --version              # should print the scanner version
+command -v eu-ai-act-scan-mcp         # macOS / Linux: should print a path
+Get-Command eu-ai-act-scan-mcp        # Windows PowerShell: should list it
+```
+
+If either is not found, activate the environment you installed into before
+launching Claude Code, or reinstall with pipx as above, then restart Claude
+Code. The slash commands still load without the server, but Claude cannot call
+the 17 scanner tools until `/mcp` shows it connected.
+
 **MCP server** — same engine, any MCP client, the client's own model:
 
 ```bash

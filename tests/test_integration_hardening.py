@@ -466,6 +466,52 @@ def test_skill_cross_links_resolve() -> None:
             assert (skill_md.parent / rel).resolve().is_file(), f"{skill_md}: {rel}"
 
 
+def _plugin_docs() -> list[Path]:
+    return sorted((REPO_ROOT / "commands").glob("*.md")) + sorted(
+        (REPO_ROOT / "skills").glob("*/SKILL.md")
+    )
+
+
+def test_plugin_docs_use_console_script_not_python_module() -> None:
+    """Commands run in the founder's project, where `python` rarely has the engine.
+
+    A pipx or separate-venv install puts `eu-ai-act-scan` on PATH but leaves the
+    system `python` without the `scanner` module, so `python -m scanner.cli`
+    fails with ModuleNotFoundError. The console script works everywhere.
+    """
+    offenders = [
+        f"{p.relative_to(REPO_ROOT)}:{n}"
+        for p in _plugin_docs()
+        for n, line in enumerate(p.read_text(encoding="utf-8").splitlines(), start=1)
+        if "python -m scanner" in line or "python3 -m scanner" in line
+    ]
+    assert not offenders, offenders
+
+
+def test_plugin_docs_mcp_examples_use_real_parameter_names() -> None:
+    """`founder_triage(project_path=...)` in a command made Claude send an
+    unknown argument; the server ignored it and scanned its own cwd instead."""
+    import inspect
+    import re
+
+    import scanner.mcp_server as mcp_server
+
+    tools = {
+        name.removeprefix("tool_"): set(inspect.signature(fn).parameters)
+        for name, fn in vars(mcp_server).items()
+        if name.startswith("tool_") and callable(fn)
+    }
+    assert {"founder_triage", "scan_project", "ingest_claude_ecosystem"} <= set(tools)
+    call_re = re.compile(r"\b(" + "|".join(map(re.escape, tools)) + r")\(([^()]*)\)")
+    bad: list[str] = []
+    for p in _plugin_docs():
+        for m in call_re.finditer(p.read_text(encoding="utf-8")):
+            for param in re.findall(r"\b([a-z_]+)\s*=", m.group(2)):
+                if param not in tools[m.group(1)]:
+                    bad.append(f"{p.relative_to(REPO_ROOT)}: {m.group(1)}({param}=)")
+    assert not bad, bad
+
+
 def test_mcp_ingest_accepts_claude_security_jsonl(tmp_path: Path, monkeypatch) -> None:
     from scanner.mcp_server import tool_ingest_claude_ecosystem
 

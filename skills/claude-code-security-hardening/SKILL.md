@@ -133,10 +133,11 @@ For startups on Claude Enterprise / Team plans, pull read-only organizational au
    ```
 3. **Preview offline, fetch locally, and ingest offline** (`anthropic-version: 2026-10-21`):
    ```bash
-   python scripts/fetch_claude_compliance.py --dry-run
-   python scripts/fetch_claude_compliance.py --output compliance-api-export.json --org-uuid "$ORG_UUID"
+   python <scanner-clone>/scripts/fetch_claude_compliance.py --dry-run
+   python <scanner-clone>/scripts/fetch_claude_compliance.py --output compliance-api-export.json --org-uuid "$ORG_UUID"
    eu-ai-act-scan . --ingest-compliance-api compliance-api-export.json --dossier release-dossier.json
    ```
+   (`<scanner-clone>` is the folder where you cloned eu-ai-act-scanner; the fetcher is not part of the installed engine.)
 4. **What `ingest_compliance_api_export` checks automatically**:
    - **Art. 12(1) & Art. 26(6)**: verifies activity audit trail exists and flags `< 180` day retention (`cca-short-log-retention`).
    - **Art. 26(2)**: verifies organization group/RBAC governance (`cca-org-group-governance`).

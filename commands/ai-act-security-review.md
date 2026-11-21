@@ -25,7 +25,7 @@ Run a diff-aware cybersecurity and AI-safety review of your current branch again
    (Fallback to `git diff main...HEAD --name-only` or `git status --short` when `origin/main` is unavailable.)
 2. Run the deterministic scanner in JSON mode to collect evidence from `mcp_toolchain`, `claude_code_security`, `security_controls`, `lethal_trifecta`, `privilege_minimization`, and `agent_cascade`:
    ```bash
-   python -m scanner.cli "$1" --json
+   eu-ai-act-scan "$1" --json
    ```
    - If `--ingest-sarif` is provided, parse external SARIF files with `scanner.sarif.ingest_sarif_files(...)` so Semgrep, Bandit, Snyk, and CodeQL findings are evaluated alongside EU AI Act Art. 15(4) checks.
    - If `--ingest-claude-security` is provided, parse `/claude-security` or `/security-review` reports (SARIF, JSON, or Markdown) with `scanner.claude_ecosystem.ingest_claude_security_report(...)`. Findings refuted, mitigated, or marked `verified: false` by Claude Security's **adversarial verification panel** are excluded automatically, and confirmed findings map to **Art. 15(4)** & **Art. 9(2)**.
@@ -102,7 +102,7 @@ To keep PR reviews high-signal and noise-free, run every candidate finding throu
      - Install Anthropic's official security plugins: `/plugin install claude-security@claude-plugins-official` and `/plugin install security-guidance@claude-plugins-official`.
      - Run `/threat-model` to maintain a repo-level `THREAT_MODEL.md` (Art. 9(2) risk identification), then run `/claude-security` or `/security-review` and pass the exported local report to `--ingest-claude-security` (adversarial verification panel results are respected automatically).
    - **Anthropic Claude Compliance API**:
-     - Pull an opt-in read-only org snapshot (`python scripts/fetch_claude_compliance.py --output compliance-api-export.json`, env `ANTHROPIC_COMPLIANCE_ACCESS_KEY`, header `anthropic-version: 2026-10-21`) and run `--ingest-compliance-api compliance-api-export.json` offline.
+     - Pull an opt-in read-only org snapshot (`python <scanner-clone>/scripts/fetch_claude_compliance.py --output compliance-api-export.json` from your clone of eu-ai-act-scanner, env `ANTHROPIC_COMPLIANCE_ACCESS_KEY`, header `anthropic-version: 2026-10-21`) and run `--ingest-compliance-api compliance-api-export.json` offline.
    - **SARIF 2.1.0 & CI**:
      - Export findings to SARIF 2.1.0 (`scanner.sarif.write_sarif(result, path)`) for GitHub Code Scanning, VS Code SARIF Viewer, or CI gates (strictly offline, no remote URLs).
      - Pair with Anthropic's `anthropics/claude-code-security-review` GitHub Action by pointing its custom instructions at `templates/security-scan-instructions.md` and `templates/false-positive-filter.md`.
