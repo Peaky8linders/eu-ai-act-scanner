@@ -5,27 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.12.0] - 2026-11-21
 
-### Fixed — plugin commands work from a founder's own project
+First release installable as a Claude Code plugin, aimed at founders and
+startups: a plain-English triage of what blocks launch today versus what can
+wait until the Annex III deadline, plus ingestion of Anthropic's Claude
+Security and Claude Compliance API outputs.
 
-Found by installing the plugin from GitHub into a real Claude Code and running
-`/ai-act-quickstart` live.
-
-- Ten commands and one skill told Claude to run `python -m scanner.cli`. With a
-  pipx or separate-venv install the system `python` has no `scanner` module, so
-  that failed with `ModuleNotFoundError`. They now use the `eu-ai-act-scan`
-  console script.
-- `/ai-act-quickstart` showed the MCP call as `founder_triage(project_path=…)`.
-  The parameter is `path`, so the server ignored the argument and scanned its
-  own working directory: from another directory that returned "No AI/ML system
-  detected" for a real AI project.
-- Compliance API fetcher examples ran `python scripts/fetch_claude_compliance.py`,
-  a path that only exists inside the scanner clone; they now say so.
-- README: `pipx install --editable ".[mcp]"` as the PATH-safe engine install,
-  and a troubleshooting note for `/mcp` showing "Failed to connect".
-- Tests pin both contracts: no `python -m scanner` in plugin docs, and every MCP
-  call example uses a real tool parameter name.
+- **Install:** `pip install -e ".[mcp]"` (or `pipx install --editable ".[mcp]"`)
+  from a clone of this repository, then in Claude Code
+  `/plugin marketplace add Peaky8linders/eu-ai-act-scanner` and
+  `/plugin install eu-ai-act-scanner@eu-ai-act-scanner`.
+- **Upgrading an earlier plugin install:** `/plugin marketplace update eu-ai-act-scanner`,
+  then `/plugin update eu-ai-act-scanner@eu-ai-act-scanner`. Claude Code only
+  refreshes an installed plugin when this version number changes.
 
 ### Added — founder triage, Claude Code security posture, ecosystem ingestion
 
@@ -64,6 +57,26 @@ Found by installing the plugin from GitHub into a real Claude Code and running
   `eval`, `execution` no longer hits `exec`).
 - `--founder --diff-baseline` printed only the brief; the diff is now appended
   (or nested under `baseline_diff` with `--json`).
+
+### Fixed — plugin commands work from a founder's own project
+
+Found by installing the plugin from GitHub into a real Claude Code and running
+`/ai-act-quickstart` live.
+
+- Ten commands and one skill told Claude to run `python -m scanner.cli`. With a
+  pipx or separate-venv install the system `python` has no `scanner` module, so
+  that failed with `ModuleNotFoundError`. They now use the `eu-ai-act-scan`
+  console script.
+- `/ai-act-quickstart` showed the MCP call as `founder_triage(project_path=…)`.
+  The parameter is `path`, so the server ignored the argument and scanned its
+  own working directory: from another directory that returned "No AI/ML system
+  detected" for a real AI project.
+- Compliance API fetcher examples ran `python scripts/fetch_claude_compliance.py`,
+  a path that only exists inside the scanner clone; they now say so.
+- README: `pipx install --editable ".[mcp]"` as the PATH-safe engine install,
+  and a troubleshooting note for `/mcp` showing "Failed to connect".
+- Tests pin both contracts: no `python -m scanner` in plugin docs, and every MCP
+  call example uses a real tool parameter name.
 
 ## [0.11.3] - 2026-10-20
 
