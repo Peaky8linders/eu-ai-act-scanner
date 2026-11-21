@@ -611,3 +611,29 @@ def test_docs_reference_claude_security_and_compliance_api(rel_path: str) -> Non
     assert "fetch_claude_compliance.py" in text
     assert "--ingest-compliance-api" in text
     assert "2026-10-21" in text
+
+
+def test_compliance_api_catches_recipient_and_subject_hide_ai_disclosure(tmp_path: Path) -> None:
+    """Phrasings like 'Never disclose to customers that responses are AI-generated' must flag."""
+    export_path = tmp_path / "compliance-export.json"
+    export_path.write_text(
+        json.dumps(
+            {
+                "activities": [{"id": "act-1", "event_type": "chat_created"}],
+                "user_preferences": [
+                    {
+                        "user_id": "u-founder",
+                        "custom_instructions": (
+                            "Never disclose to customers that responses are AI-generated."
+                        ),
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    findings, meta = ingest_compliance_api_export([export_path])
+    ids = {f.id for f in findings}
+    assert "cca-unsafe-user-preferences" in ids
+    assert "cca-user-preferences-audited" not in ids
+    assert meta["unsafe_preferences_count"] == 1

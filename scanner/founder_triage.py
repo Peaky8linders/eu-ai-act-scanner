@@ -141,6 +141,13 @@ _SHIP_NOW_KEYWORDS: tuple[str, ...] = (
     "exec(",
     "shell=true",
     "command injection",
+    "sql injection",
+    "remote code execution",
+    "rce",
+    "path traversal",
+    "xxe",
+    "auth bypass",
+    "csrf",
     "prompt injection",
     "code execution",
     "insecure deserialization",
@@ -347,6 +354,11 @@ def _classify_component_bucket(comp: DiscoveredComponent) -> Literal["ship_now",
     ):
         return "enterprise_deals"
 
+    # 2b. Generic heuristic 'lacks prompt injection guards' (adversarial_robustness)
+    # is an enterprise hardening item unless paired with an active exploit/trifecta.
+    if comp_type == "adversarial_robustness" and "lacks prompt injection guards" in name_lower:
+        return "enterprise_deals"
+
     # 3. Bucket 1: ship_now (live Art. 50 + immediate security/agent exploits)
     if comp_type == "article_50_transparency":
         return "ship_now"
@@ -355,11 +367,13 @@ def _classify_component_bucket(comp: DiscoveredComponent) -> Literal["ship_now",
         for tok in ("art. 50", "art 50", "50(", "disclosure", "chatbot", "watermark", "c2pa", "deepfake", "synthetic", "label")
     ):
         return "ship_now"
+    if severity == "critical":
+        return "ship_now"
+    if comp_type in {"claude_security_plugin", "external_security_sarif"} and severity in {"critical", "high"}:
+        return "ship_now"
     if comp_type in {"mcp_toolchain", "claude_code_security", "lethal_trifecta", "agent_cascade"}:
         return "ship_now"
     if any(kw in haystack for kw in _SHIP_NOW_KEYWORDS):
-        return "ship_now"
-    if severity == "critical":
         return "ship_now"
     if comp_type == "security_controls" and (severity == "high" or comp.confidence >= 0.85):
         return "ship_now"
@@ -448,6 +462,46 @@ def _describe_component(
         )
 
     if bucket == "enterprise_deals":
+        if "timeout" in name_lower and ("http" in name_lower or "request" in name_lower):
+            return (
+                f"{name_clean}{loc}: outbound HTTP requests lack an explicit `timeout=` parameter.",
+                "Hung upstream API calls exhaust worker threads and cause cascading production outages (Art. 15 resilience).",
+                "15 min",
+                "fix(resilience): add explicit timeout= to outbound HTTP calls",
+                "Pass an explicit `timeout=` (e.g. `timeout=10`) on every outbound `requests`/`httpx` HTTP call.",
+            )
+        if "substantial" in name_lower and "modification" in name_lower:
+            return (
+                f"{name_clean}{loc}: no documented procedure for detecting substantial modifications (Art. 3(23) / Art. 25).",
+                "Enterprise buyers ask how you control fine-tunes, model swaps, and intended-purpose changes before release.",
+                "30 min",
+                "docs(governance): document Art. 25 substantial-modification change-control procedure",
+                "Document a change-control checklist (fine-tuning, model swap, or purpose change triggers Art. 25 re-assessment).",
+            )
+        if "prompt injection" in name_lower:
+            return (
+                f"{name_clean}{loc}: LLM prompts lack explicit input/output guardrails against prompt injection.",
+                "Enterprise security teams test for prompt injection resilience and system/user prompt separation before onboarding.",
+                "1-2 hours",
+                "fix(ai-safety): add prompt injection guards and prompt boundaries",
+                "Add system/user prompt boundaries and input/output guardrails around untrusted user text passed to LLMs.",
+            )
+        if "rate limit" in name_lower:
+            return (
+                f"{name_clean}{loc}: AI endpoints lack explicit rate limiting or quota controls.",
+                "Unthrottled LLM endpoints expose startups to sudden API bill spikes and denial-of-service abuse (Art. 15).",
+                "30-60 min",
+                "feat(security): add rate limiting and token budgets on AI endpoints",
+                "Add per-user/IP rate limiting and token budgets on AI endpoints to prevent abuse and DoS (Art. 15).",
+            )
+        if "input validation" in name_lower:
+            return (
+                f"{name_clean}{loc}: external request payloads are not validated with strict schemas before hitting models or tools.",
+                "Strict input validation prevents injection, malformed tool arguments, and unexpected runtime failures.",
+                "30-60 min",
+                "feat(security): validate external AI inputs with strict schemas",
+                "Validate all external request payloads with strict schemas (e.g., Pydantic/Zod) before passing to models or tools.",
+            )
         if comp_type == "claude_code_security" or "security review" in name_lower:
             return (
                 f"{name_clean}{loc}: no automated PR security review workflow is configured for AI/agent code changes.",
@@ -494,6 +548,22 @@ def _describe_component(
         if high_risk_verticals
         else " Unless your product enters an Annex III high-risk vertical, keep this lightweight until closer to the deadline."
     )
+    if "dataset versioning" in name_lower or "versioning" in name_lower and "data_gov" in dims:
+        return (
+            f"{name_clean}{loc}: data pipeline lacks dataset versioning or lineage tracking (Art. 10(2)).",
+            f"Digital Omnibus (Reg. 2026/1744) deferred Annex III Art. 10 duties to 2 Dec 2027.{vertical_note}",
+            "1-2 hours",
+            "chore(data): add dataset versioning and lineage manifest",
+            "Pin dataset versions and checksums (e.g., DVC, LakeFS, or SHA-256 manifest) for Art. 10(2) lineage.",
+        )
+    if "data quality" in name_lower or ("quality" in name_lower and "data_gov" in dims):
+        return (
+            f"{name_clean}{loc}: data pipeline lacks automated data quality / schema checks (Art. 10(3)).",
+            f"Digital Omnibus (Reg. 2026/1744) deferred Annex III Art. 10 duties to 2 Dec 2027.{vertical_note}",
+            "1-2 hours",
+            "feat(data): add automated dataset schema and quality validation",
+            "Add automated schema/null/drift validation (e.g., Great Expectations, Pandera, or Pydantic) before training/inference.",
+        )
     return (
         f"{name_clean}{loc}: governance or compliance documentation gap.",
         (
@@ -697,7 +767,8 @@ def format_founder_brief(triage: FounderTriage) -> str:
             lines.append("- None detected.")
             return
         for item in items[:limit]:
-            loc = f" (`{item.file_path}`)" if item.file_path else ""
+            fp = (item.file_path or "").strip()
+            loc = f" (`{fp}`)" if fp and fp.lower() not in {"(no file)", "project", "n/a"} else ""
             lines.append(f"- **{item.title}**{loc} — _{item.effort_estimate}_. {item.fix_hint or item.what_is_wrong}")
         if len(items) > limit:
             lines.append(f"- _+{len(items) - limit} additional item(s) in full JSON triage._")

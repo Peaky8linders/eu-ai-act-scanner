@@ -225,9 +225,11 @@ def scan_to_sarif(
                 msg_parts.append(f"Evidence: {evidence}")
             message_text = " | ".join(msg_parts)
 
+            _sentinel_paths = {"", "project", "(no file)", "n/a", "repository"}
             locations: list[dict[str, Any]] = []
-            if comp.file_path:
-                uri = _strip_urls(comp.file_path.replace("\\", "/"))
+            raw_fp = (comp.file_path or "").strip()
+            if raw_fp and raw_fp.lower() not in _sentinel_paths:
+                uri = _strip_urls(raw_fp.replace("\\", "/"))
                 phys: dict[str, Any] = {
                     "artifactLocation": {"uri": uri},
                 }
@@ -235,21 +237,21 @@ def scan_to_sarif(
                     phys["region"] = {"startLine": line_num}
                 locations.append({"physicalLocation": phys})
 
-            sarif_results.append(
-                {
-                    "ruleId": rule_id,
-                    "level": level,
-                    "message": {"text": message_text},
-                    "locations": locations,
-                    "properties": {
-                        "eu_ai_act_articles": articles,
-                        "dimensions": dimensions,
-                        "related_incidents": incidents,
-                        "confidence": round(float(comp.confidence), 4),
-                        "component_type": comp.component_type,
-                    },
-                }
-            )
+            sarif_entry: dict[str, Any] = {
+                "ruleId": rule_id,
+                "level": level,
+                "message": {"text": message_text},
+                "properties": {
+                    "eu_ai_act_articles": articles,
+                    "dimensions": dimensions,
+                    "related_incidents": incidents,
+                    "confidence": round(float(comp.confidence), 4),
+                    "component_type": comp.component_type,
+                },
+            }
+            if locations:
+                sarif_entry["locations"] = locations
+            sarif_results.append(sarif_entry)
 
     return {
         "version": _SARIF_VERSION,

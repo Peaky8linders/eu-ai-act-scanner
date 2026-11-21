@@ -267,3 +267,73 @@ class TestReusableAssetsContracts:
         assert data["key_dates"]["article_50_transparency"] == "2026-08-02"
         assert data["key_dates"]["annex_iii_high_risk"] == "2027-12-02"
         assert data["key_dates"]["annex_i_safety_components"] == "2028-08-02"
+
+
+class TestWave4TriageCalibrationRegressions:
+    def test_critical_claude_security_sqli_lands_in_ship_now(self) -> None:
+        result = ScanResult(
+            project_name="calibration-demo",
+            scan_id="scan-cal",
+            scanner_version="0.11.3",
+            is_ai_system=True,
+            overall_compliance_pct=50.0,
+            components=[
+                DiscoveredComponent(
+                    name="[claude-security] SQL Injection in user lookup",
+                    component_type="claude_security_plugin",
+                    file_path="app.py",
+                    confidence=0.95,
+                    compliance_dimensions=["security", "access_control", "risk_mgmt"],
+                    compliance_impact="gap",
+                    details={
+                        "severity": "critical",
+                        "article_paragraphs": ["Art. 15(4)", "Art. 9(2)"],
+                    },
+                    line_number=24,
+                ),
+                DiscoveredComponent(
+                    name="LLM system lacks prompt injection guards",
+                    component_type="adversarial_robustness",
+                    file_path="",
+                    confidence=0.75,
+                    compliance_dimensions=["security"],
+                    compliance_impact="gap",
+                ),
+                DiscoveredComponent(
+                    name="HTTP request missing explicit timeout=",
+                    component_type="security_controls",
+                    file_path="client.py",
+                    confidence=0.70,
+                    compliance_dimensions=["security"],
+                    compliance_impact="gap",
+                ),
+                DiscoveredComponent(
+                    name="No documented substantial-modification procedure",
+                    component_type="runtime_drift",
+                    file_path="(no file)",
+                    confidence=0.70,
+                    compliance_dimensions=["runtime_drift"],
+                    compliance_impact="gap",
+                ),
+                DiscoveredComponent(
+                    name="No dataset versioning detected",
+                    component_type="data_pipeline",
+                    file_path="pipeline.py",
+                    confidence=0.70,
+                    compliance_dimensions=["data_gov"],
+                    compliance_impact="gap",
+                ),
+            ]
+        )
+        triage = build_founder_triage(result)
+        ship_titles = [item.title for item in triage.ship_now]
+        ent_titles = [item.title for item in triage.enterprise_deals]
+        later_titles = [item.title for item in triage.later_2027]
+
+        assert any("SQL Injection" in t for t in ship_titles)
+        assert not any("lacks prompt injection guards" in t for t in ship_titles)
+        assert any("lacks prompt injection guards" in t for t in ent_titles)
+        assert any("timeout=" in item.fix_hint for item in triage.enterprise_deals)
+        assert any("DVC" in item.fix_hint for item in triage.later_2027)
+        assert any("dataset versioning" in t.lower() for t in later_titles)
+        assert "((no file))" not in triage.brief_markdown

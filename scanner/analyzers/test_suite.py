@@ -7,6 +7,8 @@ Uses AST to count actual test functions and compute test-to-source ratio.
 
 from __future__ import annotations
 
+import re
+
 from scanner.analyzers._base import (
     AnalyzerContext,
     AnalyzerResult,
@@ -45,8 +47,19 @@ def analyze_test_suite(ctx: AnalyzerContext) -> AnalyzerResult:
                 kb_question_ids=["rm-3"], suggested_answer="yes",
             ))
 
-    # 2. Test file ratio
-    test_files = has_file(ctx, r"test[_s]?[/\\]|_test\.py$|test_\w+\.py$")
+    # 2. Test file ratio — count actual test source files, never fixture data
+    # (e.g. tests/fixtures/k8s_bad.yaml must not inflate test coverage).
+    _test_code_exts = (
+        ".py", ".js", ".ts", ".tsx", ".jsx", ".mjs", ".cjs",
+        ".go", ".rs", ".java", ".rb", ".cs", ".php", ".swift", ".kt",
+    )
+    _fixture_seg_re = re.compile(r"(^|/)fixtures?(/|$)", re.IGNORECASE)
+    raw_test_files = has_file(ctx, r"test[_s]?[/\\]|_test\.py$|test_\w+\.py$|\.(test|spec)\.[cm]?[jt]sx?$")
+    test_files = [
+        p for p in raw_test_files
+        if p.lower().endswith(_test_code_exts)
+        and not _fixture_seg_re.search(p.replace("\\", "/"))
+    ]
     source_files = [p for p in ctx.file_list if p.endswith(".py") and "test" not in p.lower()]
     if source_files:
         ratio = len(test_files) / len(source_files) if source_files else 0

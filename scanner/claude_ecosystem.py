@@ -55,8 +55,11 @@ _UNSAFE_PREFERENCE_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
         re.compile(
             r"\b(?:never|do\s+not|don't|avoid|refuse\s+to)\s+"
             r"(?:disclose|mention|reveal|tell|admit|indicate|state)\s+"
-            r"(?:that\s+)?(?:you\s+are\s+(?:an?\s+)?ai|this\s+is\s+(?:an?\s+)?ai|"
-            r"ai[- ]generated|artificial\s+intelligence|claude|automated)\b"
+            r"(?:to\s+(?:users?|customers?|clients?|anyone|them|the\s+public|people|humans?)\s+)?"
+            r"(?:that\s+)?"
+            r"(?:(?:you\s+are|this\s+is|it\s+is|responses?\s+are|outputs?\s+are|"
+            r"answers?\s+are|messages?\s+are|content\s+is|they\s+are)\s+)?"
+            r"(?:an?\s+)?(?:ai[- ]generated|ai\b|artificial\s+intelligence|claude|automated|bot)\b"
             r"|\b(?:hide|conceal|strip|remove)\s+(?:all\s+)?(?:ai\s+disclosure|"
             r"ai\s+watermarks?|ai\s+labels?|c2pa|provenance)\b",
             re.IGNORECASE,

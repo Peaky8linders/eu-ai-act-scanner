@@ -522,6 +522,26 @@ _BENCHMARK_CORPUS: tuple[BenchmarkSample, ...] = (
         ),
     ),
     BenchmarkSample(
+        sample_id="tf_sagemaker_missing_cloudtrail",
+        files={
+            "infra/main.tf": (
+                'provider "aws" {\n'
+                '  region = "eu-central-1"\n'
+                "}\n"
+                'resource "aws_sagemaker_endpoint" "prod" {\n'
+                '  name = "prod-model"\n'
+                "}\n"
+            ),
+        },
+        ground_truth=BenchmarkGroundTruth(
+            analyzer_id="terraform",
+            expect_finding=True,
+            expected_impact="gap",
+            expected_finding_id="tf-cloudtrail-missing",
+            rationale="Production Terraform AI resource without CloudTrail must emit tf-cloudtrail-missing.",
+        ),
+    ),
+    BenchmarkSample(
         sample_id="tf_test_fixture_excluded",
         files={
             "tests/fixtures/terraform_bad.tf": (

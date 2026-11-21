@@ -287,3 +287,36 @@ class TestSarifIngestion:
         missing = tmp_path / "missing.sarif"
         with pytest.raises(ValueError, match="missing.sarif"):
             ingest_sarif_files([missing])
+
+
+def test_sarif_omits_locations_for_sentinel_paths() -> None:
+    result = ScanResult(
+        project_name="sentinel-demo",
+        scan_id="scan-sentinel",
+        scanner_version="0.11.3",
+        is_ai_system=True,
+        overall_compliance_pct=50.0,
+        components=[
+            DiscoveredComponent(
+                name="No documented substantial-modification procedure",
+                component_type="runtime_drift",
+                file_path="(no file)",
+                confidence=0.7,
+                compliance_dimensions=["runtime_drift"],
+                compliance_impact="gap",
+            ),
+            DiscoveredComponent(
+                name="LLM system lacks prompt injection guards",
+                component_type="adversarial_robustness",
+                file_path="project",
+                confidence=0.7,
+                compliance_dimensions=["security"],
+                compliance_impact="gap",
+            ),
+        ],
+    )
+    sarif = scan_to_sarif(result)
+    results = sarif["runs"][0]["results"]
+    assert len(results) == 2
+    for entry in results:
+        assert "locations" not in entry or entry["locations"] == []

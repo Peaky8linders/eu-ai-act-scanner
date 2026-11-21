@@ -9,7 +9,7 @@ build-backend = "setuptools.build_meta"
 # scripts (`eu-ai-act-scan*`) keep their names.
 name = "eu-ai-act-scanner-plugin"
 version = "0.11.3"
-description = "Scan any codebase for EU AI Act (Regulation 2024/1689) compliance evidence and gaps, grounded in real-world AI security incidents and authoritative article text. 22 analyzers (incl. 7 agent-aware per Nannini et al. 2026), deterministic operator-role + obligation inference, a vendored GenAI/agentic-AI incident corpus crosswalked to OWASP LLM Top 10, OWASP Agentic (ASI), NIST AI RMF and MITRE ATLAS, an autonomous scan->fix->rescan loop with a regression guard, and an MCP server. Local-only static analysis with a Claude Code plugin (uses your existing subscription)."
+description = "Scan any codebase for EU AI Act (Regulation 2024/1689 + Digital Omnibus Reg. 2026/1744) compliance evidence and gaps, grounded in real-world AI security incidents and authoritative article text. 24 analyzers (incl. MCP tool-chain security, Claude Code security posture, AST-gated Art. 50 transparency, and 7 agent-aware analyzers), deterministic operator-role + obligation inference, founder 3-bucket triage, SARIF 2.1.0 + Claude Security / Claude Compliance API ingestion, a vendored GenAI/agentic-AI incident corpus crosswalked across 12 frameworks (incl. EN 18286:2026), an autonomous scan->fix->rescan loop, and a 17-tool MCP server. Local-only static analysis with a Claude Code plugin."
 readme = "README.md"
 license = { text = "Apache-2.0" }
 authors = [{ name = "Andrei Bacu", email = "andrei@antifragile-ai.net" }]
