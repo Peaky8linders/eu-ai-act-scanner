@@ -87,7 +87,7 @@ _DEPLOYER_VENDOR_CONTRACT_CHECKLIST: tuple[str, ...] = (
         "usage guidelines and 6-month accessible logs (or retain prompt/output logs yourself)."
     ),
     (
-        "AI-ready DPA & incident notice (Art. 10(5), Art. 73): verify zero-training / data "
+        "AI-ready DPA & incident notice (GDPR Art. 28, AI Act Art. 4a / Art. 73): verify zero-training / data "
         "safeguards in the DPA and prompt vendor notification of model or security incidents."
     ),
 )

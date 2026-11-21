@@ -108,11 +108,11 @@ positions:
 
   - id: aiact-04
     clause: "AI-Specific Data Governance & Zero-Training DPA Safeguards"
-    article: "Art. 10(5), Art. 53(1)(c)-(d)"
+    article: "Art. 4a, Art. 10(2), Art. 53(1)(c)-(d)"
     applies_from: "2025-08-02 (Art. 53 GPAI); 2027-12-02 (Art. 10 high-risk); GDPR live"
     description: "Whether the DPA addresses AI-specific data governance, zero training on customer inputs/outputs, copyright compliance, and bias-monitoring safeguards."
     acceptable:
-      description: "DPA explicitly prohibits training on customer prompts/data without opt-in, confirms lawful training data governance, and addresses Art. 10(5) special-category safeguards where relevant."
+      description: "DPA explicitly prohibits training on customer prompts/data without opt-in, confirms lawful training data governance, and addresses Art. 4a (successor to deleted Art. 10(5) under Digital Omnibus Reg. 2026/1744) special-category safeguards where relevant."
       language_hints:
         - "vendor will not train models on customer data"
         - "AI data governance and bias monitoring safeguards"
