@@ -92,10 +92,11 @@ If your team already builds with Claude Code or Claude Enterprise/Team, two 5-mi
    - Generate a read-only **Compliance Access Key** in `claude.ai` (*Organization settings > Data and privacy*, scopes `read:compliance_activities`, `read:compliance_org_data`, `read:compliance_user_data`) and set `ANTHROPIC_COMPLIANCE_ACCESS_KEY`.
    - Run the opt-in local fetcher (strictly `GET https://api.anthropic.com/v1/compliance/*` with `anthropic-version: 2026-10-21`; never uploads repo code) and ingest offline:
      ```bash
-     python scripts/fetch_claude_compliance.py --dry-run
-     python scripts/fetch_claude_compliance.py --output compliance-api-export.json --org-uuid "$ORG_UUID"
+     python <scanner-clone>/scripts/fetch_claude_compliance.py --dry-run
+     python <scanner-clone>/scripts/fetch_claude_compliance.py --output compliance-api-export.json --org-uuid "$ORG_UUID"
      eu-ai-act-scan . --ingest-compliance-api compliance-api-export.json --dossier release-dossier.json
      ```
+     (`<scanner-clone>` is the folder where you cloned eu-ai-act-scanner; the fetcher is not part of the installed engine.)
    - Automatically verifies >=180-day audit retention, RBAC group governance, clean *Instructions for Claude* / *Cowork Global instructions*, and reviewed remote-session tool executions.
 
 ## Vendor Contract Review Handoff (Anthropic Official Legal Plugin)

@@ -11,7 +11,7 @@ Run `/ai-act-scan`, then build a remediation plan for the top compliance gaps.
 
 - `$1` (optional) — path to scan. Defaults to the current directory.
 - `--top N` (default 3) — number of gaps to remediate.
-- `--startup` — prioritize live startup ship-blockers first (**Art. 50 transparency** in force since 2 Aug 2026 + **MCP toolchain**, **Claude Code security**, and **Art. 15 cybersecurity** gaps) ahead of Annex III high-risk governance docs deferred to **2 Dec 2027** under Digital Omnibus (Reg. 2026/1744). Mirrors `python -m scanner.cli "$1" --fix --startup` / `eu-ai-act-fix --profile startup`.
+- `--startup` — prioritize live startup ship-blockers first (**Art. 50 transparency** in force since 2 Aug 2026 + **MCP toolchain**, **Claude Code security**, and **Art. 15 cybersecurity** gaps) ahead of Annex III high-risk governance docs deferred to **2 Dec 2027** under Digital Omnibus (Reg. 2026/1744). Mirrors `eu-ai-act-scan "$1" --fix --startup` / `eu-ai-act-fix --profile startup`.
 - `--save-baseline [PATH]` / `--diff-baseline [PATH]` — snapshot before fixing and diff scores/gaps after each PR (`default: .eu-ai-act-baseline.json`).
 
 > **New to EU AI Act compliance?** Run `/ai-act-quickstart` first for a 60-second plain-English triage (`Ship Now` / `Enterprise Deals` / `Later 2027`). For diff-aware vulnerability checks paired with `claude-security@claude-plugins-official` (`/claude-security` / `/threat-model`), run `/ai-act-security-review`.
@@ -42,7 +42,7 @@ Run `/ai-act-scan`, then build a remediation plan for the top compliance gaps.
    - **Prompt**: ask `[a]pply / [s]kip / [e]dit / [q]uit` before touching disk
 4. **Show the plan. Do NOT apply edits yet.** For each approved `[i/N]` proposal:
    - Apply the proposal cleanly
-   - Re-run the scanner (or `python -m scanner.cli "$1" --diff-baseline`) immediately after each fix
+   - Re-run the scanner (or `eu-ai-act-scan "$1" --diff-baseline`) immediately after each fix
    - Report the exact score delta per dimension and verify zero regressions
 5. If the user says "apply all", still apply serially and re-scan between fixes so regressions are caught early.
 
@@ -66,7 +66,7 @@ When proposing fixes, lean on these canonical patterns — they are what the sca
 ## Autonomous loop (`eu-ai-act-fix` / `--fix --startup`)
 
 This command is the **human-in-the-loop** remediation flow. For unattended use there is a
-programmatic counterpart, `eu-ai-act-fix` (or `python -m scanner.cli "$1" --fix --startup`) / `scanner.fix_loop.run_fix_loop(..., profile="startup")`, which
+programmatic counterpart, `eu-ai-act-fix` (or `eu-ai-act-scan "$1" --fix --startup`) / `scanner.fix_loop.run_fix_loop(..., profile="startup")`, which
 runs the same scan → propose → apply → **re-scan** → revert-on-regression → repeat cycle to
 convergence. It defaults to a safe dry-run; `--apply` is required to write. Its deterministic
 fixers are validated against the analyzers' own positive-detection patterns, and a
@@ -76,7 +76,7 @@ should approve each `[1/N]` change.
 
 ## Assisted mode & auto-apply (use your own Claude Code power)
 
-Check the mode + auto-apply flag: `python -m scanner.cli --settings`.
+Check the mode + auto-apply flag: `eu-ai-act-scan --settings`.
 
 - **deterministic** (default) — behave exactly as above: propose, show the plan,
   apply only what the user approves.
@@ -86,7 +86,7 @@ Check the mode + auto-apply flag: `python -m scanner.cli --settings`.
   every regulatory claim with `/ai-act-ask`. Still show the plan first unless
   `auto_apply` is `true`.
 - **assisted + `auto_apply: true`** — apply the approved plan directly with your
-  own edit tools, re-running `python -m scanner.cli "$1" --json` after each change
+  own edit tools, re-running `eu-ai-act-scan "$1" --json` after each change
   to confirm the dimension score moved and nothing regressed.
 
 No API key or wrapper is needed for assisted mode — the command runs inside your

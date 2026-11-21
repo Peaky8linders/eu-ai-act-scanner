@@ -29,13 +29,13 @@ Run the EU AI Act compliance scanner on a local codebase and summarise the findi
 
 - **Startup / Founder 60-Second Triage**: run `/ai-act-quickstart` (backed by `--founder`) to translate findings into plain-English **Ship Now**, **Enterprise Deals**, and **Later 2027** buckets.
 - **Diff-Aware Security Review**: run `/ai-act-security-review` to pair the scanner's `mcp_toolchain` and `claude_code_security` analyzers with **`claude-security@claude-plugins-official`** (`/claude-security`, `/threat-model` -> `THREAT_MODEL.md`, `/security-review`), SARIF 2.1.0, and local Claude Compliance API exports.
-- **Guided Remediation**: run `/ai-act-scan-fix` (or `python -m scanner.cli "$1" --fix --startup`) to walk through fixes one PR at a time with regression protection.
+- **Guided Remediation**: run `/ai-act-scan-fix` (or `eu-ai-act-scan "$1" --fix --startup`) to walk through fixes one PR at a time with regression protection.
 
 ## Behaviour
 
 1. Run the scanner CLI in JSON mode:
    ```bash
-   python -m scanner.cli "$1" --json
+   eu-ai-act-scan "$1" --json
    ```
    If `$1` is empty, scan the current directory.
 2. Parse the JSON output. Key fields:
@@ -74,7 +74,7 @@ public-interest-text labelling (50(4)), under the `transparency` /
 
 ## Mode: deterministic vs assisted (use your own Claude Code / Codex subscription)
 
-Read the active mode first: `python -m scanner.cli --settings`.
+Read the active mode first: `eu-ai-act-scan --settings`.
 
 - **deterministic** (default) — present the scanner's findings as-is. The scan is
   100% local static analysis; do not add findings the scanner did not report.

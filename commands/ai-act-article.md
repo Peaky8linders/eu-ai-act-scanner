@@ -16,7 +16,7 @@ Trace a single EU AI Act article from regulation → compliance dimensions → s
 1. Normalise `$1` to the canonical lowercase form (e.g. `art9`).
 2. Run:
    ```bash
-   python -m scanner.cli . --article art9
+   eu-ai-act-scan . --article art9
    ```
 3. Parse the filtered JSON. Present the result in this structure:
    ```
