@@ -70,6 +70,13 @@ target-version = "py311"
 select = ["E", "F", "W", "I", "UP", "B"]
 ignore = ["E501"]
 
+[[tool.mypy.overrides]]
+# The MCP SDK is the optional `[mcp]` extra, imported lazily inside
+# scanner.mcp_server._load_server_class (1.x and 2.x module paths). CI type-checks
+# with `.[dev]` only, so a missing install must not fail mypy.
+module = ["mcp", "mcp.*"]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-v --tb=short"
