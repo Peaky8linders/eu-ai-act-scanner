@@ -414,3 +414,42 @@ def test_cen_cenelec_jtc21_en_18286_scope_and_draft_labelling() -> None:
         assert stds, f"{art} missing cen_cenelec_jtc21 draft mapping"
         assert "EN 18286:2026" not in stds, f"EN 18286:2026 over-claimed on {art}"
         assert all("(draft)" in s for s in stds), f"unlabelled draft on {art}: {stds}"
+
+
+# ---------------------------------------------------------------------------
+# legit-ai port (catalogue 2026.11.v2): spot checks and deliberate exclusions
+# ---------------------------------------------------------------------------
+
+
+def test_legit_ai_ported_controls_are_present() -> None:
+    expected = {
+        "Art. 15": {
+            "nist_sp_800_53": {"SI-7", "SI-10", "SI-15", "SI-16", "RA-5"},
+            "mitre_atlas": {"AML.T0010", "AML.T0029", "AML.T0031", "AML.T0053", "AML.T0054", "AML.T0055"},
+        },
+        "Art. 14": {
+            "nist_ai_rmf": {"MG-2.4"},
+            "nist_sp_800_53": {"AC-3", "AC-6"},
+            "owasp_agentic": {"ASI01", "ASI03", "ASI09"},
+            "iso_42001": {"6.1.4"},
+        },
+        "Art. 10": {"gdpr": {"Art. 6", "Art. 9"}, "mitre_atlas": {"AML.T0115"}},
+        "Art. 9": {"iso_42001": {"6.1.2"}},
+        "Art. 12": {"nist_sp_800_53": {"AU-12"}, "cen_cenelec_jtc21": {"prEN ISO/IEC 24970 (draft)"}},
+    }
+    for art, by_fw in expected.items():
+        for fw, ids in by_fw.items():
+            missing = ids - set(ARTICLE_FRAMEWORK_CROSSWALK[art].get(fw, []))
+            assert not missing, f"{art} {fw} missing {missing}"
+
+
+def test_non_existent_or_out_of_scope_ids_were_not_ported() -> None:
+    ids = {(fw, cid) for _owner, fw, cid in _all_mappings()}
+    assert ("iso_42001", "8.6") not in ids and ("iso_42001", "8.7") not in ids
+    assert not any(cid.startswith("AML.M") for fw, cid in ids if fw == "mitre_atlas")
+
+
+def test_article_lists_have_no_duplicates() -> None:
+    for art, mapping in ARTICLE_FRAMEWORK_CROSSWALK.items():
+        for fw, cids in mapping.items():
+            assert len(cids) == len(set(cids)), f"{art} {fw} has duplicates"
