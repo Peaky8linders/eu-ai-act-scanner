@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.1] - 2026-11-22
+
+### Added — 208 more framework controls per article (ported from legit-ai)
+
+- `ARTICLE_FRAMEWORK_CROSSWALK` gains the article-level controls the legit-ai parent
+  project maps and the scanner lacked, across Art. 4, 9-15, 17, 25, 50 and 72: SOC 2,
+  ISO/IEC 27002, NIST SP 800-53, NIST AI RMF, MITRE ATLAS techniques, OWASP LLM and
+  Agentic, GDPR, NIST AI 600-1 actions and ISO/IEC 42001 (including 6.1.2 AI risk
+  assessment and 6.1.4 AI system impact assessment). Examples: Art. 15 gains SP 800-53
+  SI-7/10/15/16 and RA-5 and ATLAS AML.T0010/T0029/T0031/T0043/T0053-55; Art. 14 gains
+  NIST MG-2.4, SP 800-53 AC-3/AC-6 and ASI01/03/09; Art. 10 gains GDPR Art. 6 and 9.
+- IDs were normalised (`MEASURE-2.3` -> `MS-2.3`, ISO 27002 `A.5.15` -> `5.15`) and
+  vetted: ISO 42001 8.6/8.7 do not exist; ATLAS mitigations (`AML.M...`) and
+  sub-techniques, NIST AI 600-1 "GAI-n" risk categories, CSA AICM domain-only codes,
+  SP 800-53 enhancements and SOC 2 privacy criteria (weak article fit) were left out;
+  retired AML.T0019 maps to its successor AML.T0115. Catalogue `2026.11.v2`.
+- `get_article` stays compact: Art. 15 now lists 64 controls in about 490 tokens.
+
 ## [0.13.0] - 2026-11-22
 
 Lighter, quieter and easier to use: far fewer tokens per session and per
