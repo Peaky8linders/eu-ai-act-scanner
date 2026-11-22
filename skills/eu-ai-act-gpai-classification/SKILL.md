@@ -1,6 +1,6 @@
 ---
 name: eu-ai-act-gpai-classification
-description: Use when the user asks "is my model a GPAI", mentions general-purpose AI, foundation models, Art. 51, Art. 53, Art. 55, systemic risk, or the 10^25 FLOP threshold. Serves foundation-model providers (who bear Art. 53/55 obligations), downstream integrators (who need to know what the model provider owes them under Art. 53(1)(b)), legal counsel, and compliance officers. Separates GPAI provider duties from downstream-deployer duties, and clarifies what triggers the systemic-risk tier.
+description: "Explains general-purpose AI model duties (Art. 51-55, systemic-risk threshold) for model providers and the apps built on them. Use for GPAI or foundation-model questions."
 user_invocable: true
 ---
 

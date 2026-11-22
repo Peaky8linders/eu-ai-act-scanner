@@ -1,6 +1,6 @@
 ---
 name: eu-ai-act-operator-roles
-description: Use when the user asks "am I a provider or deployer", mentions distinguishing roles (importer, distributor, authorised representative, product manufacturer), asks which obligations apply to their organisation, or is unsure which duties flow from their position in the AI supply chain. Serves legal counsel, product leads, and compliance officers. Determining the role is the gateway decision — every downstream obligation (Art. 9-15 vs. Art. 26-27 vs. Art. 23 importer duties) depends on it.
+description: "Works out whether an organisation is a provider, deployer, importer, distributor or product manufacturer under the EU AI Act, and what each role owes. Use for 'are we a provider or deployer?'."
 user_invocable: true
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: eu-ai-act-reference
-description: Use when the user names a specific EU AI Act article, annex, or obligation (e.g. "Art. 9", "Annex IV", "Art. 50 transparency", "systemic risk threshold"), asks "what does the Act say about X", or wants to understand which articles apply to their system. Serves legal counsel (who need precise article-to-obligation mapping), compliance officers (who read the Act in translation to their QMS), and engineers (who need to know which analyzer feeds which obligation). Surfaces the coverage map without claiming completeness on governance articles.
+description: "Maps EU AI Act articles and annexes to obligations and to the scanner's checks. Use when the user names an article or annex or asks what the Act says about a topic."
 user_invocable: true
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: eu-ai-act-fria-guide
-description: Use when the user asks about Fundamental Rights Impact Assessment, FRIA, Art. 27, whether they need to perform one, or what it must contain. Serves deployers of high-risk AI (primary audience — FRIA is a deployer obligation, not a provider one), compliance officers, and legal counsel. Clarifies the narrow triggering scope (specific Annex III domains, specific deployer types), the required elements of the assessment, and the interaction with DPIA under GDPR.
+description: "Explains when a Fundamental Rights Impact Assessment (Art. 27) is required and what it must contain. Use for FRIA questions."
 user_invocable: true
 ---
 

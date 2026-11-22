@@ -243,7 +243,7 @@ def analyze_regulatory_perimeter(ctx: AnalyzerContext) -> AnalyzerResult:
             key="cra", label="CRA (product with digital elements)",
             evidence_path=path, evidence_line=line,
             rationale="Distributable artefact (CLI entry point, npm bin, packaged extension) — agent ships as a network-connected software product.",
-            obligation="CRA secure-by-design, vulnerability reporting from 11 Sep 2026, SBOM, full conformity by 11 Dec 2027. Note CRA Art. 12 conformity-presumption bridge with AI Act Art. 15.",
+            obligation="If it is a product with digital elements: CRA Art. 14 reporting of actively exploited vulnerabilities and severe incidents (applies since 11 Sep 2026), an SBOM and full conformity by 11 Dec 2027. For a high-risk AI system, CRA conformity is presumed to meet the cybersecurity part of AI Act Art. 15 only (CRA Art. 12).",
             kb_q="rp-4",
         ))
 
@@ -255,8 +255,8 @@ def analyze_regulatory_perimeter(ctx: AnalyzerContext) -> AnalyzerResult:
         findings.append(_emit_finding(
             key="nis2", label="NIS2 (essential / important entity)",
             evidence_path=nis2_hits[0][0], evidence_line=nis2_hits[0][1],
-            rationale="OT/SCADA/critical-infrastructure signals — agent likely serves a NIS2 essential entity.",
-            obligation="24h incident reporting, supply-chain security, cybersecurity risk management.",
+            rationale="OT, SCADA or critical-infrastructure signals: the agent may serve an essential or important entity (NIS2 Art. 3).",
+            obligation="If the entity is essential or important: Art. 23 incident reporting (24h early warning, 72h notification) and Art. 21 cybersecurity risk management, including supply-chain security. A financial entity reports under DORA instead (DORA Art. 1(2)).",
             kb_q="rp-5",
         ))
 
@@ -282,7 +282,7 @@ def analyze_regulatory_perimeter(ctx: AnalyzerContext) -> AnalyzerResult:
             key="mdr", label="MDR/IVDR (medical device)",
             evidence_path=mdr_hits[0][0], evidence_line=mdr_hits[0][1],
             rationale="FHIR/DICOM/HL7/Epic/Cerner SDK present — clinical-decision-support pattern.",
-            obligation="Full MDR conformity assessment, ISO 13485 QMS, ISO 14971 risk management, GDPR Art. 9, AI Act Annex I(A) HIGH-RISK.",
+            obligation="If the software is a medical device or an IVD: MDR or IVDR conformity assessment with a quality management system and risk management (usually EN ISO 13485 and EN ISO 14971), and GDPR Art. 9 for health data. It is AI Act high-risk under Art. 6(1) only if it needs third-party conformity assessment, from 2 Aug 2028, assessed within the MDR or IVDR procedure (Art. 43(3)).",
             kb_q="rp-7",
         ))
 
@@ -321,7 +321,7 @@ def analyze_regulatory_perimeter(ctx: AnalyzerContext) -> AnalyzerResult:
             key="dora", label="DORA (financial operational resilience)",
             evidence_path=dora_hits[0][0], evidence_line=dora_hits[0][1],
             rationale="Explicit DORA / financial-entity-critical signal.",
-            obligation="DORA ICT risk management, third-party risk, incident reporting.",
+            obligation="If the operator is a financial entity (DORA Art. 2): ICT risk management, ICT third-party risk and major-incident reporting (Art. 19), applying since 17 Jan 2025. For such an entity DORA displaces NIS2's equivalent duties (DORA Art. 1(2)).",
             kb_q="rp-7",
         ))
 
@@ -365,16 +365,16 @@ def analyze_regulatory_perimeter(ctx: AnalyzerContext) -> AnalyzerResult:
         else:
             findings.append(Finding(
                 id="rp-step9-missing", category="regulatory_perimeter",
-                title="Step 9 inventory missing despite triggered instruments",
+                title="Other EU laws may apply; no compliance map lists them",
                 description=(
-                    f"Perimeter triggers detected ({', '.join(sorted(triggered))}) but no "
+                    f"Code signals point to other EU laws ({', '.join(sorted(triggered))}) but no "
                     "`adjacent-legislation.md` / `regulatory-perimeter.md` / `compliance-map.md` "
-                    "artefact in the repo. Per paper Step 9 (line 1727) — the four-question "
-                    "tool trace through GDPR / Data Act / DSA / sectoral must be documented."
+                    "lists which apply and why (working-paper Step 9, line 1727). A short map "
+                    "helps answer customer and auditor questions; it is not itself a legal duty."
                 ),
                 file_path="(no file)",
                 confidence=0.7,
-                compliance_impact="gap",
+                compliance_impact="neutral",
                 compliance_dimensions=["regulatory_perimeter", "tech_docs"],
                 evidence_snippet="",
                 kb_question_ids=["rp-9"], suggested_answer="no",

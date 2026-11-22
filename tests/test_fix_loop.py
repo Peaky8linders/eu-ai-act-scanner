@@ -175,11 +175,12 @@ def test_run_fix_loop_startup_profile_dry_run(project):
     res = run_fix_loop(project, top_n=3, apply=False, profile="startup")
     assert res.proposals
     assert res.applied == []
-    # Under startup profile, security (via configuration fixer) outranks risk_mgmt (test_suite).
+    # Under startup profile, security (configuration fixer) outranks risk_mgmt
+    # (test-suite fixer). Proposals are labelled with the KB dimension they close.
     dims = [p.dimension for p in res.proposals]
-    assert "configuration" in dims
-    assert "test_suite" in dims
-    assert dims.index("configuration") < dims.index("test_suite")
+    assert "security" in dims
+    assert "risk_mgmt" in dims
+    assert dims.index("security") < dims.index("risk_mgmt")
 
 
 # ─── Out-of-scope (non-AI project) short-circuit ──────────────────────────
@@ -246,20 +247,22 @@ def test_dry_run_writes_nothing_and_collects_proposals(project):
 
 def test_dry_run_surfaces_known_missing_dimensions(project, tmp_path):
     """sample_project/model.py has real logging (100%) and human_oversight (100%);
-    the fix loop should target its genuine missing dimensions (tech_docs, risk_mgmt
-    via test_suite, security via configuration) and surface human_oversight when absent."""
+    the fix loop should target its genuine missing dimensions (risk_mgmt via
+    test_suite, security via configuration). README headings are no longer an
+    Art. 11 gap (Annex IV technical documentation is not the README), so
+    tech_docs is not ranked for this fixture."""
     scan = scan_project(project)
     assert scan.compliance_scores["logging"] == 100.0
     ranked_dims = {dim for dim, _score in rank_gaps(scan)}
-    assert {"tech_docs", "risk_mgmt", "security"} <= ranked_dims
+    assert {"risk_mgmt", "security"} <= ranked_dims
     assert "logging" not in ranked_dims
 
     result = run_fix_loop(project, top_n=8, apply=False)
-    proposed_dims = {p.dimension for p in result.proposals}
-    assert "tech_docs" in proposed_dims
-    assert "test_suite" in proposed_dims
-    assert "configuration" in proposed_dims
-    assert "logging" not in proposed_dims
+    proposed = {p.id: p.dimension for p in result.proposals}
+    # Each proposal names the KB dimension it closes, not the fixer technique.
+    assert proposed.get("fix-test-suite") == "risk_mgmt"
+    assert proposed.get("fix-configuration") == "security"
+    assert "logging" not in proposed.values()
 
     # A minimal AI project without human_oversight should surface human_oversight too.
     minimal = tmp_path / "no_oversight"

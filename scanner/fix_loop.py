@@ -861,7 +861,13 @@ def _build_proposal(dim_id: str, root: Path) -> FixProposal | None:
     """Build a deterministic proposal for a dimension, or None."""
     fixer_key = _fixer_key_for_dimension(dim_id)
     if fixer_key is not None:
-        return DETERMINISTIC_FIXERS[fixer_key](root)
+        proposal = DETERMINISTIC_FIXERS[fixer_key](root)
+        # A fixer named after its technique (e.g. "test_suite") closes a KB
+        # dimension gap (risk_mgmt). Report the dimension the user sees scored,
+        # so a proposal's area matches the score that moves.
+        if proposal.dimension != dim_id and get_dimension(proposal.dimension) is None:
+            proposal = proposal.model_copy(update={"dimension": dim_id})
+        return proposal
     return None
 
 

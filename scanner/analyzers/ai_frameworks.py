@@ -205,7 +205,8 @@ def analyze_ai_frameworks(ctx: AnalyzerContext) -> AnalyzerResult:
             title=f"Multi-framework complexity: {len(detected_frameworks)} frameworks",
             description=f"Project uses {len(detected_frameworks)} AI frameworks ({', '.join(detected_frameworks)}). High complexity increases maintenance risk.",
             file_path="", confidence=0.7,
-            compliance_impact="gap",
+            # Informational: using several frameworks is not a missing control.
+            compliance_impact="neutral",
             compliance_dimensions=["risk_mgmt"],
         ))
 

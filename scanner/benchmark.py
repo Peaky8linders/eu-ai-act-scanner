@@ -403,7 +403,25 @@ _BENCHMARK_CORPUS: tuple[BenchmarkSample, ...] = (
     ),
     # ── data_pipeline ────────────────────────────────────────────────────
     BenchmarkSample(
-        sample_id="dp_pandas_only_gaps",
+        sample_id="dp_training_without_versioning_gaps",
+        files={
+            "train.py": (
+                "import pandas as pd\n"
+                "from sklearn.linear_model import LogisticRegression\n\n"
+                "df = pd.read_csv('data.csv')\n"
+                "model = LogisticRegression().fit(df[['x']], df['y'])\n"
+            ),
+        },
+        ground_truth=BenchmarkGroundTruth(
+            analyzer_id="data_pipeline",
+            expect_finding=True,
+            expected_impact="gap",
+            expected_finding_id="dp-no-versioning",
+            rationale="Model training on unversioned data without quality checks must emit Art. 10 gaps.",
+        ),
+    ),
+    BenchmarkSample(
+        sample_id="dp_pandas_only_no_training_clean",
         files={
             "ingest.py": (
                 "import pandas as pd\n\n"
@@ -413,10 +431,10 @@ _BENCHMARK_CORPUS: tuple[BenchmarkSample, ...] = (
         },
         ground_truth=BenchmarkGroundTruth(
             analyzer_id="data_pipeline",
-            expect_finding=True,
+            expect_finding=False,
             expected_impact="gap",
             expected_finding_id="dp-no-versioning",
-            rationale="Bare pandas import without versioning/quality checks must emit Art. 10 gaps.",
+            rationale="Art. 10 governs training data; pandas without any training is not a training-data gap.",
         ),
     ),
     BenchmarkSample(
@@ -630,6 +648,93 @@ _BENCHMARK_CORPUS: tuple[BenchmarkSample, ...] = (
             expect_finding=False,
             expected_impact="gap",
             rationale="Test file under tests/ must be recognised via include_non_product=True.",
+        ),
+    ),
+    # ── precision decoys from real startup repos (v0.13) ─────────────────
+    BenchmarkSample(
+        sample_id="sc_placeholder_keys_and_scanner_config_clean",
+        files={
+            "README.md": 'client = make_client(api_key="sk-ant-...")  # your key here\n',
+            ".gitleaks.toml": "[allowlist]\nregexes = [\n    '''AKIAIOSFODNN7EXAMPLE''',\n]\n",
+            "scripts/setup.sh": 'export SERVICE_API_KEY="$API_KEY"\n',
+            "app.py": "import os\nAPI_KEY = os.environ['SERVICE_API_KEY']\n",
+        },
+        ground_truth=BenchmarkGroundTruth(
+            analyzer_id="security_controls",
+            expect_finding=False,
+            expected_impact="gap",
+            expected_finding_id="sec-hardcoded-*",
+            rationale="Placeholders, a secret scanner's allowlist and shell variable references are not hardcoded secrets.",
+        ),
+    ),
+    BenchmarkSample(
+        sample_id="ar_zod_validated_endpoint_clean",
+        files={
+            "src/server.ts": (
+                'import OpenAI from "openai";\nimport express from "express";\nimport { z } from "zod";\n'
+                "const Body = z.object({ q: z.string().max(2000) });\nconst app = express();\n"
+                'app.post("/ask", async (req, res) => {\n  const { q } = Body.parse(req.body);\n'
+                '  res.json(await new OpenAI().responses.create({ model: "gpt-4o", input: q }));\n});\n'
+            ),
+        },
+        ground_truth=BenchmarkGroundTruth(
+            analyzer_id="adversarial_robustness",
+            expect_finding=False,
+            expected_impact="gap",
+            expected_finding_id="ar-no-input-validation",
+            rationale="A zod schema validating the request body is input validation.",
+        ),
+    ),
+    BenchmarkSample(
+        sample_id="ar_cli_tool_no_endpoint_clean",
+        files={
+            "summarize.py": (
+                "import argparse\nimport anthropic\n\n"
+                "def main() -> None:\n    args = argparse.ArgumentParser().parse_args()\n"
+                "    print(anthropic.Anthropic().messages.create(model='m', max_tokens=100,\n"
+                "          messages=[{'role': 'user', 'content': 'hi'}]))\n"
+            ),
+        },
+        ground_truth=BenchmarkGroundTruth(
+            analyzer_id="adversarial_robustness",
+            expect_finding=False,
+            expected_impact="gap",
+            expected_finding_id="ar-no-rate-limiting",
+            rationale="A command-line tool has no endpoint to rate-limit.",
+        ),
+    ),
+    BenchmarkSample(
+        sample_id="ac_taxonomy_enum_and_sklearn_pipeline_clean",
+        files={
+            "app/data/taxonomy.py": (
+                "from enum import StrEnum\n\nclass Pattern(StrEnum):\n"
+                "    multi_agent_swarm = 'multi_agent_swarm'\n    agent_chain = 'agent_chain'\n"
+            ),
+            "model.py": (
+                "from sklearn.pipeline import Pipeline\nfrom sklearn.linear_model import LogisticRegression\n"
+                "pipeline = Pipeline([('clf', LogisticRegression())])\n"
+            ),
+        },
+        ground_truth=BenchmarkGroundTruth(
+            analyzer_id="agent_cascade",
+            expect_finding=False,
+            expected_impact="gap",
+            expected_finding_id="ac-missing-validation",
+            rationale="Naming agent patterns in a data enum, or an sklearn Pipeline, is not an agent chain.",
+        ),
+    ),
+    BenchmarkSample(
+        sample_id="log_readme_print_examples_clean",
+        files={
+            "README.md": "```python\nprint(client.ask('hello'))\nprint(result)\n```\n",
+            "app.py": "import logging\nlogger = logging.getLogger(__name__)\n\ndef run():\n    logger.info('started')\n",
+        },
+        ground_truth=BenchmarkGroundTruth(
+            analyzer_id="logging_monitoring",
+            expect_finding=False,
+            expected_impact="gap",
+            expected_finding_id="log-print-instead",
+            rationale="print() in README code samples is documentation, not the product's logging.",
         ),
     ),
 )

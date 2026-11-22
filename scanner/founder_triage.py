@@ -263,8 +263,25 @@ class FounderTriage(BaseModel):
     later_2027: list[TriageItem] = Field(default_factory=list)
     top_cross_framework_levers: list[QuickWinLever] = Field(default_factory=list)
     vendor_contract_checklist: list[str] = Field(default_factory=list)
+    # Gap titles left out because every area they touch is owed only by other
+    # operator roles (e.g. provider-only Annex IV paperwork for a deployer).
+    not_for_your_role: list[str] = Field(default_factory=list)
     summary_counts: dict[str, int] = Field(default_factory=dict)
     brief_markdown: str = ""
+
+
+# Areas that matter to customers' security reviews whatever the operator's EU
+# AI Act role, so role scoping never hides them.
+_ROLE_AGNOSTIC_DIMENSIONS = frozenset({
+    "security", "access_control", "supply_chain", "tool_governance", "infra_mlops",
+    "logging", "transparency", "content_transparency",
+})
+
+
+def _owed_only_by_other_roles(dimensions: list[str], out_of_scope: set[str]) -> bool:
+    """True when every area of an item is owed only by roles the user does not hold."""
+    dims = set(dimensions)
+    return bool(dims) and dims <= out_of_scope and not dims & _ROLE_AGNOSTIC_DIMENSIONS
 
 
 def _clean_text(text: str) -> str:
@@ -616,7 +633,7 @@ def _extract_top_levers(
         summary = _clean_text(str(item.get("impact_summary", "")))
         if not summary:
             summary = (
-                f"One engineering fix closes {controls_closed} controls across "
+                f"One engineering fix supports {controls_closed} controls across "
                 f"{len(fw_labels)} frameworks at once."
             )
         levers.append(
@@ -635,9 +652,17 @@ def _synthesize_dimension_items(
     enterprise_deals: list[TriageItem],
     later_2027: list[TriageItem],
     high_risk_verticals: list[str],
+    *,
+    out_of_scope: set[str] | None = None,
 ) -> None:
-    """Back-fill critical missing dimensions from compliance_scores when no explicit gap component exists."""
-    covered_dims: set[str] = set()
+    """Back-fill critical missing dimensions from compliance_scores when no explicit gap component exists.
+
+    Dimensions owed only by other operator roles (``out_of_scope``) are never
+    back-filled, except the role-agnostic security / transparency areas.
+    """
+    covered_dims: set[str] = {
+        d for d in (out_of_scope or set()) if d not in _ROLE_AGNOSTIC_DIMENSIONS
+    }
     for bucket_items in (ship_now, enterprise_deals, later_2027):
         for item in bucket_items:
             covered_dims.update(item.dimensions)
@@ -795,7 +820,7 @@ def format_founder_brief(triage: FounderTriage) -> str:
         lines.append("## Satisfy Once, Comply Everywhere")
         for lever in triage.top_cross_framework_levers[:3]:
             fws = ", ".join(lever.frameworks_unlocked[:4])
-            lines.append(f"- **{lever.control}** -> unlocks {fws}")
+            lines.append(f"- **{lever.control}** -> supports {fws}")
 
     if triage.vendor_contract_checklist:
         lines.append("")
@@ -803,6 +828,20 @@ def format_founder_brief(triage: FounderTriage) -> str:
         for item in triage.vendor_contract_checklist[:3]:
             lines.append(f"- {item}")
 
+    if triage.not_for_your_role:
+        lines.append("")
+        lines.append(
+            f"_{len(triage.not_for_your_role)} item(s) apply only to AI providers or other roles, "
+            f"not to a {triage.operator_role}, so they are left out (for example "
+            f"\"{triage.not_for_your_role[0]}\"). If you train, fine-tune or rebrand the model, "
+            "re-run with `--role provider`._"
+        )
+
+    lines.append("")
+    lines.append(
+        "_This scan reads code and configuration only. Policies, contracts, training and "
+        "how the system is used in practice are not verified._"
+    )
     lines.append("")
     lines.append(
         "_Key dates (Reg. 2024/1689 & Digital Omnibus Reg. 2026/1744): "
@@ -853,9 +892,16 @@ def build_founder_triage(
     ship_now: list[TriageItem] = []
     enterprise_deals: list[TriageItem] = []
     later_2027: list[TriageItem] = []
+    not_for_your_role: list[str] = []
+    out_of_scope = set((result.role_scope or {}).get("out_of_scope_dimensions", []))
 
     gap_components = [c for c in result.components if c.compliance_impact == "gap"]
     for idx, comp in enumerate(gap_components, start=1):
+        if _owed_only_by_other_roles(list(comp.compliance_dimensions), out_of_scope):
+            title = _clean_text(comp.name)
+            if title not in not_for_your_role:
+                not_for_your_role.append(title)
+            continue
         bucket = _classify_component_bucket(comp)
         what_wrong, why_now, effort, pr_title, fix_hint = _describe_component(
             comp, bucket, high_risk_verticals
@@ -886,7 +932,9 @@ def build_founder_triage(
         else:
             later_2027.append(item)
 
-    _synthesize_dimension_items(result, ship_now, enterprise_deals, later_2027, high_risk_verticals)
+    _synthesize_dimension_items(
+        result, ship_now, enterprise_deals, later_2027, high_risk_verticals, out_of_scope=out_of_scope,
+    )
 
     top_levers = _extract_top_levers(result, cross_framework)
     vendor_checklist = list(_DEPLOYER_VENDOR_CONTRACT_CHECKLIST) if operator_role == "deployer" else []
@@ -896,6 +944,7 @@ def build_founder_triage(
         "enterprise_deals": len(enterprise_deals),
         "later_2027": len(later_2027),
         "total_gaps": len(ship_now) + len(enterprise_deals) + len(later_2027),
+        "not_for_your_role": len(not_for_your_role),
     }
 
     if ship_now:
@@ -929,6 +978,7 @@ def build_founder_triage(
         later_2027=later_2027,
         top_cross_framework_levers=top_levers,
         vendor_contract_checklist=vendor_checklist,
+        not_for_your_role=not_for_your_role,
         summary_counts=summary_counts,
     )
     triage.brief_markdown = format_founder_brief(triage)

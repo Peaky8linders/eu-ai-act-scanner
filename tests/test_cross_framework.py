@@ -65,8 +65,14 @@ def test_project_scan_to_frameworks_basic() -> None:
     # Controls projected
     assert len(proj.controls) > 0
     statuses = {c.status for c in proj.controls}
-    assert "compliant" in statuses
+    # Legal force (legit-ai port): AI Act evidence *supports* voluntary controls;
+    # it never makes them "compliant", and binding law is not assessed.
+    assert "supported" in statuses
     assert "gap" in statuses
+    assert "compliant" not in statuses
+    gdpr = [c for c in proj.controls if c.framework_id == "gdpr"]
+    assert gdpr and {c.status for c in gdpr} == {"not_assessed"}
+    assert all(c.force == "binding_law" for c in gdpr)
 
 
 def test_framework_projection_coverage_calculation() -> None:
@@ -91,8 +97,14 @@ def test_framework_projection_coverage_calculation() -> None:
     assert len(proj.frameworks) == 1
     gdpr_summary = proj.frameworks[0]
     assert gdpr_summary.framework_id == "gdpr"
+    # Strong related evidence, but binding law is never assessed from it.
+    assert gdpr_summary.assessed is False
+    assert gdpr_summary.force == "binding_law"
     assert gdpr_summary.coverage_pct >= 80.0
-    assert gdpr_summary.gap == 0
+    assert gdpr_summary.not_assessed == gdpr_summary.total_controls
+    assert gdpr_summary.compliant == 0 and gdpr_summary.gap == 0
+    # The average only counts frameworks that can be assessed.
+    assert proj.average_multi_framework_coverage_pct == 0.0
 
 
 def test_satisfy_once_levers_identified() -> None:
@@ -111,7 +123,9 @@ def test_satisfy_once_levers_identified() -> None:
     assert "human_oversight" in lever_dims or "data_gov" in lever_dims
     first_lever = proj.satisfy_once_levers[0]
     assert first_lever.framework_count >= 2
-    assert "Closing this gap directly satisfies" in first_lever.impact_summary
+    assert "Closing this gap supports" in first_lever.impact_summary
+    # Binding law is assessed on its own; a lever never claims to help it.
+    assert all("gdpr" not in lever.frameworks_helped for lever in proj.satisfy_once_levers)
 
 
 def test_framework_ids_are_canonical_no_variant_keys() -> None:
@@ -185,8 +199,10 @@ def test_cross_framework_markdown_rendering() -> None:
     )
     proj = project_scan_to_frameworks(scan)
     md = proj.format_markdown()
-    assert "# Cross-Framework Compliance Projection — Test-Markdown" in md
-    assert "| Framework | Coverage | Compliant | Partial | Gap |" in md
+    assert "# Cross-Framework Projection — Test-Markdown" in md
+    assert "| Framework | Legal force | Evidence coverage | Supported | Partial | Gap |" in md
+    assert "not assessed" in md  # GDPR row
+    assert "presumption of conformity" in md
     assert "Evidence Harmonization & Reuse" in md
 
 

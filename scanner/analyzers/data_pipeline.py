@@ -10,7 +10,18 @@ from scanner.analyzers._base import (
     AnalyzerResult,
     Finding,
     has_file,
+    search_code_files,
     search_files,
+)
+
+# Art. 10 governs training, validation and test data sets. A data library on
+# its own (pandas for a CSV export, SQLAlchemy for the app database) does not
+# mean the project trains a model, and raising Art. 10 training-data gaps for
+# every web app with a database was a recurring false positive.
+_TRAINING_PATTERN = (
+    r"\.fit\(|\.fit_transform\(|train_test_split\(|\b(SFT|DPO|Reward)?Trainer\(|\btrainer\.train\(|"
+    r"\bmodel\.train\(\)|optimizer\.step\(\)|\.backward\(\)|fine_tuning\.jobs\.create\(|"
+    r"\bfine_tune\(|LoraConfig\(|get_peft_model\(|model\.compile\(|\b(xgb|lgb|lightgbm|xgboost)\.train\("
 )
 
 
@@ -145,7 +156,7 @@ def analyze_data_pipeline(ctx: AnalyzerContext) -> AnalyzerResult:
     # 8. Art. 10 gaps — when data libraries are detected without versioning
     # or quality controls, emit explicit gaps rather than letting neutral data
     # imports pass Art. 10 unchecked.
-    if data_lib_detected:
+    if data_lib_detected and search_code_files(ctx, _TRAINING_PATTERN):
         if not any(f.id.startswith(("dp-versioning", "dp-lineage")) for f in findings):
             findings.append(Finding(
                 id="dp-no-versioning", category="data_pipeline",

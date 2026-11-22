@@ -129,6 +129,37 @@ def incidents_for_article(article: str, limit: int = 5) -> list[Incident]:
     return [inc for _s, inc in ranked[: max(0, limit)]]
 
 
+def incidents_for_key(key: str, limit: int = 5) -> tuple[str | None, list[Incident]]:
+    """Resolve one free-form lookup key to ``(kind, incidents)``.
+
+    Backs both ``eu-ai-act-scan --incidents`` and the MCP ``incidents`` tool so
+    they accept the same spellings. Tries, in order: a KB dimension id
+    (``security``), an agentic threat id (``prompt_injection``), then any
+    article spelling (``art15``, ``Art. 15``, ``Article 15(4)``, ``15``).
+    Returns ``(None, [])`` when nothing matches.
+    """
+    from scanner.kb import DIMENSIONS
+    from scanner.refs import article_key
+
+    raw = (key or "").strip()
+    if not raw:
+        return None, []
+    lowered = raw.lower()
+    if lowered in DIMENSIONS:
+        found = incidents_for_dimension(lowered, limit)
+        if found:
+            return "dimension", found
+    threat = incidents_for_threat(lowered, limit)
+    if threat:
+        return "threat", threat
+    art = article_key(raw if not raw.isdigit() else f"Art. {raw}")
+    if art.startswith("art"):
+        found = incidents_for_article(art, limit)
+        if found:
+            return "article", found
+    return None, []
+
+
 def incidents_for_finding(finding: Any, limit: int = 3) -> list[Incident]:
     """Incidents grounding a scanner Finding.
 
@@ -203,6 +234,7 @@ __all__ = [
     "incidents_for_threat",
     "incidents_for_dimension",
     "incidents_for_article",
+    "incidents_for_key",
     "incidents_for_finding",
     "incident_corpus_stats",
 ]

@@ -51,7 +51,9 @@ def analyze_documentation(ctx: AnalyzerContext) -> AnalyzerResult:
                 title=f"README missing sections: {', '.join(missing[:3])}",
                 description=f"Only {len(present)}/{len(_README_SECTIONS)} key sections found.",
                 file_path=readme_files[0], confidence=0.8,
-                compliance_impact="gap",
+                # Informational: Art. 11 technical documentation is Annex IV,
+                # not the README, so README headings are no AI Act gap.
+                compliance_impact="neutral",
                 compliance_dimensions=["tech_docs"],
                 kb_question_ids=["td-1"], suggested_answer="partial",
             ))

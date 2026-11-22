@@ -1,6 +1,6 @@
 {
   "name": "eu-ai-act-scanner",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "EU AI Act (Regulation 2024/1689) and Digital Omnibus (Regulation 2026/1744) compliance harness for Claude Code and MCP clients. 24 deterministic analyzers (including MCP toolchain & Claude Code security + AST-gated Art. 50), 60-second Founder/Startup quickstart (/ai-act-quickstart), diff-aware security review (/ai-act-security-review) interoperating with claude-security@claude-plugins-official, Claude Compliance API & SARIF 2.1.0, interactive visual context graph (/ai-act-graph), cryptographic release dossier (/ai-act-dossier), 12-framework projection (/ai-act-cross-framework including EN 18286:2026), and autonomous startup/regulatory remediation (/ai-act-scan-fix).",
   "author": "Andrei Bacu (@Peaky8linders)",
   "license": "Apache-2.0",
@@ -22,7 +22,6 @@
   "skills": [
     "founder-startup-triage",
     "claude-code-security-hardening",
-    "authoring-eu-ai-act-skills",
     "using-eu-ai-act-scanner",
     "interpreting-findings",
     "eu-ai-act-reference",

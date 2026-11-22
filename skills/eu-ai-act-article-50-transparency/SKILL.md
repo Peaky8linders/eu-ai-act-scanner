@@ -1,6 +1,6 @@
 ---
 name: eu-ai-act-article-50-transparency
-description: Use when the user asks about transparency to end users, AI-interaction disclosure, chatbot disclaimers, labelling of AI-generated or synthetic content, deep-fake disclosure, emotion-recognition or biometric-categorisation notices, or names Art. 50. Distinguishes the four Art. 50 duties by actor (which are the provider's, which are the deployer's) and separates limited-risk Art. 50 transparency from high-risk Art. 13 transparency. Serves legal counsel (primary), product leads, and deployers.
+description: "Explains Art. 50 transparency duties (telling users they talk to an AI, labelling AI-generated content and deepfakes) and who owes each. Use for chatbot disclosure or AI-content labelling questions."
 user_invocable: true
 ---
 

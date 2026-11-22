@@ -29,6 +29,52 @@ _REQUESTS_CALL_PATTERN = r"requests\.(get|post|put|delete)\("
 _UNSAFE_DESER_MODULES = frozenset({"marshal", "dill"})
 _UNSAFE_DESER_FUNCS = frozenset({"load", "loads"})
 
+# Hardcoded-secret precision. Every rule below came from a real false positive
+# in a startup codebase: placeholders in README snippets ("sk-ant-...",
+# "your-api-key"), shell variable references ("$API_KEY"), a secret scanner's
+# own allowlist (.gitleaks.toml), and a fixture string that *contains* an
+# assignment ('API_KEY = "sk-…"\n'). A finding here lands in "fix before
+# shipping", so a false alarm costs real trust.
+_SECRET_PROSE_SUFFIXES = (".md", ".mdx", ".rst", ".txt", ".adoc", ".ipynb")
+_SECRET_SCANNER_CONFIGS = frozenset({
+    ".gitleaks.toml", "gitleaks.toml", ".secrets.baseline", ".gitguardian.yaml",
+    ".gitguardian.yml", "trufflehog.yaml", ".trufflehog.yml", ".talismanrc",
+})
+_SECRET_PLACEHOLDER_RE = re.compile(
+    r"\.\.\.|…|<[^>]*>|['\"]\$\{?[A-Za-z_][A-Za-z0-9_]*\}?['\"]|\{\{|%s|x{4,}|\*{4,}|"
+    r"your[-_ ]|example|placeholder|changeme|change[-_]me|dummy|fake|redacted|"
+    r"sample|replace[-_ ]?me|insert[-_ ]|todo|xxx",
+    re.IGNORECASE,
+)
+
+
+_ASSIGNED_LITERAL_RE = re.compile(r"""[=:]\s*(['"])([^'"]*)\1""")
+# A value made only of lowercase words joined by _ - . is an identifier (an enum
+# value, a config key such as "security_hub_api_key"), not a credential: real
+# secrets carry digits, mixed case or random characters.
+_IDENTIFIER_VALUE_RE = re.compile(r"[a-z]+(?:[-_.][a-z]+)+")
+
+
+def _is_secret_false_positive(path: str, line: str) -> bool:
+    """True when a secret-pattern hit is documentation, a template or test data."""
+    low_path = path.lower().replace("\\", "/")
+    name = low_path.rsplit("/", 1)[-1]
+    if low_path.endswith(_SECRET_PROSE_SUFFIXES) or name in _SECRET_SCANNER_CONFIGS:
+        return True
+    if _SECRET_PLACEHOLDER_RE.search(line):
+        return True
+    stripped = line.strip()
+    # The whole assignment sits inside another string literal (fixture code).
+    if stripped[:1] in {"'", '"'} and ("\\n" in stripped or stripped.endswith((",", "'", '"'))):
+        return True
+    assigned = _ASSIGNED_LITERAL_RE.search(line)
+    if assigned:
+        value = assigned.group(2)
+        # UI text ('Password is required') and identifier-shaped values.
+        if any(ch.isspace() for ch in value) or _IDENTIFIER_VALUE_RE.fullmatch(value):
+            return True
+    return False
+
 
 def _find_unsafe_deserialization(ctx: AnalyzerContext) -> list[tuple[str, int, str, str]]:
     """AST-based detector for ``marshal.load(s)`` / ``dill.load(s)`` in Python product code."""
@@ -236,6 +282,7 @@ def analyze_security_controls(ctx: AnalyzerContext) -> AnalyzerResult:
         real_matches = [
             m for m in line_matches
             if "test" not in m[0].lower() and "example" not in m[0].lower()
+            and not _is_secret_false_positive(m[0], m[2])
         ]
         for path, line_no, _matched, pattern in real_matches[:3]:
             findings.append(Finding(

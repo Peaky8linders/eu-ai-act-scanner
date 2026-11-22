@@ -1,41 +1,13 @@
 ---
 name: ai-act-dossier
-description: Generate and cryptographically seal an immutable compliance release dossier (compliance-dossier.json) for Notified Bodies, auditors, and release gates.
+description: "Creates a tamper-evident compliance record of this release to share with customers or auditors."
+argument-hint: "[path] [output.json]"
 ---
 
 # /ai-act-dossier
 
-Produce a mathematically verifiable, tamper-evident compliance dossier binding the exact code state, git provenance, compliance scores, and statutory grounding.
+Create a tamper-evident record of what this release contains and what the scan found.
 
-## Usage
-
-```bash
-/ai-act-dossier [PATH] [--out compliance-dossier.json]
-```
-
-Or via CLI:
-```bash
-eu-ai-act-scan [PATH] --dossier compliance-dossier.json
-```
-
-## What it binds
-
-1. **SHA-256 File Manifest**: Exact cryptographic digests of all scanned source files and configuration manifests.
-2. **Git Provenance**: Repository commit hash and active branch.
-3. **Operator Roles**: Inferred and declared operator roles (Provider vs Deployer).
-4. **Compliance Scores**: Dimension-by-dimension compliance scores and identified gaps.
-5. **Statutory Grounding**:
-   - Primary regulation: Regulation (EU) 2024/1689
-   - Amending enactment: Regulation (EU) 2026/1744 (Digital Omnibus on AI)
-   - Official CELEX reference: `02024R1689-20260727`
-6. **Cross-Framework Mappings**: Readiness ratings across NIST AI RMF, ISO 42001, and GDPR.
-7. **Applied Remediations**: Tracked fixes applied via the remediation loop.
-8. **Dossier Integrity Hash**: A single cryptographic SHA-256 seal covering canonical dossier contents. Any modification to the dossier or underlying code breaks the signature.
-
-## Auditor / CI Gate Integration
-
-Use the sealed dossier in CI/CD release pipelines to enforce conformity gates:
-```bash
-eu-ai-act-scan . --dossier release-dossier.json
-```
-If compliance scores fall below threshold or critical gaps are unresolved, the pipeline fails before code is deployed.
+1. Run `eu-ai-act-scan "$1" --dossier compliance-dossier.json` (use the output name the user gave, if any), or call `generate_dossier(path="$1")` with the scanner MCP server.
+2. Report the file path, the integrity hash, the git commit, the overall score and the number of files covered.
+3. Explain in one or two sentences: the dossier binds SHA-256 digests of the scanned files, the git commit, the scores and gaps, and the legal basis (Reg. 2024/1689 as amended by Reg. 2026/1744) under one hash, so any later change to the code or the file is detectable. It is evidence for an auditor or customer, not a certificate of conformity.

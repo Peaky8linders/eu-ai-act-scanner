@@ -1,38 +1,13 @@
 ---
 name: ai-act-cross-framework
-description: Project EU AI Act scan findings across NIST AI RMF, ISO 42001, GDPR, OWASP LLM 2025, OWASP Agentic Top 10, and SOC 2. Identifies 'Satisfy Once, Comply Everywhere' levers.
+description: "Maps scan results to SOC 2, ISO 27001 and 42001, NIST AI RMF, GDPR and OWASP, and finds single fixes that support several at once."
+argument-hint: "[path]"
 ---
 
 # /ai-act-cross-framework
 
-Evaluate your codebase against international AI governance, security, and data privacy frameworks simultaneously from a single EU AI Act scan.
+Show how one EU AI Act scan maps onto the other frameworks customers ask about.
 
-## Usage
-
-```bash
-/ai-act-cross-framework [PATH]
-```
-
-Or via CLI:
-```bash
-eu-ai-act-scan [PATH] --cross-framework --markdown
-```
-
-## Supported Frameworks
-
-- **NIST AI Risk Management Framework (NIST AI RMF 1.0 / AI 100-1)**
-- **ISO/IEC 42001:2023** (Artificial Intelligence Management System)
-- **OWASP Top 10 for LLM Applications (2025 Edition)**
-- **OWASP Top 10 for Agentic Applications (ASI01-ASI10)**
-- **GDPR (Regulation EU 2016/679)**
-- **MITRE ATLAS** (Adversarial Threat Landscape for AI Systems)
-- **NIST AI 600-1** (Generative AI Profile)
-- **SOC 2 Type II** (Trust Services Criteria)
-- **CSA AI Controls Matrix (AICM v1.0)**
-- **ISO/IEC 27002:2022 & NIST SP 800-53 Rev. 5**
-
-## Output Sections
-
-1. **Framework Readiness Summary**: Table showing multi-framework readiness score (%), compliant count, partial count, and top priority remediation gaps.
-2. **Satisfy Once, Comply Everywhere Levers**: Ranks single EU AI Act dimensions whose remediation simultaneously closes gaps across multiple global standards.
-3. **Evidence Harmonization & Reuse Opportunities**: Practical guidance on reusing AI Act technical documentation (Art. 11/Annex IV) and FRIA (Art. 27) for GDPR DPIA (Art. 35) and NIST MP profiles.
+1. With the scanner MCP server, call `project_cross_framework(path="$1")`; otherwise run `eu-ai-act-scan "$1" --cross-framework --markdown` (default path: the current folder).
+2. Present: evidence coverage per framework with its legal force (SOC 2, ISO/IEC 27002 and 42001, NIST AI RMF, OWASP LLM and Agentic, and the others in the output); GDPR and other binding law as "not assessed" with the related evidence; the top "satisfy once, comply everywhere" fixes, meaning single changes whose evidence supports controls in several frameworks at once, each with the finding behind it (file:line); and where documents can be reused (for example a FRIA alongside a GDPR DPIA).
+3. Say plainly that coverage is code evidence, not compliance: auditors, certification bodies and lawyers decide that. Only EN 18286:2026 gives a presumption of conformity (for Art. 17); ISO/IEC 42001 certification does not.

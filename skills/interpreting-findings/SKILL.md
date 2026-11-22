@@ -1,6 +1,6 @@
 ---
 name: interpreting-findings
-description: Use after a scanner run when the user asks "what does this mean", "which finding should I fix first", "why did I get this score", "are we compliant now", or needs help understanding how scanner output relates to EU AI Act obligations. Serves compliance officers (who translate scores to action), engineers (who fix the underlying code), and legal counsel (who assess whether the evidence supports a conformity claim). Explains the scoring model, severity tiers, priority rules, and the limits of static analysis.
+description: "Explains scanner results in plain language, including scores, what to fix first, and what a static scan cannot prove. Use after a scan when the user asks what the results mean."
 user_invocable: true
 ---
 

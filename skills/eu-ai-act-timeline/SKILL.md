@@ -1,6 +1,6 @@
 ---
 name: eu-ai-act-timeline
-description: Use when the user asks about EU AI Act deadlines, when obligations kick in, Art. 113, "when do we need to comply", the application timeline for prohibitions or high-risk obligations or GPAI. Serves legal counsel, compliance officers, product leads, and board-level stakeholders planning compliance budgets and roadmaps. Names each of the staggered application dates under Art. 113 and which obligations attach at each.
+description: "Lists EU AI Act application dates and what applies when, including the Digital Omnibus changes. Use for deadline or 'when do we need to comply' questions."
 user_invocable: true
 ---
 

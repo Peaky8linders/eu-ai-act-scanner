@@ -56,6 +56,40 @@ _SPECIAL_FILENAMES = {
 }
 
 _MAX_FILE_BYTES = 2 * 1024 * 1024  # 2 MB — skip generated/bundled files
+
+# Use/mention discipline for gaps. A code-level analyzer whose gap points at a
+# README, a planning doc or an env template is describing a *mention*, not the
+# product's code: real repos produced "hardcoded secret" from README snippets,
+# "print() in source files" from README examples and "lethal trifecta" from an
+# ARCHITECTURE.md. Positive evidence from docs is unaffected.
+_PROSE_SUFFIXES = (".md", ".mdx", ".rst", ".txt", ".adoc")
+_ENV_TEMPLATE_NAMES = frozenset({".env.example", ".env.sample", ".env.template", ".env.dist"})
+_CODE_LEVEL_ANALYZERS = frozenset({
+    "security_controls", "logging_monitoring", "agent_cascade", "lethal_trifecta",
+    "privilege_minimization", "runtime_drift", "adversarial_robustness", "model_typology",
+    "human_oversight", "data_pipeline", "mcp_toolchain", "ai_frameworks", "cloud_deployment",
+    "article_50_transparency", "agent_inventory",
+})
+
+
+def _is_prose_location(path: str) -> bool:
+    low = (path or "").lower().replace("\\", "/")
+    return low.endswith(_PROSE_SUFFIXES) or low.rsplit("/", 1)[-1] in _ENV_TEMPLATE_NAMES
+
+
+def _drop_prose_located_gaps(results: list[AnalyzerResult]) -> int:
+    """Remove code-level gaps whose location is prose or an env template; return the count."""
+    dropped = 0
+    for ar in results:
+        if ar.analyzer_id not in _CODE_LEVEL_ANALYZERS:
+            continue
+        kept = [
+            f for f in ar.findings
+            if not (f.compliance_impact == "gap" and _is_prose_location(f.file_path))
+        ]
+        dropped += len(ar.findings) - len(kept)
+        ar.findings = kept
+    return dropped
 _MAX_AGENT_CONFIG_BYTES = 512 * 1024  # 512 KB cap for allowlisted .claude/ configs
 _MIN_PREFIX_MATCH = 40
 _SKIPPED_CLAUDE_PARTS = frozenset({"worktrees", "state", "memory"})
@@ -340,6 +374,9 @@ def scan_project(
         extracted_role=role,
     )
     analyzer_results = run_all_analyzers(ctx)
+    dropped_prose_gaps = _drop_prose_located_gaps(analyzer_results)
+    if dropped_prose_gaps:
+        logger.debug("dropped_prose_located_gaps", count=dropped_prose_gaps)
 
     # Incorporate optional externally ingested findings (SARIF, Claude Security,
     # Claude Compliance API) as a first-class synthetic analyzer result so they
@@ -623,7 +660,7 @@ def scan_project(
         )
         cross_proj = project_scan_to_frameworks(temp_res)
         cross_framework_summary = {
-            fw.framework_label: fw.coverage_pct for fw in cross_proj.frameworks
+            fw.framework_label: fw.coverage_pct for fw in cross_proj.frameworks if fw.assessed
         }
 
     # Semantic audit is intentionally NOT run headlessly here. When deep=True

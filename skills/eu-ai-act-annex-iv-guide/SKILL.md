@@ -1,6 +1,6 @@
 ---
 name: eu-ai-act-annex-iv-guide
-description: Use when the user asks what goes in Annex IV technical documentation, mentions Art. 11, needs to assemble the technical file for conformity assessment, or is producing SME documentation under Art. 11(1) simplified form. Serves providers of high-risk AI (primary — Art. 11 is a provider obligation), their technical writers, and notified bodies reviewing the file. Lists the nine Annex IV items with concrete guidance on what counts as adequate evidence for each.
+description: "Lists what Annex IV technical documentation (Art. 11) must contain and what evidence is adequate. Use when preparing the technical file for a high-risk AI system."
 user_invocable: true
 ---
 
