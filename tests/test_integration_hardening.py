@@ -449,7 +449,7 @@ def test_every_skill_is_a_skill_md_directory() -> None:
     skills_dir = REPO_ROOT / "skills"
     assert not list(skills_dir.glob("*.md")), "flat skills/*.md files are not loaded by Claude Code"
     skill_dirs = [p for p in skills_dir.iterdir() if p.is_dir()]
-    assert len(skill_dirs) >= 16
+    assert len(skill_dirs) >= 15  # the maintainer-only authoring skill lives in .claude/skills
     for d in skill_dirs:
         skill_md = d / "SKILL.md"
         assert skill_md.is_file(), d

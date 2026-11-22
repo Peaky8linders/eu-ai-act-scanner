@@ -1,6 +1,6 @@
 ---
 name: founder-startup-triage
-description: Use when a founder, CTO, or startup engineer asks "do we even need to care about the EU AI Act right now", "what should we fix before launch", "how do we answer this enterprise security questionnaire", "are we a deployer or provider", or wants a plain-English priority plan and Customer/Investor Security Brief. Translates EU AI Act + Digital Omnibus dates, role boundaries, and vendor contract handoffs into startup-ready actions.
+description: "Plain-English EU AI Act priorities for founders, covering what to fix before launch, what unblocks enterprise deals, and what can wait until Dec 2027. Use for startup, launch-readiness or security-questionnaire questions."
 user_invocable: true
 ---
 
@@ -40,7 +40,7 @@ Enacted under **EU Regulation 2024/1689** as amended by the **Digital Omnibus Re
 | **2 Feb 2025** | Art. 5 prohibited AI practices & Art. 4 AI literacy | **IN FORCE.** Never build social scoring, manipulative subliminal systems, or workplace/school emotion recognition. |
 | **2 Aug 2025** | Chapter V GPAI model provider duties (Art. 53–55) | **IN FORCE** for foundation model creators (pre-existing models have until 2 Aug 2027 under Art. 111(3)). |
 | **2 Aug 2026** | **Art. 50 Transparency** (chatbot disclosure, synthetic media C2PA/watermarking, deepfake labels) | **IN FORCE TODAY.** Add visible AI notices & synthetic-content marking before shipping. |
-| **Oct 2026** | **EN 18286:2026** harmonized QMS standard milestone | Reference benchmark for lightweight startup quality management alignment. |
+| **Oct 2026** | **EN 18286:2026** cited in the Official Journal | The only harmonised standard so far: following it gives a presumption of conformity for Art. 17 (quality management system), which only providers of high-risk AI owe. ISO/IEC 42001 certification and SOC 2 reports are useful evidence but give no presumption. |
 | **2 Dec 2026** | New Art. 5(1)(ba)–(bb) NCII & CSAM generation bans | **Reg. 2026/1744.** Ensure safety filters block non-consensual intimate & CSAM generation. |
 | **2 Dec 2027** | **Annex III High-Risk Obligations** (Art. 9–15, 17, 26, 27 FRIA) | **Deferred by Digital Omnibus.** Only critical earlier if selling into hiring/HR, credit/lending, healthcare, biometrics, education, or law enforcement. |
 | **2 Aug 2028** | **Annex I Safety-Component Products** (medical devices, machinery, toys) | **Deferred by Digital Omnibus.** |
@@ -74,7 +74,7 @@ Generate automatically via `/ai-act-quickstart` (`brief_markdown`), or adapt thi
   - **Art. 15(4) Security & Agent Hardening:** <MCP pinning, secrets guard, least-privilege permissions / managed settings, THREAT_MODEL.md & Claude Code Security review>
   - **Art. 12 / Art. 26(6) / SOC 2 CC7.2 Auditability:** <Structured logging / OpenTelemetry / Claude Compliance API >=180-day audit trail>
   - **Art. 14 / OWASP Agentic Oversight:** <Human approval gates for high-impact tool actions & clean user instructions>
-- **Cross-Framework Alignment:** Mapped locally to SOC 2 Type II, GDPR, OWASP LLM 2025, OWASP Agentic Top 10, NIST AI RMF, and ISO 42001.
+- **Cross-Framework Alignment:** Mapped locally to 12 frameworks (SOC 2, ISO/IEC 27002 and 42001, NIST AI RMF, OWASP, GDPR and more), each with its legal force: code evidence supports voluntary controls, while binding law such as GDPR is reported as not assessed.
 - **2027 Roadmap (Digital Omnibus Reg. 2026/1744):** Tracking Annex III obligations ahead of 2 Dec 2027 (Annex I: 2 Aug 2028).
 - **Evidence Artifact:** Reproducible local scan baseline + optional signed release dossier (`eu-ai-act-scan --dossier`).
 ```

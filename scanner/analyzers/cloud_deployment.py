@@ -201,7 +201,7 @@ def analyze_cloud_deployment(ctx: AnalyzerContext) -> AnalyzerResult:  # noqa: C
                 ),
                 file_path=aws_import_file,
                 confidence=0.8,
-                compliance_impact="gap",
+                compliance_impact="neutral",  # infra hygiene, not an AI Act gap
                 compliance_dimensions=["infra_mlops", "quality_management"],
                 evidence_snippet=_snippet(aws_import_file, "AWS SDK without IaC"),
             ))
@@ -307,7 +307,7 @@ def analyze_cloud_deployment(ctx: AnalyzerContext) -> AnalyzerResult:  # noqa: C
                 ),
                 file_path=gcp_import_file,
                 confidence=0.8,
-                compliance_impact="gap",
+                compliance_impact="neutral",  # infra hygiene, not an AI Act gap
                 compliance_dimensions=["infra_mlops", "quality_management"],
                 evidence_snippet=_snippet(gcp_import_file, "GCP SDK without IaC"),
             ))
@@ -382,7 +382,7 @@ def analyze_cloud_deployment(ctx: AnalyzerContext) -> AnalyzerResult:  # noqa: C
                 ),
                 file_path=azure_import_file,
                 confidence=0.8,
-                compliance_impact="gap",
+                compliance_impact="neutral",  # infra hygiene, not an AI Act gap
                 compliance_dimensions=["infra_mlops", "quality_management"],
                 evidence_snippet=_snippet(azure_import_file, "Azure SDK without IaC"),
             ))

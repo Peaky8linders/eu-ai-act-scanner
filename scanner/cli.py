@@ -22,6 +22,9 @@ import structlog
 # structlog.configure() themselves.
 structlog.configure(
     wrapper_class=structlog.make_filtering_bound_logger(logging.WARNING),
+    # stdout carries the JSON/markdown payload (and is what an agent reads);
+    # a warning printed there would corrupt `--json` output.
+    logger_factory=structlog.PrintLoggerFactory(file=sys.stderr),
 )
 
 # Ensure UTF-8 output regardless of the host console code page. Windows cmd /
@@ -37,11 +40,6 @@ for _stream in (sys.stdout, sys.stderr):
 from scanner import __version__, scan_project  # noqa: E402
 from scanner.data.incident_corpus import get_incident  # noqa: E402
 from scanner.data.role_obligations import CANONICAL_ROLE_IDS  # noqa: E402
-from scanner.incident_grounding import (  # noqa: E402
-    incidents_for_article,
-    incidents_for_dimension,
-    incidents_for_threat,
-)
 from scanner.kb import DIMENSIONS, dimensions_for_article  # noqa: E402
 
 
@@ -195,19 +193,10 @@ def _incidents_payload(key: str, limit: int = 5) -> dict:
     Backs the `/ai-act-incidents` command. Tries article -> dimension -> threat
     so a single argument form covers all three lookup vocabularies.
     """
+    from scanner.incident_grounding import incidents_for_key
+
     key = key.strip()
-    incidents = []
-    resolved = None
-    if key.lower().startswith("art"):
-        incidents = incidents_for_article(key, limit)
-        resolved = "article"
-    if not incidents and key in DIMENSIONS:
-        incidents = incidents_for_dimension(key, limit)
-        resolved = "dimension"
-    if not incidents:
-        threat = incidents_for_threat(key, limit)
-        if threat:
-            incidents, resolved = threat, "threat"
+    resolved, incidents = incidents_for_key(key, limit)
     if not incidents:
         return {
             "key": key,
@@ -379,7 +368,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--cross-framework", "-x",
         action="store_true",
-        help="Project findings across NIST AI RMF, ISO 42001, GDPR, OWASP LLM/Agentic, SOC 2.",
+        help="Project findings across 12 frameworks (SOC 2, ISO 27002/42001, NIST AI RMF, GDPR, OWASP, ...), each with its legal force.",
     )
     parser.add_argument(
         "--role",

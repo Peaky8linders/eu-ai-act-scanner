@@ -270,14 +270,17 @@ def analyze_model_typology(ctx: AnalyzerContext) -> AnalyzerResult:  # noqa: C90
         findings.append(Finding(
             id="mt-llm-oversight-gap",
             category="model_typology",
-            title="LLM detected: Art. 14 human oversight controls required",
+            title="LLM in use: human oversight (Art. 14) applies if the system is high-risk",
             description=(
-                "LLM-based systems with significant output impact require human override mechanisms "
-                "(Art. 14). Verify escalation paths, confidence thresholds, and override capability."
+                "LLM-based systems with significant output impact need human override mechanisms "
+                "when they are high-risk (Art. 14). Verify escalation paths, confidence thresholds, "
+                "and override capability. The human_oversight analyzer reports whether such controls exist."
             ),
             file_path=rep_file,
             confidence=0.8,
-            compliance_impact="gap",
+            # Informational: detecting an LLM is not a missing control. Art. 14
+            # binds high-risk systems only, and human_oversight checks the code.
+            compliance_impact="neutral",
             compliance_dimensions=["human_oversight"],
             evidence_snippet=rep_snip,
             kb_question_ids=["ho-1", "ho-2"],
@@ -380,7 +383,7 @@ def analyze_model_typology(ctx: AnalyzerContext) -> AnalyzerResult:  # noqa: C90
             ),
             file_path="",
             confidence=0.85,
-            compliance_impact="gap",
+            compliance_impact="neutral",  # a description of the system, not a missing control
             compliance_dimensions=["security", "risk_mgmt", "tech_docs"],
             evidence_snippet="LLM + classical ML co-present",
             kb_question_ids=["rm-2", "td-4"],

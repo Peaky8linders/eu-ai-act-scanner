@@ -1,18 +1,19 @@
 """Cross-framework projection engine for EU AI Act Scanner.
 
-Projects an EU AI Act `ScanResult` onto major international AI governance,
-security, and risk management frameworks:
-- NIST AI Risk Management Framework 1.0 (NIST AI RMF)
-- ISO/IEC 42001:2023 (Artificial Intelligence Management System - AIMS)
-- OWASP Top 10 for LLM Applications (2025)
-- OWASP Top 10 for Agentic Applications (ASI01-ASI10)
-- GDPR (EU 2016/679)
-- MITRE ATLAS (Adversarial Threat Landscape for AI Systems)
-- SOC 2 Type II
-- CSA AI Controls Matrix (AICM)
+Projects an EU AI Act `ScanResult` onto other AI governance, security and
+privacy frameworks: NIST AI RMF 1.0, NIST AI 600-1, ISO/IEC 42001:2023,
+ISO/IEC 27002:2022, NIST SP 800-53 Rev. 5, SOC 2, CSA AI Controls Matrix,
+OWASP LLM Top 10 (2025), OWASP Agentic Top 10, MITRE ATLAS, CEN-CENELEC JTC 21
+harmonised standards and GDPR.
 
-Provides 'Satisfy Once, Comply Everywhere' analysis to identify high-leverage
-remediation targets that unlock multi-framework compliance simultaneously.
+Legal force (ported from the legit-ai parent project, see
+:mod:`scanner.data.normative_force`): an AI Act code-evidence score is
+*evidence* for another framework's control, never an assessment of it.
+Voluntary and guidance controls are reported as ``supported`` / ``partial`` /
+``gap``; binding law (GDPR) is ``not_assessed`` and stays out of the average.
+
+Provides 'Satisfy Once, Comply Everywhere' analysis: single fixes whose
+evidence supports controls in several frameworks at once.
 """
 
 from __future__ import annotations
@@ -28,25 +29,45 @@ from scanner.data.frameworks import (
     normalize_framework_id,
 )
 from scanner.data.incident_corpus import INCIDENT_BY_ID
+from scanner.data.normative_force import (
+    FORCE_EXPLANATION,
+    FORCE_RANK,
+    PRESUMPTION_OF_CONFORMITY_NOTE,
+    NormativeForce,
+    force_of,
+)
 from scanner.models import ScanResult
+
+_STATUS_PRIORITY = {"gap": 3, "partial": 2, "supported": 1, "not_assessed": 0, "unknown": 0}
 
 
 class FrameworkControlProjection(BaseModel):
     """Projection for an individual control in a target framework."""
 
-    control_id: str = Field(..., description="Framework control identifier (e.g. 'GV-1.4', '8.5', 'Art. 35').")
+    control_id: str = Field(..., description="Framework control identifier (e.g. 'GV-1.4', 'A.7.4', 'Art. 35').")
     framework_id: str = Field(..., description="Target framework slug.")
     framework_label: str = Field("", description="Human-readable framework name.")
-    status: str = Field(..., description="'compliant' | 'partial' | 'gap' | 'unknown'.")
+    status: str = Field(
+        ...,
+        description=(
+            "'supported' (strong AI Act evidence for this control) | 'partial' | 'gap' | "
+            "'not_assessed' (binding law: evidence is relevant but cannot assess compliance)."
+        ),
+    )
+    force: str = Field(default="", description="Legal force of the control: binding_law, harmonised_standard, ...")
     source_dimensions: list[str] = Field(default_factory=list, description="Contributing EU AI Act KB dimensions.")
     score: float = Field(0.0, description="Highest score among contributing EU AI Act dimensions (0-100).")
     gap_count: int = Field(0, description="Number of contributing dimensions scoring below 60%.")
     # Documented incidents that exploited this control's gap class. Populated
-    # for every non-compliant control — a gap that names no incident is a
+    # for every non-supported control — a gap that names no incident is a
     # normative claim; one that does is evidence (see scanner.incident_grounding).
     related_incidents: list[str] = Field(
         default_factory=list,
-        description="Corpus incident IDs for this gap class (empty when compliant).",
+        description="Corpus incident IDs for this gap class (empty when supported).",
+    )
+    lead_finding: str = Field(
+        default="",
+        description="The most actionable scanner gap behind this control, as 'title (file:line)'.",
     )
 
 
@@ -55,17 +76,30 @@ class FrameworkProjectionSummary(BaseModel):
 
     framework_id: str
     framework_label: str
+    force: str = Field(default="", description="Legal force: binding_law | harmonised_standard | voluntary_standard | guidance.")
+    assessed: bool = Field(
+        default=True,
+        description="False for binding law: coverage_pct is related evidence, not an assessment.",
+    )
     total_controls: int = 0
-    compliant: int = 0
+    supported: int = 0
+    compliant: int = Field(
+        default=0,
+        description="Always 0: code evidence never establishes another framework's compliance (kept for compatibility).",
+    )
     partial: int = 0
     gap: int = 0
+    not_assessed: int = 0
     unknown: int = 0
-    coverage_pct: float = Field(0.0, description="(compliant + 0.5 * partial) / total_controls * 100")
+    coverage_pct: float = Field(
+        0.0,
+        description="Evidence coverage: (strong + 0.5 * partial evidence) / total_controls * 100.",
+    )
     top_gaps: list[str] = Field(default_factory=list, description="Top priority gap control IDs.")
 
 
 class SatisfyOnceLever(BaseModel):
-    """A high-leverage compliance remediation closing gaps across multiple frameworks."""
+    """A high-leverage fix whose evidence supports controls across several frameworks."""
 
     dimension_id: str
     dimension_label: str
@@ -79,50 +113,67 @@ class SatisfyOnceLever(BaseModel):
 
 
 class CrossFrameworkScanProjection(BaseModel):
-    """Complete cross-framework compliance projection from a ScanResult."""
+    """Complete cross-framework projection from a ScanResult."""
 
     scan_id: str
     project_name: str
     catalogue_version: str = CROSSWALK_CATALOGUE_VERSION
     total_frameworks_mapped: int = 0
-    average_multi_framework_coverage_pct: float = 0.0
+    average_multi_framework_coverage_pct: float = Field(
+        0.0, description="Average evidence coverage over assessed (non-binding) frameworks.",
+    )
     frameworks: list[FrameworkProjectionSummary] = Field(default_factory=list)
     controls: list[FrameworkControlProjection] = Field(default_factory=list)
     satisfy_once_levers: list[SatisfyOnceLever] = Field(default_factory=list)
     evidence_reuse_opportunities: list[str] = Field(default_factory=list)
+    presumption_of_conformity_note: str = PRESUMPTION_OF_CONFORMITY_NOTE
     # Scored KB dimensions with no crosswalk entry. Non-empty means the
     # coverage % does NOT see those dimensions — read it alongside the scan's
     # own compliance_scores, never as a standalone verdict.
     unmapped_dimensions: list[str] = Field(default_factory=list)
 
     def format_markdown(self) -> str:
-        """Render a readable cross-framework compliance report."""
+        """Render a readable cross-framework report."""
         lines = [
-            f"# Cross-Framework Compliance Projection — {self.project_name}",
+            f"# Cross-Framework Projection — {self.project_name}",
             "",
             f"- **Catalogue version**: `{self.catalogue_version}`",
             f"- **Target frameworks mapped**: {self.total_frameworks_mapped}",
-            f"- **Average multi-framework readiness**: **{self.average_multi_framework_coverage_pct:.1f}%**",
+            f"- **Average evidence coverage (voluntary frameworks)**: "
+            f"**{self.average_multi_framework_coverage_pct:.1f}%**",
             "",
-            "## Framework Readiness Summary",
+            "_Code evidence supports a framework's controls; it never proves compliance. "
+            "Audits, certification bodies and lawyers decide that._",
             "",
-            "| Framework | Coverage | Compliant | Partial | Gap | Top Remediation Gaps |",
-            "|---|---|---|---|---|---|",
+            "## Framework Evidence Summary",
+            "",
+            "| Framework | Legal force | Evidence coverage | Supported | Partial | Gap | Top gaps |",
+            "|---|---|---|---|---|---|---|",
         ]
 
         for fw in self.frameworks:
             top_gaps_str = ", ".join(f"`{g}`" for g in fw.top_gaps[:3]) or "None"
+            force = fw.force.replace("_", " ")
+            if not fw.assessed:
+                lines.append(
+                    f"| **{fw.framework_label}** | {force} | not assessed "
+                    f"(related evidence {fw.coverage_pct:.0f}%) | — | — | — | {top_gaps_str} |"
+                )
+                continue
             lines.append(
-                f"| **{fw.framework_label}** | **{fw.coverage_pct:.1f}%** | "
-                f"{fw.compliant} | {fw.partial} | {fw.gap} | {top_gaps_str} |"
+                f"| **{fw.framework_label}** | {force} | **{fw.coverage_pct:.1f}%** | "
+                f"{fw.supported} | {fw.partial} | {fw.gap} | {top_gaps_str} |"
             )
+
+        lines += ["", f"_{self.presumption_of_conformity_note}_"]
 
         if self.satisfy_once_levers:
             lines += [
                 "",
                 "## Satisfy Once, Comply Everywhere — Top Levers",
                 "",
-                "_Remediating these single EU AI Act dimensions unlocks compliance across multiple global standards simultaneously._",
+                "_Fixing these single EU AI Act areas produces evidence that supports controls in "
+                "several frameworks at once._",
                 "",
             ]
             for lever in self.satisfy_once_levers:
@@ -142,11 +193,11 @@ class CrossFrameworkScanProjection(BaseModel):
                 "",
                 "## Gap controls, grounded in real-world incidents",
                 "",
-                "_Each control below is marked gap/partial by the projection and names "
-                "the documented incidents (vendored corpus) that exploited its class._",
+                "_Each control below has weak AI Act evidence and names the documented incidents "
+                "(vendored corpus) that exploited its class._",
                 "",
-                "| Framework | Control | Status | Documented incidents |",
-                "|---|---|---|---|",
+                "| Framework | Control | Status | Behind it | Documented incidents |",
+                "|---|---|---|---|---|",
             ]
             shown = grounded_controls[:15]
             for ctrl in shown:
@@ -156,11 +207,12 @@ class CrossFrameworkScanProjection(BaseModel):
                     if i in INCIDENT_BY_ID
                 )
                 lines.append(
-                    f"| {ctrl.framework_label} | `{ctrl.control_id}` | {ctrl.status} | {incidents} |"
+                    f"| {ctrl.framework_label} | `{ctrl.control_id}` | {ctrl.status} | "
+                    f"{ctrl.lead_finding or '—'} | {incidents} |"
                 )
             if len(grounded_controls) > len(shown):
                 lines.append(
-                    f"| … | _+{len(grounded_controls) - len(shown)} more gap controls_ | | |"
+                    f"| … | _+{len(grounded_controls) - len(shown)} more gap controls_ | | | |"
                 )
 
         if self.unmapped_dimensions:
@@ -169,7 +221,7 @@ class CrossFrameworkScanProjection(BaseModel):
                 "## Unmapped dimensions (not in coverage %)",
                 "",
                 "_These scored dimensions have no crosswalk entry (catalogue "
-                f"`{self.catalogue_version}`) and are invisible to the readiness "
+                f"`{self.catalogue_version}`) and are invisible to the coverage "
                 "percentages above — check the scan's own scores for them._",
                 "",
             ]
@@ -192,34 +244,48 @@ class CrossFrameworkScanProjection(BaseModel):
 # cites. The Act refs are data rather than prose because the same sentences
 # cite GDPR articles that share the ``Art. N`` surface form (GDPR Art. 5 is
 # data-protection principles; Act Art. 5 is prohibited practices), so a test
-# that scraped the sentence would resolve the wrong statute.
+# that scraped the sentence would resolve the wrong statute. Worded as reuse of
+# evidence, never as satisfying the other law (AI Act Art. 2(7): GDPR applies
+# in full; Art. 26(9) and 27(4) are the Act's own reuse provisions).
 EVIDENCE_REUSE_OBSERVATIONS: tuple[tuple[tuple[str, ...], str], ...] = (
     (
         ("Art. 10",),
-        "**Art. 10 Data Governance ↔ GDPR Art. 5/25 ↔ NIST AI RMF MP-3.4**: A single data quality and provenance datasheet satisfies AI Act technical documentation, GDPR data protection by design, and NIST mapping requirements.",
+        "**Art. 10 Data Governance ↔ GDPR Art. 5/25 ↔ NIST AI RMF MP-3.4**: one data quality and "
+        "provenance datasheet can serve as evidence for AI Act data governance, a GDPR "
+        "data-protection-by-design review and NIST mapping. GDPR still applies in full (AI Act Art. 2(7)).",
     ),
     (
         ("Art. 14",),
-        "**Art. 14 Human Oversight ↔ GDPR Art. 22 ↔ OWASP Agentic ASI02**: Implementing a human approval circuit breaker simultaneously addresses EU AI Act operator oversight and GDPR automated decision rights.",
+        "**Art. 14 Human Oversight ↔ GDPR Art. 22 ↔ OWASP Agentic ASI02**: a human approval step before "
+        "consequential actions is evidence for AI Act oversight and supports GDPR Art. 22 safeguards for "
+        "automated decisions; whether Art. 22 is met is a separate legal assessment.",
     ),
     (
         ("Art. 12",),
-        "**Art. 12 Logging ↔ SOC 2 CC7.2 ↔ ISO 27002 8.15**: Structured logging with session IDs and model prompt hashing fulfills AI Act record-keeping and SOC 2 / ISO audit logging criteria.",
+        "**Art. 12 Logging ↔ SOC 2 CC7.2 ↔ ISO/IEC 27002 8.15**: structured logs with session IDs serve AI "
+        "Act record-keeping and are the logging evidence SOC 2 and ISO auditors ask for.",
     ),
     (
-        ("Art. 27",),
-        "**Art. 27 FRIA ↔ GDPR Art. 35 DPIA**: A Fundamental Rights Impact Assessment directly reuses data protection impact assessment findings, preventing redundant compliance cycles.",
+        ("Art. 26", "Art. 27"),
+        "**Art. 27 FRIA ↔ GDPR Art. 35 DPIA**: where a DPIA already covers the system, the FRIA complements "
+        "it rather than repeating it (AI Act Art. 27(4)), and deployers can use the provider's Art. 13 "
+        "information for the DPIA (Art. 26(9)).",
     ),
 )
 
 
 def _band(score: float) -> str:
-    """Classify dimension score into compliance band."""
+    """Classify a dimension score into an evidence band."""
     if score >= 60.0:
-        return "compliant"
+        return "supported"
     if score >= 30.0:
         return "partial"
     return "gap"
+
+
+def _status(force: NormativeForce, band: str) -> str:
+    """Binding law is never assessed from AI Act evidence; other controls carry the band."""
+    return "not_assessed" if force is NormativeForce.BINDING else band
 
 
 def project_scan_to_frameworks(
@@ -233,11 +299,13 @@ def project_scan_to_frameworks(
         target_framework_ids: Optional list of framework ids to restrict projection to.
 
     Returns:
-        CrossFrameworkScanProjection with per-framework readiness and control mappings.
+        CrossFrameworkScanProjection with per-framework evidence coverage and control mappings.
     """
+    from scanner.agent_views import prioritized_gaps, where
     from scanner.kb import DIMENSIONS
 
     bucket: dict[tuple[str, str], FrameworkControlProjection] = {}
+    bands: dict[tuple[str, str], str] = {}
     unmapped = sorted(
         dim_id for dim_id in scan.compliance_scores
         if dim_id not in DIMENSION_CROSSWALK
@@ -258,33 +326,44 @@ def project_scan_to_frameworks(
 
             for ctrl_id in control_ids:
                 key = (fw_id, ctrl_id)
+                force = force_of(fw_id, ctrl_id)
                 existing = bucket.get(key)
                 if existing is None:
+                    bands[key] = dim_band
                     bucket[key] = FrameworkControlProjection(
                         control_id=ctrl_id,
                         framework_id=fw_id,
                         framework_label=FRAMEWORK_LABELS.get(fw_id, fw_id.replace("_", " ").title()),
-                        status=dim_band,
+                        status=_status(force, dim_band),
+                        force=force.value,
                         source_dimensions=[dim_id],
                         score=round(score, 1),
-                        gap_count=1 if dim_band != "compliant" else 0,
+                        gap_count=1 if dim_band != "supported" else 0,
                     )
                 else:
                     if score > existing.score:
                         existing.score = round(score, 1)
                     if dim_id not in existing.source_dimensions:
                         existing.source_dimensions.append(dim_id)
-                    # Status escalates to worst-band if any contributing dimension is non-compliant
-                    priority = {"gap": 3, "partial": 2, "compliant": 1, "unknown": 0}
-                    if priority[dim_band] > priority[existing.status]:
-                        existing.status = dim_band
-                    if dim_band != "compliant":
+                    # The evidence band escalates to the worst contributing dimension.
+                    if _STATUS_PRIORITY[dim_band] > _STATUS_PRIORITY[bands[key]]:
+                        bands[key] = dim_band
+                        existing.status = _status(force, dim_band)
+                    if dim_band != "supported":
                         existing.gap_count += 1
 
+    # ── The concrete finding behind each weak control ───────────────────
+    # A founder should be able to go from "SOC 2 CC6.1: gap" straight to the
+    # file and line (legit-ai port). Worst = most actionable per agent_views.
+    lead_by_dim: dict[str, str] = {}
+    for comp in prioritized_gaps(scan):
+        for dim_id in comp.compliance_dimensions:
+            lead_by_dim.setdefault(dim_id, f"{comp.name} ({where(comp.file_path, comp.line_number)})")
+
     # ── Real-world incident grounding ───────────────────────────────────
-    # Attach the documented incidents that exploited each non-compliant
-    # control's gap class, so the projection reports evidence rather than only
-    # a normative "you are missing X".
+    # Attach the documented incidents that exploited each weak control's gap
+    # class, so the projection reports evidence rather than only a normative
+    # "you are missing X".
     from scanner.incident_grounding import incidents_for_dimension
 
     _incident_cache: dict[str, list[str]] = {}
@@ -302,9 +381,12 @@ def project_scan_to_frameworks(
     # data-governance one, not three from whichever dimension happens to match
     # the most corpus entries.
     _MAX_GROUNDING = 3
-    for ctrl in bucket.values():
-        if ctrl.status == "compliant":
+    for key, ctrl in bucket.items():
+        if bands[key] == "supported":
             continue
+        ctrl.lead_finding = next(
+            (lead_by_dim[d] for d in ctrl.source_dimensions if d in lead_by_dim), ""
+        )
         pools = [_incidents_for_dim(dim_id) for dim_id in ctrl.source_dimensions]
         grounded: list[str] = []
         for depth in range(_MAX_GROUNDING):
@@ -319,7 +401,7 @@ def project_scan_to_frameworks(
 
     controls = sorted(
         bucket.values(),
-        key=lambda c: (c.framework_id, c.status != "gap", -c.score, c.control_id),
+        key=lambda c: (c.framework_id, bands[(c.framework_id, c.control_id)] != "gap", -c.score, c.control_id),
     )
 
     by_fw: dict[str, list[FrameworkControlProjection]] = defaultdict(list)
@@ -327,44 +409,51 @@ def project_scan_to_frameworks(
         by_fw[c.framework_id].append(c)
 
     framework_summaries: list[FrameworkProjectionSummary] = []
-    total_coverage = 0.0
+    assessed_coverage: list[float] = []
 
     for fw_id, fw_controls in by_fw.items():
         total = len(fw_controls)
-        compliant = sum(1 for c in fw_controls if c.status == "compliant")
-        partial = sum(1 for c in fw_controls if c.status == "partial")
-        gap = sum(1 for c in fw_controls if c.status == "gap")
-        unknown = sum(1 for c in fw_controls if c.status == "unknown")
-        cov = round(((compliant + 0.5 * partial) / total) * 100, 1) if total else 0.0
-        total_coverage += cov
+        fw_bands = [bands[(fw_id, c.control_id)] for c in fw_controls]
+        strong = sum(1 for b in fw_bands if b == "supported")
+        some = sum(1 for b in fw_bands if b == "partial")
+        weak = sum(1 for b in fw_bands if b == "gap")
+        cov = round(((strong + 0.5 * some) / total) * 100, 1) if total else 0.0
+        force = force_of(fw_id)
+        assessed = force is not NormativeForce.BINDING
+        if assessed:
+            assessed_coverage.append(cov)
 
-        top_gaps = [c.control_id for c in fw_controls if c.status == "gap"][:5]
+        top_gaps = [c.control_id for c in fw_controls if bands[(fw_id, c.control_id)] == "gap"][:5]
 
         framework_summaries.append(
             FrameworkProjectionSummary(
                 framework_id=fw_id,
                 framework_label=FRAMEWORK_LABELS.get(fw_id, fw_id.replace("_", " ").title()),
+                force=force.value,
+                assessed=assessed,
                 total_controls=total,
-                compliant=compliant,
-                partial=partial,
-                gap=gap,
-                unknown=unknown,
+                supported=strong if assessed else 0,
+                partial=some if assessed else 0,
+                gap=weak if assessed else 0,
+                not_assessed=0 if assessed else total,
+                unknown=sum(1 for c in fw_controls if c.status == "unknown"),
                 coverage_pct=cov,
                 top_gaps=top_gaps,
             )
         )
 
-    framework_summaries.sort(key=lambda s: (-s.coverage_pct, s.framework_label))
-    avg_cov = (
-        round(total_coverage / len(framework_summaries), 1)
-        if framework_summaries
-        else 0.0
+    framework_summaries.sort(
+        key=lambda s: (FORCE_RANK[NormativeForce(s.force)], -s.coverage_pct, s.framework_label)
     )
+    avg_cov = round(sum(assessed_coverage) / len(assessed_coverage), 1) if assessed_coverage else 0.0
 
-    # Derive Satisfy-Once Levers
+    # Derive Satisfy-Once Levers — only frameworks where AI Act evidence can
+    # actually help close a control (binding law is assessed on its own).
     by_dim_gaps: dict[str, set[tuple[str, str]]] = defaultdict(set)
     for ctrl in controls:
-        if ctrl.status in ("gap", "partial"):
+        if ctrl.force == NormativeForce.BINDING.value:
+            continue
+        if bands[(ctrl.framework_id, ctrl.control_id)] in ("gap", "partial"):
             for d in ctrl.source_dimensions:
                 by_dim_gaps[d].add((ctrl.framework_id, ctrl.control_id))
 
@@ -376,7 +465,7 @@ def project_scan_to_frameworks(
             dim_lbl = dim_meta.label if dim_meta else d
             fw_names = [FRAMEWORK_LABELS.get(f, f) for f in fws]
             summary = (
-                f"Closing this gap directly satisfies {len(hits)} controls across {len(fws)} "
+                f"Closing this gap supports {len(hits)} controls across {len(fws)} "
                 f"frameworks ({', '.join(fw_names[:3])}{'...' if len(fw_names) > 3 else ''})."
             )
             satisfy_once_levers.append(
@@ -407,3 +496,14 @@ def project_scan_to_frameworks(
         satisfy_once_levers=satisfy_once_levers[:5],
         evidence_reuse_opportunities=reuse_opps,
     )
+
+
+__all__ = [
+    "EVIDENCE_REUSE_OBSERVATIONS",
+    "FORCE_EXPLANATION",
+    "CrossFrameworkScanProjection",
+    "FrameworkControlProjection",
+    "FrameworkProjectionSummary",
+    "SatisfyOnceLever",
+    "project_scan_to_frameworks",
+]

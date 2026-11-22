@@ -44,7 +44,9 @@ from scanner.data.frameworks import CANONICAL_FRAMEWORK_IDS as _CANON
 #   CEN-CENELEC JTC 21   -> EN <NNNNN>:<YYYY> (OJ-cited) or prEN <NNNNN>[-<p>] (draft)
 ID_PATTERNS: dict[str, re.Pattern[str]] = {
     "nist_ai_rmf": re.compile(r"^(GV|MP|MS|MG)-\d+\.\d+$"),
-    "iso_42001": re.compile(r"^(\d+\.\d+|A\.\d+\.\d+)$"),
+    # Clauses 4.1-10.2 (sub-clauses such as 6.1.2 allowed); Annex A controls
+    # A.2.2-A.10.4, with A.6 controls one level deeper (A.6.1.2, A.6.2.4).
+    "iso_42001": re.compile(r"^(\d+\.\d+(\.\d+)?|A\.\d+\.\d+(\.\d+)?)$"),
     "owasp_llm": re.compile(r"^LLM(0[1-9]|10):2025$"),
     "owasp_agentic": re.compile(r"^ASI(0[1-9]|10)$"),
     "mitre_atlas": re.compile(r"^AML\.T\d{4}$"),

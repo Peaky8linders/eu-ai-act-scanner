@@ -1,114 +1,20 @@
 ---
 name: ai-act-scan
-description: Scan a codebase for EU AI Act compliance evidence and gaps. Produces a dimension-scored report with per-file findings, architecture graph, and prioritized recommendations.
+description: "Full EU AI Act scan of a codebase with scores per area, the top gaps, and recommended next steps."
+argument-hint: "[path] [--article art50] [--role deployer|provider]"
 ---
 
 # /ai-act-scan
 
-Run the EU AI Act compliance scanner on a local codebase and summarise the findings.
+Scan a codebase and explain the result in plain language.
 
-## Arguments
+1. Scan `$1` (default: the current folder). If the scanner MCP server is connected, call `scan_project(path="$1")`; its default concise response is enough. Otherwise run `eu-ai-act-scan "$1" --markdown`, adding any option the user asked for: `--article art50`, `--role provider`, `--cross-framework`, `--sarif`, `--save-baseline` / `--diff-baseline`, or `--ingest-claude-security FILE` / `--ingest-sarif FILE` / `--ingest-compliance-api FILE` (`eu-ai-act-scan --help` lists all).
+2. If the result says the project is not an AI system, say that the EU AI Act does not appear to apply, quote the reason, and stop. Never show a compliance percentage for it.
+3. Otherwise summarise in this order:
+   - the overall score, explained as the share of expected evidence found (not a legal verdict);
+   - the three lowest-scoring areas with their article;
+   - the top three gaps, each with file:line when given and one sentence on why it matters;
+   - one recommended next step.
+4. Offer follow-ups: `/ai-act-quickstart` (founder priorities), `/ai-act-scan-fix` (fix plan), `/ai-act-cross-framework` (SOC 2 / ISO / NIST mapping), `/ai-act-graph` (visual map).
 
-- `$1` (optional) — path to scan. Defaults to the current working directory.
-- `--founder` — emit the plain-English 3-bucket Founder/Startup Triage brief (`Ship Now` / `Enterprise Deals` / `Later 2027`), or structured JSON when combined with `--json`. (See also `/ai-act-quickstart`.)
-- `--article ARTN` — filter results to a single article (e.g. `art9`, `art15`, `art50`).
-- `--cross-framework`, `-x` — project findings across 12 frameworks (NIST AI RMF, ISO 42001, CEN/CENELEC EN 18286:2026, OWASP LLM/Agentic, GDPR, MITRE ATLAS, SOC 2, ISO 27002, NIST SP 800-53, CSA AICM).
-- `--sarif [PATH]` — export an offline SARIF 2.1.0 report (`eu-ai-act.sarif.json` by default) for GitHub Code Scanning or security pipelines.
-- `--ingest-sarif PATH` — ingest local SARIF 2.1.0 files from Semgrep, Bandit, Snyk, CodeQL, or GitHub Code Scanning (repeatable).
-- `--ingest-compliance-api PATH` — ingest local Anthropic **Claude Compliance API** exports (`/v1/compliance/*`, pulled via `scripts/fetch_claude_compliance.py`) into Art. 12/14/26/50 scoring (repeatable).
-- `--ingest-claude-security PATH` — ingest local **`/claude-security`** (`claude-security@claude-plugins-official`) or `/security-review` JSON/Markdown/SARIF reports (repeatable; honors the adversarial verification panel).
-- `--save-baseline [PATH]` — save a local per-repo baseline snapshot (`.eu-ai-act-baseline.json` by default).
-- `--diff-baseline [PATH]` — diff current scores and fixed/new gaps against a saved local baseline (`.eu-ai-act-baseline.json` by default).
-- `--benchmark` — run the offline deterministic analyzer precision/recall/F1 accuracy benchmark (no codebase scan).
-- `--graph [PATH]` — generate an interactive visual context graph browser (`context-graph.html`).
-- `--dossier [PATH]` — seal and export a cryptographic release dossier (`compliance-dossier.json`).
-- `--role ROLE` — scope evaluation to an explicit operator role (`provider`, `deployer`, `gpai_provider`, etc.).
-- `--deep`, `--extensive` — include a semantic-review pointer for your host Claude Code session / MCP client (deterministic scores stay the baseline).
-
-## Related Workflows
-
-- **Startup / Founder 60-Second Triage**: run `/ai-act-quickstart` (backed by `--founder`) to translate findings into plain-English **Ship Now**, **Enterprise Deals**, and **Later 2027** buckets.
-- **Diff-Aware Security Review**: run `/ai-act-security-review` to pair the scanner's `mcp_toolchain` and `claude_code_security` analyzers with **`claude-security@claude-plugins-official`** (`/claude-security`, `/threat-model` -> `THREAT_MODEL.md`, `/security-review`), SARIF 2.1.0, and local Claude Compliance API exports.
-- **Guided Remediation**: run `/ai-act-scan-fix` (or `eu-ai-act-scan "$1" --fix --startup`) to walk through fixes one PR at a time with regression protection.
-
-## Behaviour
-
-1. Run the scanner CLI in JSON mode:
-   ```bash
-   eu-ai-act-scan "$1" --json
-   ```
-   If `$1` is empty, scan the current directory.
-2. Parse the JSON output. Key fields:
-   - `is_ai_system` — bool. **Check this first.** When `false` the codebase is
-     out of EU AI Act scope (no AI/ML/agent signal): `compliance_scores` is empty
-     and `overall_compliance_pct` is `0.0` but **not** a compliance measure.
-   - `ai_system_signals` — the AI evidence that put the project in scope (e.g.
-     `ai_framework:pytorch`, `model_typology:llm`); empty when out of scope.
-   - `scope_note` — populated only when `is_ai_system` is `false`; explains why
-     scoring was skipped.
-   - `overall_compliance_pct` — 0–100 (only meaningful when `is_ai_system` is `true`)
-   - `compliance_scores` — map of dimension id → 0–100
-   - `components` — list of discovered components with `component_type`, `compliance_impact`, `compliance_dimensions`
-   - `risk_indicators` — top 10 gap-severity findings
-   - `recommendations` — prioritised remediation suggestions
-   - `cross_framework_summary` — multi-framework readiness across NIST, ISO, GDPR, OWASP
-   - `semantic_audit` — Claude Code / Codex semantic findings and cleared false positives
-   - `file_findings` — per-file roll-up of findings/gaps/status
-3. **If `is_ai_system` is `false`**: do not present a compliance percentage.
-   State that the project is not an AI system and is out of EU AI Act scope,
-   show `scope_note` verbatim, and stop (optionally point to `CONTRIBUTING.md`
-   if the user believes an AI pattern was missed). Otherwise present a summary in this order:
-   1. **Headline**: overall compliance % and file count
-   2. **Lowest-scoring dimensions** (bottom 3) with article references — use the `eu-ai-act-reference` skill if the user wants deeper article context
-   3. **Top 3 risk indicators** verbatim from the result
-   4. **Top 3 recommendations** verbatim
-   5. **Interactive Context Graph**: Offer to generate or view `/ai-act-graph` to visually browse each node's gaps and recommended code patches!
-   6. **Cross-Framework Synergies**: Offer `/ai-act-cross-framework` for multi-standard compliance
-4. Never invent findings. If the scanner reports zero components, say so and suggest the project may not be an AI system or may use patterns the scanner does not yet recognise (and link to `CONTRIBUTING.md` for adding an analyzer).
-
-Note: the dedicated **`article_50_transparency`** analyzer reports real
-findings for chatbot disclosure (Art. 50(1)), synthetic-content marking
-(50(2)), emotion/biometric exposure notices (50(3)) and deep-fake / AI-generated
-public-interest-text labelling (50(4)), under the `transparency` /
-`content_transparency` dimensions.
-
-## Mode: deterministic vs assisted (use your own Claude Code / Codex subscription)
-
-Read the active mode first: `eu-ai-act-scan --settings`.
-
-- **deterministic** (default) — present the scanner's findings as-is. The scan is
-  100% local static analysis; do not add findings the scanner did not report.
-- **assisted / deep** — use YOUR OWN Claude Code or Codex session (no paid API key
-  or separate subscription needed!) to add deep semantic analysis:
-  1. Inspect flagged source files and prompt templates directly.
-  2. Verify operational controls (e.g. human approval circuit breakers in agent tool calls).
-  3. Clear static false positives where custom implementations already satisfy requirements.
-  4. Generate context-aware code diffs and test cases that solve gaps cleanly.
-  Keep the deterministic scores as the objective baseline and label semantic additions clearly.
-
-## Example
-
-User: `/ai-act-scan ./my-rag-app`
-
-Response:
-```
-Scanned 412 files in my-rag-app. Overall compliance: 58.3%.
-
-Lowest-scoring dimensions:
-- logging (Art. 12) — 22%: no structured logging or MLflow integration detected
-- human_oversight (Art. 14) — 28%: no human-in-the-loop patterns found
-- risk_mgmt (Art. 9) — 31%: no risk register or threat-model artefacts
-
-Top risk indicators:
-1. AI system detected but no human oversight found
-2. No adversarial robustness testing found
-3. Logging present but no correlation/trace IDs
-
-Want me to dive into any of these, or jump to a specific article (/ai-act-article art12)?
-```
-
-## Notes
-
-- The scanner is **local-only** — never sends code off-machine.
-- Scans respect standard exclusions (`.git`, `node_modules`, `__pycache__`, `.venv`, `dist`, `build`).
-- Files over 2 MB are treated as binary (skipped for text analysis).
+Report only what the scanner found. If the user doubts a finding, open the cited file and check it before agreeing; label anything you add as your own review. The scan runs locally and never uploads code.

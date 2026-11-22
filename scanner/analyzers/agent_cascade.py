@@ -28,11 +28,15 @@ from scanner.data.role_obligations import (
 # agent runtimes (MCP, OpenAI Assistants v2, Anthropic tool-use, browser-use /
 # Playwright, code-interpreter sandboxes, AutoGen v0.4, AG2/OpenDevin/MetaGPT).
 _AGENT_CHAIN_PATTERNS = [
-    r"(langchain|langgraph|crewai|autogen|swarm|magentic)",
-    r"agent.*chain|chain.*agent|multi.?agent|agent.*orchestrat",
+    # Frameworks are anchored to an import. Bare identifiers produced false
+    # agent chains in real repos: a taxonomy enum `multi_agent_swarm`, sklearn
+    # `Pipeline`, CI "workflow steps" and data "pipelines" are not agents.
+    r"^\s*(from|import)\s+(langchain\w*|langgraph\w*|crewai\w*|autogen\w*|swarm|magentic\w*|"
+    r"llama_index\w*|smolagents|pydantic_ai)\b",
+    r"^\s*from\s+agents\s+import\s+.*\b(Agent|Runner)\b",
+    r"""(from|require\()\s*['"](@langchain/[\w-]+|langchain|crewai|@openai/agents|@mastra/[\w-]+|llamaindex)['"]""",
     r"tool_calls|function_calling|tool_use",
     r"\.invoke\(.*\.invoke\(|\.run\(.*\.run\(",
-    r"pipeline|workflow.*step|step.*workflow|dag.*task",
     # MCP (Model Context Protocol) clients and servers
     r"\bfrom\s+mcp\b|\bmcp\.client\b|@mcp\.(server\.)?tool\b",
     # OpenAI Assistants v2 lifecycle (thread/run model)
@@ -159,7 +163,9 @@ def analyze_agent_cascade(ctx: AnalyzerContext) -> AnalyzerResult:
     # 3. Detect model routing without fitness checks
     routing_matches = []
     for pattern in _MODEL_ROUTING_PATTERNS:
-        routing_matches.extend(search_files(ctx, pattern))
+        # Code only: a README feature list ("model selection with validation")
+        # is not routing logic.
+        routing_matches.extend(search_code_files(ctx, pattern))
 
     if routing_matches:
         evidence_files.add(routing_matches[0][0])
@@ -320,7 +326,8 @@ def analyze_agent_cascade(ctx: AnalyzerContext) -> AnalyzerResult:
     # 8. Detect multi-agent swarms without inter-agent monitoring (emergent-risk axis)
     swarm_evidence = search_code_files(
         ctx,
-        r"crewai|autogen|swarm|magentic|agentops|semantic.?kernel|launch_swarm|orchestrator.*broker|broker.*orchestrator",
+        r"^\s*(from|import)\s+(crewai\w*|autogen\w*|swarm|magentic\w*|agentops|semantic_kernel)\b"
+        r"|launch_swarm\(|\bGroupChat(Manager)?\(",
     )
     if swarm_evidence:
         broker_policy = search_code_files(

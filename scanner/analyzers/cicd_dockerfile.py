@@ -75,7 +75,9 @@ def _analyze_gh_actions(path: str, content: str) -> list[Finding]:
         findings.append(_finding(
             id="gha-adversarial-missing", title="No adversarial test step detected",
             description="Art. 15 robustness recommends adversarial testing in CI.",
-            file_path=path, confidence=0.6, impact="gap",
+            # Informational: adversarial_robustness already reports missing
+            # adversarial testing; counting it again per workflow doubled the gap.
+            file_path=path, confidence=0.6, impact="neutral",
             dims=["quality_management", "security"],
             articles=["Art. 15(4)"], artifact="github_actions",
         ))

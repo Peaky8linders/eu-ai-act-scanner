@@ -1,6 +1,6 @@
 ---
 name: eu-ai-act-article-6-classification
-description: Use when the user asks "is my system high-risk", "does Annex III apply to us", mentions Art. 6, or describes a use case that could fall under the eight Annex III domains (biometrics, critical infrastructure, education, employment, essential services, law enforcement, migration/asylum, justice/democracy). Serves legal counsel, product leads, compliance officers, and deployers who need to determine risk tier before investing in Art. 9-15 obligations. Walks Art. 6 + Annex III with the Art. 6(3) derogation applied strictly.
+description: "Decides whether an AI system is high-risk under Art. 6 and Annex III, including the Art. 6(3) exemption. Use for 'are we high-risk?' questions."
 user_invocable: true
 ---
 

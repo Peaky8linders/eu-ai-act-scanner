@@ -1,41 +1,13 @@
 ---
 name: ai-act-graph
-description: Generate an interactive visual context graph browser for the codebase. Browse architecture components, inspect each node for compliance gaps, and view copyable recommended fixes.
+description: "Generates an interactive map of the codebase showing where each compliance gap sits and how to fix it."
+argument-hint: "[path] [output.html]"
 ---
 
 # /ai-act-graph
 
-Generate and explore a standalone, interactive visual context graph of the audited AI system.
+Generate an interactive, offline HTML map of the scanned system.
 
-## Usage
-
-```bash
-/ai-act-graph [PATH]
-```
-
-Or via CLI:
-```bash
-eu-ai-act-scan [PATH] --graph context-graph.html
-```
-
-## What it does
-
-1. Scans the codebase at `PATH` (defaults to current directory).
-2. Generates an interactive, self-contained visual context graph (`context-graph.html`).
-   The CSS is bundled and inlined, so the file opens offline and makes no network
-   request — safe to attach to a review or open on an air-gapped machine.
-3. Renders a node-link visual diagram where:
-   - **Nodes** represent discovered architecture components, agent runtimes, and governance gates.
-   - **Badges** indicate compliance status:
-     - <span style="color: #10b981;">●</span> **Compliant** (evidence verified in codebase)
-     - <span style="color: #f59e0b;">●</span> **Partial** (partial controls found; extra evidence recommended)
-     - <span style="color: #f43f5e;">●</span> **Gap** (immediate statutory remediation required)
-   - **Inspector Panel**: Clicking any node opens a comprehensive drilldown:
-     - Exact EU AI Act Article & Paragraph grounding
-     - Enacted timeline under Digital Omnibus Regulation (EU) 2026/1744
-     - Contributing project source files
-     - Detected gaps
-     - Cross-framework synergies (NIST AI RMF, ISO 42001, OWASP LLM / ASI, GDPR)
-     - **Recommended Fix**: Target file path, rationale, and a production-ready, copyable code patch
-     - Grounded real-world incident case studies from the vendored incident corpus
-4. Presents a summary in chat with the path to the interactive HTML artifact and highlights the top gap nodes needing attention.
+1. Run `eu-ai-act-scan "$1" --graph context-graph.html` (use the output name the user gave, if any), or call `generate_visual_graph(path="$1")` with the scanner MCP server.
+2. Give the file path and say how to use it: open it in a browser; green nodes have evidence, amber are partial, red are gaps; clicking a node shows the article, the source files, the gaps, related frameworks and a copyable suggested fix.
+3. Name the two or three red nodes that matter most. The file is self-contained and makes no network requests.

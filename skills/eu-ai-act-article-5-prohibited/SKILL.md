@@ -1,6 +1,6 @@
 ---
 name: eu-ai-act-article-5-prohibited
-description: Use when the user asks whether a use case is prohibited under the EU AI Act, mentions Art. 5, describes a system involving biometric identification/categorisation/emotion recognition, social scoring, manipulation, exploitation of vulnerabilities, or predictive policing for individuals. Serves legal counsel (primary), product leads (who must not ship a prohibited system), and deployers. Provides a decision tree mapping the eight prohibited categories in Art. 5(1) to the user's use case, with named open questions where the regulation is ambiguous.
+description: "Checks whether a use case is a banned AI practice under Art. 5 (manipulation, social scoring, biometric or emotion recognition, predictive policing). Use for 'is this allowed?' questions."
 user_invocable: true
 ---
 

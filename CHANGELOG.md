@@ -5,6 +5,98 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.0] - 2026-11-22
+
+Lighter, quieter and easier to use: far fewer tokens per session and per
+answer, fewer false alarms on real startup codebases, and the cross-framework
+improvements from the legit-ai parent project.
+
+### Changed — token efficiency (Anthropic tool-design guidance)
+
+Measured on four real AI codebases (tokens = characters / 4; "before" counted as compact JSON, so
+savings are understated): `scan_project` 42,051 → 1,541 (−96%), `founder_triage` 17,711 → 3,079
+(−83%), `project_cross_framework` 43,607 → 3,407 (−92%), incident lookup 7,524 → 1,884 (−75%); the
+`/ai-act-scan` CLI path 53,826 → 8,188 (−85%). Plugin cost per session ~4,170 → ~1,890 tokens; MCP
+tool definitions ~3,120 → ~2,430. A live `/ai-act-quickstart` run cost $0.13 instead of $0.26. On
+seven real AI codebases, reported gaps fell 99 → 62 and "fix before shipping" items 34 → 20.
+
+- **MCP: 17 tools → 13.** `incidents_for_dimension` / `_threat` / `_article` and
+  `incident_corpus_stats` became one `incidents(key)` that accepts an area, a
+  threat or any article spelling ("Art. 15", "Article 15(4)"); `ingest_sarif`
+  and `ingest_claude_ecosystem` became `ingest_security_reports`. The Python
+  functions behind the old names remain for library users.
+- **Concise responses by default** (`response_format="detailed"` for the full
+  data): `scan_project` returns score, scores lowest-first and the top gaps with
+  file:line, with `area`, `limit` and `offset` to drill in; `founder_triage`
+  returns the markdown brief; `project_cross_framework` returns coverage per
+  framework and the top levers; dossier, graph and SARIF tools return receipts
+  instead of echoing what they wrote to disk.
+- Tools return compact JSON strings with structured output off: the SDK
+  pretty-printed dicts, and Claude Code forwards only `structuredContent` when
+  both are present. Errors raise the SDK's `ToolError`, so clients get `isError`
+  with the valid values instead of a generic message. Tool schemas drop
+  redundant titles; `response_format` is an enum; `founder_triage` and
+  `scan_project` are marked `anthropic/alwaysLoad`; server instructions list
+  what the tools cover (what tool search shows at startup). A small scan cache
+  keyed on file size and mtime makes paging instant without ever going stale.
+- **Plugin:** skill and command descriptions rewritten as short "what + when"
+  lines, the maintainer-only `authoring-eu-ai-act-skills` skill moved to
+  `.claude/skills/`, command bodies cut to the steps, commands use the compact
+  `--markdown` / `--founder` output instead of `--json`, and `/ai-act-settings`
+  is hidden from model invocation. (Commands deliberately do not declare
+  `allowed-tools`: a skill that grants itself tools needs an extra approval,
+  which made headless runs fail.) The incident-grounding skill keeps its depth in a
+  `reference.md` read on demand.
+- CLI logs go to stderr so `--json` stays parseable; `--incidents` accepts any
+  article spelling.
+
+### Fixed — false positives found by scanning eight real codebases
+
+- Hardcoded-secret findings skip prose files, placeholders (`sk-ant-...`,
+  `your-api-key`), shell variable references, secret-scanner configs, UI
+  messages (`errors.password = 'Password is required'`) and identifier-shaped
+  values (`"security_hub_api_key"`); a real-looking key is still flagged.
+- Code-level gaps located in README / docs / env templates are dropped
+  (use/mention); `print()` counting and trajectory-monitoring evidence read
+  code only (a `// Score trajectory` comment raised a monitoring gap).
+- Generated build output (`.next/`, `.nuxt/`, `coverage/`, ...) is no longer scanned.
+- Agent-chain detection needs a real agent framework import or agent API, not
+  the words "pipeline", "workflow" or "multi_agent" (a taxonomy enum and sklearn
+  `Pipeline` were flagged as agent chains).
+- Input validation recognises zod, yup, joi, ajv, marshmallow and other
+  validators; output validation recognises structured outputs (`response_format`,
+  `instructor`, `generateObject`); prompt guards recognise hosted moderation
+  and guardrail services. Rate-limit and input-validation gaps apply only to
+  code that serves an endpoint.
+- Art. 10 training-data gaps need training code, not just pandas or a database driver.
+- Statements are no longer gaps: "LLM detected: Art. 14 controls required",
+  "Dual-mode system", "Multi-framework complexity", "SDK used but no IaC", the
+  duplicate CI adversarial-test check, README headings (Art. 11 is Annex IV, not
+  the README) and the jargon "Step 9 inventory".
+- The founder brief leaves out items owed only by other operator roles and says
+  how many and why; it also states what a code scan cannot verify.
+- Fix-loop proposals name the dimension they close (`risk_mgmt`), not the fixer.
+- Benchmark corpus: 30 → 36 samples, including a decoy for each new rule; still
+  1.0 precision and recall.
+
+### Added — cross-framework improvements ported from legit-ai
+
+- **Legal force per framework** (`scanner/data/normative_force.py`): AI Act code
+  evidence *supports* voluntary controls (status `supported`, never
+  `compliant`); binding law (GDPR) is `not_assessed` and left out of the
+  average; harmonised standards confer a presumption of conformity only once
+  OJ-cited (EN 18286:2026, Art. 17); levers count only frameworks evidence can
+  help; evidence-reuse notes cite AI Act Art. 2(7), 26(9) and 27(4).
+- Each weak control names the scanner finding behind it (file:line).
+- Other-law triggers state their scope conditions (CRA, NIS2, MDR, DORA); a FHIR
+  import no longer asserts "AI Act Annex I(A) HIGH-RISK".
+- ISO/IEC 42001 references corrected (catalogue `2026.11.v1`): clause 8 ends at
+  8.4 and each Annex A `x.1` is an objective, so `8.5`, `A.6.3`, `A.7.1`,
+  `A.8.1`, `A.9.1`, `A.10.1` were replaced and topics realigned (Art. 10 → A.7
+  data; transparency → A.8; Art. 15 → A.6.2.4 / A.6.2.6).
+- Public claims tested against code: the README's framework list, the CLI help
+  and every advertised MCP tool count.
+
 ## [0.12.0] - 2026-11-21
 
 First release installable as a Claude Code plugin, aimed at founders and

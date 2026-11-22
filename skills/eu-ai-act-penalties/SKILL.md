@@ -1,6 +1,6 @@
 ---
 name: eu-ai-act-penalties
-description: Use when the user asks about fines, penalties, Art. 99, Art. 101, how much non-compliance costs, or wants to size exposure for risk registers / board reporting. Serves legal counsel (who need exact fine tiers), CFOs / risk owners (who size liabilities), compliance officers, and product leaders weighing go/no-go decisions. Explains the three-tier fine structure, the SME/start-up cap, and how turnover is calculated.
+description: "Explains EU AI Act fines (Art. 99, 101), the SME cap, and how to size exposure. Use for penalty or fine questions."
 user_invocable: true
 ---
 

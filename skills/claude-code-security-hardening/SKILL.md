@@ -1,6 +1,6 @@
 ---
 name: claude-code-security-hardening
-description: Use when hardening Claude Code settings, managed settings, .mcp.json servers, hooks, or AI agent toolchains, pairing with Claude Code Security (claude-security@claude-plugins-official, /claude-security, /threat-model, /security-review, security-guidance@claude-plugins-official), configuring OpenTelemetry, or ingesting Anthropic Claude Compliance API exports. Mapped to EU AI Act Art. 9(2), Art. 12(1), Art. 14, Art. 15(4), Art. 26(2)/(6), Art. 50(1), and OWASP Agentic Top 10.
+description: "Hardens Claude Code settings, hooks, MCP servers and agent toolchains, and pairs with claude-security and the Claude Compliance API. Use for Claude Code or MCP security setup."
 user_invocable: true
 ---
 

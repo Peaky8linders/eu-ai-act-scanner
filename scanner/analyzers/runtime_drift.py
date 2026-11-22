@@ -277,7 +277,9 @@ def analyze_runtime_drift(ctx: AnalyzerContext) -> AnalyzerResult:
     # ── 4. Behavioral monitoring presence ───────────────────────────────
     behavior_hits: list[tuple[str, str]] = []
     for pattern in _BEHAVIOR_MONITORING_HINTS:
-        behavior_hits.extend(search_files(ctx, pattern))
+        # Code only: "// Score trajectory" in a comment or a TRAJECTORY_* line
+        # in .env.example is not monitoring infrastructure.
+        behavior_hits.extend(search_code_files(ctx, pattern))
     baseline_hits: list[tuple[str, str]] = []
     for pattern in _BASELINE_VS_LIVE_HINTS:
         baseline_hits.extend(search_files(ctx, pattern))

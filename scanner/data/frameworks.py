@@ -28,7 +28,13 @@ from typing import Final
 
 from pydantic import BaseModel, Field
 
-CROSSWALK_CATALOGUE_VERSION: Final[str] = "2026.10.v3"
+# 2026.11.v1: ISO/IEC 42001 references corrected. Clause 8 ends at 8.4 and each
+# Annex A "x.1" is a control objective, not a control, so 8.5, A.6.3, A.7.1,
+# A.8.1, A.9.1 and A.10.1 were replaced, and topics realigned (Art. 10 data ->
+# A.7 "Data for AI systems"; transparency -> A.8 "Information for interested
+# parties"; Art. 15 -> A.6.2.4 verification and validation / A.6.2.6 operation
+# and monitoring). Plus legal force per framework (scanner.data.normative_force).
+CROSSWALK_CATALOGUE_VERSION: Final[str] = "2026.11.v1"
 
 # Canonical framework IDs. Older call sites used variant spellings
 # ("owasp_llm_top10" vs "owasp_llm_2025" vs "owasp_llm"); normalize everything
@@ -123,7 +129,7 @@ DIMENSION_CROSSWALK: dict[str, dict[str, list[str]]] = {
     },
     "data_gov": {
         "nist_ai_rmf": ["MP-3.4", "MS-2.6", "MG-2.2"],
-        "iso_42001": ["8.5", "A.6.1", "A.6.2", "A.6.3"],
+        "iso_42001": ["A.7.2", "A.7.3", "A.7.4", "A.7.5", "A.7.6"],
         "owasp_llm": ["LLM03:2025", "LLM04:2025", "LLM08:2025"],
         "owasp_agentic": ["ASI04", "ASI06"],
         "mitre_atlas": ["AML.T0018", "AML.T0115"],
@@ -159,7 +165,7 @@ DIMENSION_CROSSWALK: dict[str, dict[str, list[str]]] = {
     },
     "transparency": {
         "nist_ai_rmf": ["GV-3.1", "GV-5.1", "MP-1.1", "MS-2.3"],
-        "iso_42001": ["7.4", "8.4", "A.7.1", "A.7.3"],
+        "iso_42001": ["7.4", "A.8.2", "A.8.5"],
         "owasp_llm": ["LLM09:2025"],
         "owasp_agentic": ["ASI09"],
         "soc2": ["CC2.2", "CC2.3"],
@@ -188,7 +194,7 @@ DIMENSION_CROSSWALK: dict[str, dict[str, list[str]]] = {
     },
     "security": {
         "nist_ai_rmf": ["MS-2.5", "MG-2.1", "MG-3.2"],
-        "iso_42001": ["A.9.1", "A.9.2"],
+        "iso_42001": ["A.6.2.4", "A.6.2.6"],
         "owasp_llm": ["LLM01:2025", "LLM02:2025", "LLM05:2025", "LLM07:2025"],
         "owasp_agentic": ["ASI01", "ASI03", "ASI05", "ASI07"],
         "mitre_atlas": ["AML.T0015", "AML.T0040", "AML.T0051"],
@@ -217,14 +223,14 @@ DIMENSION_CROSSWALK: dict[str, dict[str, list[str]]] = {
     },
     "deployer_obligations": {
         "nist_ai_rmf": ["GV-1.1", "MP-4.1", "MS-3.1"],
-        "iso_42001": ["A.10.1", "A.10.2"],
+        "iso_42001": ["A.9.2", "A.10.2"],
         "owasp_agentic": ["ASI02", "ASI05"],
         "csa_aicm": ["GRC-10"],
         "gdpr": ["Art. 24(1)", "Art. 28(1)", "Art. 35(1)"],
     },
     "gpai": {
         "nist_ai_rmf": ["GV-6.1", "MP-1.1", "MS-2.3"],
-        "iso_42001": ["A.8.1", "A.8.2"],
+        "iso_42001": ["A.8.2", "A.8.5"],
         "owasp_llm": ["LLM02:2025", "LLM03:2025"],
         "csa_aicm": ["MDS-03"],
     },
@@ -250,7 +256,7 @@ DIMENSION_CROSSWALK: dict[str, dict[str, list[str]]] = {
     },
     "tool_governance": {
         "nist_ai_rmf": ["MS-2.5", "MG-2.1"],
-        "iso_42001": ["A.9.1", "A.9.2"],
+        "iso_42001": ["A.9.2", "A.9.4"],
         "owasp_llm": ["LLM01:2025", "LLM06:2025"],
         "owasp_agentic": ["ASI02", "ASI03", "ASI05"],
         "mitre_atlas": ["AML.T0051"],
@@ -259,7 +265,7 @@ DIMENSION_CROSSWALK: dict[str, dict[str, list[str]]] = {
     },
     "regulatory_perimeter": {
         "nist_ai_rmf": ["GV-1.1", "GV-6.1"],
-        "iso_42001": ["5.1", "A.10.1"],
+        "iso_42001": ["4.1", "5.1"],
         "soc2": ["CC2.1"],
         "gdpr": ["Art. 24(1)"],
     },
@@ -287,7 +293,7 @@ DIMENSION_CROSSWALK: dict[str, dict[str, list[str]]] = {
     },
     "supply_chain": {
         "nist_ai_rmf": ["GV-6.1", "GV-6.2", "MG-3.1"],
-        "iso_42001": ["A.8.1"],
+        "iso_42001": ["A.10.3"],
         "iso_27002": ["5.19", "5.21"],
         "owasp_llm": ["LLM03:2025"],
         "owasp_agentic": ["ASI04"],
@@ -295,7 +301,7 @@ DIMENSION_CROSSWALK: dict[str, dict[str, list[str]]] = {
     },
     "infra_mlops": {
         "nist_ai_rmf": ["MS-2.5", "MG-3.2"],
-        "iso_42001": ["A.9.1"],
+        "iso_42001": ["A.4.4", "A.4.5"],
         "iso_27002": ["8.1", "8.9"],
         "nist_sp_800_53": ["SI-4", "AU-2"],
         "soc2": ["CC7.1", "CC7.2"],
@@ -342,7 +348,7 @@ ARTICLE_FRAMEWORK_CROSSWALK: dict[str, dict[str, list[str]]] = {
     },
     "Art. 10": {
         "nist_ai_rmf": ["MP-3.4", "MS-2.6", "MG-2.2"],
-        "iso_42001": ["8.5", "A.6.1", "A.6.2", "A.6.3"],
+        "iso_42001": ["A.7.2", "A.7.3", "A.7.4", "A.7.5", "A.7.6"],
         "owasp_llm": ["LLM03:2025", "LLM08:2025"],
         "mitre_atlas": ["AML.T0018", "AML.T0115"],
         "gdpr": ["Art. 5(1)(d)", "Art. 25"],
@@ -365,7 +371,7 @@ ARTICLE_FRAMEWORK_CROSSWALK: dict[str, dict[str, list[str]]] = {
     },
     "Art. 13": {
         "nist_ai_rmf": ["GV-3.1", "MP-1.1", "MS-2.3"],
-        "iso_42001": ["7.4", "8.4", "A.7.1", "A.7.3"],
+        "iso_42001": ["7.4", "A.8.2", "A.8.5"],
         "gdpr": ["Art. 13", "Art. 14"],
         "cen_cenelec_jtc21": ["prEN 18229-1 (draft)"],
     },
@@ -378,7 +384,7 @@ ARTICLE_FRAMEWORK_CROSSWALK: dict[str, dict[str, list[str]]] = {
     },
     "Art. 15": {
         "nist_ai_rmf": ["MS-2.5", "MG-2.1", "MG-3.2"],
-        "iso_42001": ["A.9.1", "A.9.2"],
+        "iso_42001": ["A.6.2.4", "A.6.2.6"],
         "owasp_llm": ["LLM01:2025", "LLM02:2025", "LLM05:2025"],
         "owasp_agentic": ["ASI01", "ASI03", "ASI07"],
         "mitre_atlas": ["AML.T0015", "AML.T0051"],
@@ -395,7 +401,7 @@ ARTICLE_FRAMEWORK_CROSSWALK: dict[str, dict[str, list[str]]] = {
     },
     "Art. 26": {
         "nist_ai_rmf": ["GV-1.1", "MP-4.1", "MS-3.1"],
-        "iso_42001": ["A.10.1", "A.10.2"],
+        "iso_42001": ["A.9.2", "A.10.2"],
         "owasp_agentic": ["ASI02"],
         "gdpr": ["Art. 24", "Art. 28"],
     },
@@ -416,7 +422,7 @@ ARTICLE_FRAMEWORK_CROSSWALK: dict[str, dict[str, list[str]]] = {
     },
     "Art. 53": {
         "nist_ai_rmf": ["GV-6.1", "MP-1.1"],
-        "iso_42001": ["A.8.1", "A.8.2"],
+        "iso_42001": ["A.8.2", "A.8.5"],
         "csa_aicm": ["MDS-03"],
     },
     "Art. 55": {
@@ -443,7 +449,7 @@ ARTICLE_FRAMEWORK_CROSSWALK: dict[str, dict[str, list[str]]] = {
     # to do").
     "Art. 25": {
         "nist_ai_rmf": ["GV-6.1", "GV-6.2", "MP-1.1"],
-        "iso_42001": ["A.10.1", "A.10.2"],
+        "iso_42001": ["A.10.2", "A.10.3"],
         "owasp_agentic": ["ASI03"],
         "csa_aicm": ["STA-12"],
         "soc2": ["CC3.1"],

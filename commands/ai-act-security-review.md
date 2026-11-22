@@ -1,115 +1,25 @@
 ---
 name: ai-act-security-review
-description: Diff-aware Claude Code Security, MCP, Claude Compliance API, and EU AI Act Art. 15 security review. Pairs deterministic EU AI Act analyzers with claude-security@claude-plugins-official (/claude-security, /threat-model, /security-review), honors the adversarial verification panel, and supports SARIF 2.1.0 and Compliance API export ingestion.
+description: "Security review of the current branch (secrets, MCP and Claude Code settings, prompt injection), optionally merging claude-security, SARIF or Claude Compliance API reports."
+argument-hint: "[path] [--base REF] [--ingest-claude-security FILE] [--ingest-sarif FILE] [--ingest-compliance-api FILE]"
 ---
 
 # /ai-act-security-review
 
-Run a diff-aware cybersecurity and AI-safety review of your current branch against `main` (or a target directory), combining deterministic EU AI Act Art. 15 analyzers with **Claude Code Security** (`https://code.claude.com/docs/en/claude-security`), a three-pass adversarial verification filter, SARIF 2.1.0, and **Anthropic Claude Compliance API** export ingestion.
+A security review of the current branch that keeps only findings with real, line-level evidence.
 
-## Arguments
+1. **Collect evidence**
+   - Changed files: `git diff origin/main...HEAD --name-only` (fall back to `main...HEAD` or `git status --short`; use `--base REF` if given).
+   - Scanner: `eu-ai-act-scan "$1" --markdown`, adding any reports the user has: `--ingest-claude-security FILE` (Claude Code Security JSONL, JSON, Markdown or SARIF), `--ingest-sarif FILE` (Semgrep, Bandit, Snyk, CodeQL), `--ingest-compliance-api FILE` (Claude Compliance API export, `anthropic-version: 2026-10-21`). With the scanner MCP server, `ingest_security_reports` does the same.
+   - Read each changed file and check for: exposed secrets; prompt injection that can reach tools; MCP tool poisoning, SSRF or unauthenticated servers; `.claude/settings.json` with `Bash(*)` or `bypassPermissions`; `shell=True`, `eval`, or unsafe deserialization (`pickle`, `torch.load`, `yaml.load`); private data plus untrusted input plus an outbound action with no human approval step; unbounded agent loops; unpinned MCP servers, images or CI actions; AI endpoints without auth or timeouts.
+2. **Filter false positives** in three passes:
+   - **Finder**: list candidates with a severity. Critical: exposed production credentials, unauthenticated remote execution, injection reaching privileged tools, deserialization of untrusted input. High: command injection, `bypassPermissions` / `Bash(*)`, SSRF, unauthenticated AI endpoints, unbounded loops. Medium: unpinned dependencies, missing timeouts, silenced errors, missing audit logs. Low: hardening.
+   - **Adversary**: drop anything in tests, fixtures, examples, generated code, migrations or `.env.example`; anything that is a comment, string or detection pattern rather than running code; and anything an upstream check you have read really prevents. List what you dropped under "Cleared false positives".
+   - **Referee**: keep a finding only if it sits in shipped code or the developer security boundary (`.claude/`, `.mcp.json`, CI), has a concrete exploit path at a specific file:line, and has a minimal fix.
+3. **Report**: a table of counts per severity, then each finding with file:line, its impact in one sentence, the fix, and the EU AI Act link (security issues map to Art. 15(4), missing approval gates to Art. 14). Redact secret values. If nothing survives, say: "Security review passed: no confirmed security findings in this diff."
+4. **Go further** (offer, do not run unasked):
+   - Claude Code Security (https://code.claude.com/docs/en/claude-security): install `claude-security@claude-plugins-official`, run `/threat-model` to keep a `THREAT_MODEL.md`, then `/claude-security`, and feed `CLAUDE-SECURITY-RESULTS.jsonl` back with `--ingest-claude-security`.
+   - Claude Compliance API (Enterprise or Team): from your clone of eu-ai-act-scanner run `python <scanner-clone>/scripts/fetch_claude_compliance.py --output compliance-api-export.json`, then add `--ingest-compliance-api compliance-api-export.json`.
+   - CI: `--sarif` writes SARIF 2.1.0 for GitHub Code Scanning; the `anthropics/claude-code-security-review` Action can use `templates/security-scan-instructions.md` and `templates/false-positive-filter.md` from the scanner repo as custom instructions.
 
-- `$1` (optional) — path to scan. Defaults to the current working directory.
-- `--base REF` (optional) — git base ref for diff-aware review (defaults to `origin/main` or `main`).
-- `--sarif PATH` (optional) — export confirmed findings as offline SARIF 2.1.0 JSON.
-- `--ingest-sarif PATH` (optional) — ingest local `.sarif` / `.sarif.json` outputs from Semgrep, Bandit, Snyk, CodeQL, GitHub Advanced Security, or `/security-review`.
-- `--ingest-claude-security PATH` (optional) — ingest local JSON, Markdown, or SARIF reports from `claude-security@claude-plugins-official` (`/claude-security`) or built-in `/security-review` via `scanner.claude_ecosystem.ingest_claude_security_report(...)` (automatically filters mitigated/false-positive/unverified items from the adversarial verification panel).
-- `--ingest-compliance-api PATH` (optional) — ingest local JSON/JSONL snapshots from Anthropic's Claude Compliance API (`/v1/compliance/*`) via `scanner.claude_ecosystem.ingest_compliance_api_export(...)`.
-
-## Step 1 — Deterministic Scan, Changed Files & Claude Ecosystem Inputs
-
-1. Identify changed files on the current branch (if inside a git repository):
-   ```bash
-   git diff origin/main...HEAD --name-only
-   ```
-   (Fallback to `git diff main...HEAD --name-only` or `git status --short` when `origin/main` is unavailable.)
-2. Run the deterministic scanner in JSON mode to collect evidence from `mcp_toolchain`, `claude_code_security`, `security_controls`, `lethal_trifecta`, `privilege_minimization`, and `agent_cascade`:
-   ```bash
-   eu-ai-act-scan "$1" --json
-   ```
-   - If `--ingest-sarif` is provided, parse external SARIF files with `scanner.sarif.ingest_sarif_files(...)` so Semgrep, Bandit, Snyk, and CodeQL findings are evaluated alongside EU AI Act Art. 15(4) checks.
-   - If `--ingest-claude-security` is provided, parse `/claude-security` or `/security-review` reports (SARIF, JSON, or Markdown) with `scanner.claude_ecosystem.ingest_claude_security_report(...)`. Findings refuted, mitigated, or marked `verified: false` by Claude Security's **adversarial verification panel** are excluded automatically, and confirmed findings map to **Art. 15(4)** & **Art. 9(2)**.
-   - If `--ingest-compliance-api` is provided, parse local snapshots pulled via `scripts/fetch_claude_compliance.py` (`anthropic-version: 2026-10-21`) with `scanner.claude_ecosystem.ingest_compliance_api_export(...)` to audit org activity retention (Art. 12(1)/26(6)), group governance (Art. 26(2)), risky *Instructions for Claude* / *Cowork Global instructions* (Art. 14(1)/50(1)), and unreviewed remote-session tool actions (Art. 14(4)).
-3. Inspect each changed file against **`templates/security-scan-instructions.md`** and `THREAT_MODEL.md` (if generated by `/threat-model` from `claude-security@claude-plugins-official`), checking Art. 15(4)-(5) robustness, prompt injection, MCP & Claude Code config hardening (managed settings, `permissions.allow`/`deny`, OpenTelemetry), secrets, unsafe subprocesses, insecure deserialization, lethal trifecta, unbounded loops, supply-chain pinning, and auth/SSRF.
-4. Apply baseline suppressions from **`templates/false-positive-filter.md`** before triaging (tests, fixtures, examples, generated bundles, database migrations, `.env.example`, and detector rule tables).
-
-## Step 2 — EU AI Act Dimension Mapping
-
-Tag every surviving finding with canonical `scanner.kb.DIMENSIONS` IDs and EU AI Act article citations:
-
-| Security finding class | Compliance dimension(s) | EU AI Act article |
-|---|---|---|
-| Prompt injection / indirect injection | `security`, `tool_governance` | `Art. 15(4)`, `Art. 15(5)` |
-| MCP tool poisoning / SSRF / no-auth | `security`, `supply_chain`, `tool_governance` | `Art. 15(4)` |
-| `.claude/settings.json` `Bash(*)` / `bypassPermissions` | `access_control`, `tool_governance` | `Art. 15(4)` |
-| Hardcoded secrets / credentials | `security`, `access_control` | `Art. 15(4)` |
-| Unsafe subprocess / command injection / `eval` | `security` | `Art. 15(4)` |
-| Insecure deserialization (`pickle`, `torch.load`, `yaml.load`) | `security`, `supply_chain` | `Art. 15(4)` |
-| Lethal trifecta / missing human approval gate | `human_oversight`, `tool_governance`, `security` | `Art. 14`, `Art. 15(4)` |
-| Unbounded agent loop / cascade | `security`, `decision_governance` | `Art. 15(4)` |
-| Unpinned MCP servers / Dockerfiles / CI actions | `supply_chain`, `infra_mlops` | `Art. 15(4)` |
-| Missing audit logs / silenced errors in AI paths | `logging`, `security` | `Art. 12`, `Art. 15(4)` |
-
-## Step 3 — Three-Pass False-Positive Filter (Finder -> Adversary -> Referee)
-
-To keep PR reviews high-signal and noise-free, run every candidate finding through three explicit reasoning passes inside your host Claude Code session (zero external API keys required):
-
-1. **Finder** — collect all deterministic and diff-level security findings and assign initial severity:
-   - **Critical**: exposed production credentials, MCP tool poisoning / unauthenticated remote execution, lethal trifecta data exfiltration, prompt injection reaching privileged tools, insecure deserialization of untrusted input.
-   - **High**: `shell=True` / command injection, `.claude/settings.json` `bypassPermissions` or `Bash(*)`, SSRF, missing auth on AI endpoints, unbounded agent loops.
-   - **Medium**: unpinned MCP servers / Docker images / CI actions, missing timeouts/retries on LLM calls, silenced exceptions in AI routes, missing structured audit logs.
-   - **Low**: defense-in-depth hardening suggestions.
-2. **Adversary** — challenge every finding rigorously:
-   - Does the path fall under `templates/false-positive-filter.md` (test fixture, demo, migration, generated bundle)?
-   - Is the code unreachable in production or guarded by an upstream auth/validation middleware you verified by reading the code?
-   - Is the match a regex pattern, comment, or documentation string rather than live executable code?
-   - Drop any finding the Adversary conclusively disproves (list dropped items briefly under "Cleared False Positives" for transparency).
-3. **Referee** — resolve every disputed finding using a 5-step decision tree:
-   1. Is the file part of the deployed runtime, MCP toolchain, or developer security boundary (`.claude/`, `.mcp.json`, CI)?
-   2. Is there a concrete, reproducible exploit path or Art. 15(4) control gap at the exact `file:line`?
-   3. Does the Adversary's mitigation actually execute on this code path?
-   4. Would a security engineer or enterprise AppSec reviewer block the PR on this issue?
-   5. Keep only findings with clear line-level evidence and a concrete minimal fix.
-
-## Step 4 — Output & Interoperability
-
-1. Emit confirmed findings in the scanner's `Finding` JSON shape (redacting any secret values in `evidence_snippet`):
-   ```json
-   {
-     "id": "sec-review-<slug>-<line>",
-     "category": "external_security_sarif",
-     "title": "<concise summary>",
-     "description": "<impact + file:line + minimal fix>",
-     "file_path": "<relative path>",
-     "confidence": 0.9,
-     "compliance_impact": "gap",
-     "compliance_dimensions": ["security"],
-     "evidence_snippet": "<redacted snippet>",
-     "article_paragraphs": ["Art. 15(4)"]
-   }
-   ```
-2. Print a severity summary table:
-   ```markdown
-   | Severity | Count | Top Dimension | EU AI Act |
-   |---|---:|---|---|
-   | Critical | 0 | - | Art. 15(4) |
-   | High | 0 | - | Art. 15(4) |
-   | Medium | 0 | - | Art. 15(4) |
-   | Low | 0 | - | - |
-   ```
-3. **Claude Code Security, Compliance API & SARIF 2.1.0 Interop**:
-   - **Claude Code Security (`https://code.claude.com/docs/en/claude-security`)**:
-     - Install Anthropic's official security plugins: `/plugin install claude-security@claude-plugins-official` and `/plugin install security-guidance@claude-plugins-official`.
-     - Run `/threat-model` to maintain a repo-level `THREAT_MODEL.md` (Art. 9(2) risk identification), then run `/claude-security` or `/security-review` and pass the exported local report to `--ingest-claude-security` (adversarial verification panel results are respected automatically).
-   - **Anthropic Claude Compliance API**:
-     - Pull an opt-in read-only org snapshot (`python <scanner-clone>/scripts/fetch_claude_compliance.py --output compliance-api-export.json` from your clone of eu-ai-act-scanner, env `ANTHROPIC_COMPLIANCE_ACCESS_KEY`, header `anthropic-version: 2026-10-21`) and run `--ingest-compliance-api compliance-api-export.json` offline.
-   - **SARIF 2.1.0 & CI**:
-     - Export findings to SARIF 2.1.0 (`scanner.sarif.write_sarif(result, path)`) for GitHub Code Scanning, VS Code SARIF Viewer, or CI gates (strictly offline, no remote URLs).
-     - Pair with Anthropic's `anthropics/claude-code-security-review` GitHub Action by pointing its custom instructions at `templates/security-scan-instructions.md` and `templates/false-positive-filter.md`.
-4. If zero findings survive the three-pass filter, output:
-   `Three-pass security review passed: no confirmed security findings in this diff.`
-
-## Notes
-
-- Install from this repository: `/plugin marketplace add Peaky8linders/eu-ai-act-scanner` then `/plugin install eu-ai-act-scanner@eu-ai-act-scanner` and `pip install -e ".[mcp]"`.
-- Strictly local and defensive — never executes untrusted code or exfiltrates repository contents.
+Local and defensive only: never run untrusted code or send repository contents anywhere.

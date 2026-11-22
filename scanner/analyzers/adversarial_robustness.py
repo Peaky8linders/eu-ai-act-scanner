@@ -43,6 +43,10 @@ _PROMPT_GUARD_PATTERNS = [
     r"input.*sanitiz|sanitiz.*input|clean.*prompt|prompt.*clean",
     r"system.*prompt.*protect|prompt.*template.*safe",
     r"jailbreak.*detect|detect.*jailbreak",
+    # Hosted moderation / guardrail services count as input/output screening.
+    r"moderations?\.create\(|ContentSafetyClient|content_?safety|prompt_?shields?|"
+    r"apply_guardrail\(|guardrailIdentifier|llm_guard|from\s+guardrails\s+import|presidio|"
+    r"ShieldGemma|LlamaGuard",
 ]
 
 # ─── Input validation on model/inference endpoints ───────────────────
@@ -52,6 +56,31 @@ _INPUT_VALIDATION_PATTERNS = [
     r"input.*schema|schema.*valid|request.*valid",
     r"max_length|min_length|regex.*pattern|constr\(",
     r"input.*bounds|clip.*input|normalize.*input|clamp\(",
+    # JS/TS and other Python validators (a TypeScript app validating with zod
+    # was reported as having no input validation at all).
+    r"\bz\.(object|string|array|number|enum|union)\(|\.safeParse\(|\byup\.object\(|"
+    r"\bJoi\.object\(|\bnew\s+Ajv\(|@Is(String|Int|Email|Not)\w*\(|\bv\.object\(",
+    r"""['"](zod|yup|joi|ajv|valibot|class-validator|express-validator)['"]""",
+    r"\bmarshmallow\b|jsonschema\.validate\(|serializers\.\w*Serializer\b|TypeAdapter\(|\bforms\.Form\b",
+]
+
+# ─── Externally reachable interfaces (where endpoint hardening applies) ──
+# Rate limiting and request validation are endpoint controls: a CLI, library,
+# notebook or batch job has no endpoint to throttle, and flagging it was a
+# recurring false positive.
+_WEB_ENDPOINT_PATTERNS = [
+    r"@(app|router|api|bp|blueprint)\.(get|post|put|patch|delete|route|websocket)\(",
+    r"\b(FastAPI|APIRouter|Flask|Sanic|Quart|Starlette)\(|\burlpatterns\b|@api_view\b|aiohttp\.web\b",
+    r"""\b(app|router|server)\.(get|post|put|patch|delete|all|use)\(\s*['"]/""",
+    r"export\s+(async\s+)?function\s+(GET|POST|PUT|PATCH|DELETE)\b|\bnew\s+Hono\(|\bexpress\(\)",
+    r"\bgr\.(Interface|ChatInterface|Blocks)\(|\bst\.chat_input\(|@cl\.on_message\b",
+]
+
+# ─── Structured outputs count as output validation ───────────────────
+_STRUCTURED_OUTPUT_PATTERNS = [
+    r"response_format\s*[:=]|text_format\s*=|response_model\s*=|output_parsed\b|json_schema\b",
+    r"(responses|completions)\.parse\(|with_structured_output\(|OutputParser\b|\binstructor\.",
+    r"\b(generateObject|streamObject)\(|zodResponseFormat\(|\bstrict\s*[:=]\s*[Tt]rue\b",
 ]
 
 # ─── Model hardening patterns ────────────────────────────────────────
@@ -87,6 +116,7 @@ def analyze_adversarial_robustness(ctx: AnalyzerContext) -> AnalyzerResult:
     evidence_files: set[str] = set()
 
     imported_modules = get_import_modules(ctx)
+    has_endpoint = any(search_code_files(ctx, pattern) for pattern in _WEB_ENDPOINT_PATTERNS)
 
     # Detect if this is an AI/ML project at all
     ai_modules = {"torch", "tensorflow", "keras", "sklearn", "scikit-learn", "xgboost",
@@ -225,7 +255,7 @@ def analyze_adversarial_robustness(ctx: AnalyzerContext) -> AnalyzerResult:
                 compliance_dimensions=["security"],
                 evidence_snippet=input_val_matches[0][1],
             ))
-    elif has_ai_project:
+    elif has_ai_project and has_endpoint:
         findings.append(Finding(
             id="ar-no-input-validation", category="adversarial_robustness",
             title="No input validation detected",
@@ -277,7 +307,7 @@ def analyze_adversarial_robustness(ctx: AnalyzerContext) -> AnalyzerResult:
             evidence_snippet=rate_matches[0][1],
             kb_question_ids=["sc-1"], suggested_answer="partial",
         ))
-    elif has_llm:
+    elif has_llm and has_endpoint:
         findings.append(Finding(
             id="ar-no-rate-limiting", category="adversarial_robustness",
             title="No rate limiting on AI endpoints",
@@ -294,7 +324,7 @@ def analyze_adversarial_robustness(ctx: AnalyzerContext) -> AnalyzerResult:
 
     # ── 6. Output validation / post-processing ───────────────────────
     output_matches: list[tuple[str, str]] = []
-    for pattern in _OUTPUT_VALIDATION_PATTERNS:
+    for pattern in (*_OUTPUT_VALIDATION_PATTERNS, *_STRUCTURED_OUTPUT_PATTERNS):
         output_matches.extend(search_code_files(ctx, pattern))
 
     if output_matches:

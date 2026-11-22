@@ -9,6 +9,7 @@ from scanner.analyzers._base import (
     AnalyzerContext,
     AnalyzerResult,
     Finding,
+    search_code_files,
     search_files,
 )
 
@@ -129,7 +130,8 @@ def analyze_logging_monitoring(ctx: AnalyzerContext) -> AnalyzerResult:
             break
 
     # 7. Log discipline (print vs structured)
-    print_matches = search_files(ctx, r"^\s*print\s*\(")
+    # Code files only: README / docs code samples are not the product's logging.
+    print_matches = search_code_files(ctx, r"^\s*print\s*\(")
     # Filter to non-test source files
     print_in_source = [(p, s) for p, s in print_matches if "test" not in p.lower() and "__pycache__" not in p]
     structured = any(f.id.startswith("log-structured") for f in findings)

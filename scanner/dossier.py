@@ -224,7 +224,7 @@ def generate_dossier(
     # Compute cross-framework projection
     cross_proj = project_scan_to_frameworks(scan)
     fw_summary = {
-        fw.framework_label: fw.coverage_pct for fw in cross_proj.frameworks
+        fw.framework_label: fw.coverage_pct for fw in cross_proj.frameworks if fw.assessed
     }
     levers = [lever.impact_summary for lever in cross_proj.satisfy_once_levers[:3]]
 

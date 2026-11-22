@@ -1,44 +1,15 @@
 ---
 name: ai-act-settings
-description: View or change the scanner's settings — mode (deterministic vs assisted) and auto_apply. Assisted mode lets the plugin use your own Claude Code for semantic scanning, grounded Q&A, and applying fixes.
+description: "Shows or changes scanner settings (mode and auto-apply)."
+argument-hint: "[mode=deterministic|assisted] [auto-apply=true|false]"
+# Only the user changes settings; keep it out of the model's skill listing.
+disable-model-invocation: true
 ---
 
 # /ai-act-settings
 
-View or change how much the scanner leans on your own Claude Code.
+1. Show the current settings with `eu-ai-act-scan --settings`.
+2. To change one, run `eu-ai-act-scan --set mode=assisted` or `eu-ai-act-scan --set auto-apply=true` (repeatable). Values are saved to `.eu-ai-act-scanner.toml` in the project.
 
-## Behaviour
-
-1. To show the current settings:
-   ```bash
-   eu-ai-act-scan --settings
-   ```
-   Reports `mode`, `auto_apply`, where the values came from (`source`), and the
-   optional headless LLM-bridge config.
-2. To change a setting, persist it to `.eu-ai-act-scanner.toml` in the project
-   root:
-   ```bash
-   eu-ai-act-scan --set mode=assisted
-   eu-ai-act-scan --set auto-apply=true
-   ```
-   `--set` is repeatable; invalid values are rejected.
-
-## Settings
-
-- **`mode`**
-  - `deterministic` (default) — pure static analysis. No LLM, no network, no
-    telemetry.
-  - `assisted` — **use your own Claude Code power.** The slash commands drive
-    this Claude Code session to run a semantic pass over the deterministic
-    findings (`/ai-act-scan`), answer grounded questions (`/ai-act-ask`), and
-    apply fixes (`/ai-act-scan-fix`). No API key and no wrapper are needed — the
-    plugin already runs inside your Claude Code.
-- **`auto_apply`** (default `false`) — in `assisted` mode, let `/ai-act-scan-fix`
-  apply approved edits directly with your own edit tools instead of only
-  proposing them. A scan is never destructive unless you opt in.
-
-## Notes
-
-- The deterministic scanner output is always the objective baseline; assisted
-  mode augments it, never overwrites the scores.
-- Outside Claude Code, use the MCP server (`eu-ai-act-scan-mcp`) from any MCP client with its own model subscription — no wrapper or API key needed.
+- `mode`: `deterministic` (default) presents the scanner's findings as they are. `assisted` lets the commands use this Claude Code session for extra review and fix design; the scanner's scores stay the baseline.
+- `auto_apply` (default `false`): in assisted mode, lets `/ai-act-scan-fix` apply an approved plan without asking per fix.

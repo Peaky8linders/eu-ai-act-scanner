@@ -90,13 +90,24 @@ def test_is_non_product_path_and_search_helpers_fixture_gate():
 # ─── data_pipeline.py ────────────────────────────────────────────────────
 
 
-def test_data_pipeline_pandas_only_is_neutral_and_emits_art10_gaps():
+def test_data_pipeline_pandas_only_is_neutral_without_art10_gaps():
+    """Art. 10 governs training data: pandas alone (no training) raises no Art. 10 gap."""
     from scanner.analyzers.data_pipeline import analyze_data_pipeline
 
     res = analyze_data_pipeline(_ctx({"ingest.py": "import pandas as pd\ndf = pd.read_csv('a.csv')\n"}))
     by_id = {f.id: f for f in res.findings}
     assert by_id["dp-load-pandas"].compliance_impact == "neutral"
-    assert "dp-no-versioning" in by_id
+    assert "dp-no-versioning" not in by_id
+
+
+def test_data_pipeline_training_without_governance_emits_art10_gaps():
+    from scanner.analyzers.data_pipeline import analyze_data_pipeline
+
+    res = analyze_data_pipeline(_ctx({"train.py": (
+        "import pandas as pd\nfrom sklearn.linear_model import LogisticRegression\n"
+        "df = pd.read_csv('a.csv')\nmodel = LogisticRegression().fit(df[['x']], df['y'])\n"
+    )}))
+    by_id = {f.id: f for f in res.findings}
     assert by_id["dp-no-versioning"].kb_question_ids == ["dg-1"]
     assert "dp-no-quality-checks" in by_id
     assert by_id["dp-no-quality-checks"].kb_question_ids == ["dg-3"]
@@ -308,8 +319,12 @@ def test_ai_frameworks_populates_line_number_and_matched_pattern():
 def test_adversarial_robustness_uses_canonical_sc_kb_ids():
     from scanner.analyzers.adversarial_robustness import analyze_adversarial_robustness
 
+    # An HTTP endpoint makes the endpoint-only checks (input validation: sc-1) apply.
     res = analyze_adversarial_robustness(_ctx({
-        "llm.py": "import openai\nclient = openai.OpenAI()\n",
+        "llm.py": (
+            "import openai\nfrom fastapi import FastAPI\napp = FastAPI()\nclient = openai.OpenAI()\n\n"
+            "@app.post('/ask')\ndef ask(q: str):\n    return client.responses.create(model='m', input=q)\n"
+        ),
     }))
     all_qids = [qid for f in res.findings for qid in f.kb_question_ids]
     assert not any(q.startswith("sec-") for q in all_qids)

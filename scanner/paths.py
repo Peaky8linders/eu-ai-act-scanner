@@ -19,6 +19,12 @@ EXCLUDED_PATH_PARTS = frozenset({
     "__pycache__", "node_modules", ".git", ".venv", "venv", ".tox",
     ".pytest_cache", ".mypy_cache", ".ruff_cache", "dist", "build",
     ".claude", ".freebuff", ".worktrees", "worktrees",
+    # Generated framework / bundler output. Scanning it re-reports the app's
+    # own code as minified copies (one real repo produced agent and OAuth
+    # findings from `dashboard/.next/`) and adds thousands of files.
+    ".next", ".nuxt", ".svelte-kit", ".turbo", ".vercel", ".netlify",
+    ".parcel-cache", ".angular", ".docusaurus", ".expo", "storybook-static",
+    "coverage", "htmlcov", ".nyc_output", "site-packages",
 })
 
 

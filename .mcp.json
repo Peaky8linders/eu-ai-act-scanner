@@ -3,7 +3,7 @@
     "eu-ai-act-scanner": {
       "command": "eu-ai-act-scan-mcp",
       "args": [],
-      "description": "EU AI Act (Regulation 2024/1689 + Digital Omnibus 2026/1744) offline code scanner & incident grounding MCP server. 17 tools: scan_project, founder_triage, export_sarif, ingest_sarif, ingest_claude_ecosystem (Claude Compliance API & /claude-security), regulatory_applicability, project_cross_framework (12 frameworks incl. EN 18286:2026), generate_dossier, remediation_loop, generate_visual_graph, list_dimensions, get_article, agentic_taxonomy, and GenAI/agentic incident corpus lookups."
+      "description": "EU AI Act (Regulation 2024/1689 + Digital Omnibus 2026/1744) offline code scanner & incident grounding MCP server. 13 tools: founder_triage, scan_project, project_cross_framework (12 frameworks incl. EN 18286:2026, with legal force), ingest_security_reports (Claude Code Security, SARIF, Claude Compliance API), remediation_loop, export_sarif, generate_dossier, generate_visual_graph, regulatory_applicability, get_article, list_dimensions, incidents, agentic_taxonomy. Concise responses by default."
     }
   }
 }
