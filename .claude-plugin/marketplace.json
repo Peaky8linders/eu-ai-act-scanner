@@ -12,7 +12,7 @@
       "name": "antifragile-harness",
       "source": "./",
       "description": "EU AI Act + Digital Omnibus compliance scanner, founder triage, and Claude security/compliance ingestion for Claude Code.",
-      "version": "0.14.1",
+      "version": "0.15.0",
       "license": "Apache-2.0",
       "category": "security"
     }
