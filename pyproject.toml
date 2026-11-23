@@ -30,11 +30,15 @@ dependencies = [
     "pydantic>=2.5",
     "structlog>=24.1",
     "pyyaml>=6.0",
+    # The MCP server is how the Claude Code plugin and other agents use the
+    # scanner, so its SDK is a core dependency. Pinned to a recent SDK
+    # supporting Streamable HTTP + Origin validation (MCP spec 2025-11 / 2026).
+    "mcp>=1.12",
 ]
 
 [project.optional-dependencies]
-# MCP server (scanner.mcp_server) so non-Claude-Code agents can call the scanner.
-# Pinned to a recent SDK supporting Streamable HTTP + Origin validation (MCP spec 2025-11 / 2026).
+# Kept so existing `antifragile-harness[mcp]` installs keep working; the MCP SDK
+# is now a core dependency.
 mcp = ["mcp>=1.12"]
 # Regenerating the vendored incident corpus from the HuggingFace dataset.
 sync = ["pyarrow>=15"]

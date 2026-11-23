@@ -21,9 +21,16 @@
       "tests/test_integration_hardening.py",
       "tests/test_public_claims.py"
     ],
+    "scripts/check_plugin_mcp.py": [
+      "tests/test_check_plugin_mcp.py",
+      "tests/test_repo_workflows.py"
+    ],
     "scripts/fetch_claude_compliance.py": [
       "tests/test_integration_hardening.py",
       "tests/test_claude_ecosystem.py"
+    ],
+    ".github/workflows/**": [
+      "tests/test_repo_workflows.py"
     ],
     "hooks/**": [
       "tests/test_secret_guard_hook.py",

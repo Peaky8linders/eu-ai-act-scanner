@@ -8,13 +8,13 @@ argument-hint: "[path] [--top N] [--startup]"
 
 Turn the top compliance gaps into small, reviewable fixes. Always show the plan before editing anything.
 
-1. Scan `$1` (default: the current folder) with the `scan_project` MCP tool or `antifragile-scan "$1" --markdown`. To measure progress later, first run `antifragile-scan "$1" --save-baseline`. If the project is not an AI system, stop: there is nothing to fix, and writing compliance "evidence" into a non-AI project would be fabricated.
+1. Scan `$1` (default: the current folder) with the `scan_project` MCP tool or `uvx --from "${CLAUDE_PLUGIN_ROOT}" antifragile-scan "$1" --markdown`. To measure progress later, first run `uvx --from "${CLAUDE_PLUGIN_ROOT}" antifragile-scan "$1" --save-baseline`. If the project is not an AI system, stop: there is nothing to fix, and writing compliance "evidence" into a non-AI project would be fabricated.
 2. Pick the top N gaps (default 3):
    - `--startup` (best for startups): live obligations and exploitable issues first, in this order: Art. 50 transparency, MCP and tool governance, security, Claude Code permissions, supply chain, logging. Annex III paperwork (due 2 Dec 2027) comes last.
    - Default: lowest score weighted by article importance (risk management, data governance, human oversight and logging first).
    If reading the cited code shows a gap is a false positive, skip it and say why.
 3. Present one fix at a time as `[i/N] <PR title>` with: what is missing (one plain sentence), the article, where (file:line), a minimal diff, and how a re-scan will confirm it. Ask `apply / skip / edit / quit` before touching files.
-4. After each approved fix, apply it, re-scan (`antifragile-scan "$1" --diff-baseline` if a baseline exists) and report the score change and any regression. "Apply all" still means one fix at a time with a re-scan in between.
+4. After each approved fix, apply it, re-scan (`uvx --from "${CLAUDE_PLUGIN_ROOT}" antifragile-scan "$1" --diff-baseline` if a baseline exists) and report the score change and any regression. "Apply all" still means one fix at a time with a re-scan in between.
 
 Evidence the scanner accepts, so aim fixes at these:
 
@@ -28,6 +28,6 @@ Evidence the scanner accepts, so aim fixes at these:
 | Claude Code access | least-privilege `.claude/settings.json` that denies `.env`, keys and destructive shell commands |
 | Documentation | `MODEL_CARD.md` / `DATA_CARD.md` with `<FILL IN: ...>` placeholders for facts only the user knows |
 
-If `antifragile-scan --settings` shows `mode: assisted`, you may design fixes for gaps without a standard pattern; with `auto_apply: true` you may apply an approved plan without asking per fix. For unattended runs, `antifragile-fix "$1" --profile startup` (a dry run unless `--apply`) loops scan, fix, re-scan, and rolls back any fix that lowers another score.
+If `uvx --from "${CLAUDE_PLUGIN_ROOT}" antifragile-scan --settings` shows `mode: assisted`, you may design fixes for gaps without a standard pattern; with `auto_apply: true` you may apply an approved plan without asking per fix. For unattended runs, `antifragile-fix "$1" --profile startup` (a dry run unless `--apply`) loops scan, fix, re-scan, and rolls back any fix that lowers another score.
 
 Never invent facts in compliance documents, never commit without the user's approval, and always ask before touching auth, secrets or database migrations.

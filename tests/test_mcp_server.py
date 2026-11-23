@@ -388,6 +388,29 @@ def test_mcp_server_is_named_after_the_plugin() -> None:
     assert list(servers) == [plugin]
 
 
+def test_plugin_starts_its_bundled_engine_with_uv() -> None:
+    """The plugin needs no separate engine install.
+
+    Its manifest declares the server under the same name as the root
+    .mcp.json entry, which makes Claude Code use the manifest one for the
+    plugin, and runs the engine from the plugin's own files with uvx, so the
+    engine always matches the installed plugin version.
+    """
+    root = Path(__file__).parent.parent
+    manifest = json.loads((root / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
+    servers = manifest["mcpServers"]
+    assert list(servers) == [manifest["name"]]
+    server = servers[manifest["name"]]
+    assert server["command"] == "uvx"
+    assert server["args"] == ["--from", "${CLAUDE_PLUGIN_ROOT}", "antifragile-scan-mcp"]
+
+    pyproject = (root / "pyproject.toml").read_text(encoding="utf-8")
+    assert 'antifragile-scan-mcp = "scanner.mcp_server:main"' in pyproject
+    # uvx installs only core dependencies, so the MCP SDK must be one of them.
+    core = pyproject.split("dependencies = [", 1)[1].split("]", 1)[0]
+    assert '"mcp>=' in core
+
+
 # ---------------------------------------------------------------------------
 # SDK wiring (skipped when mcp is not installed)
 # ---------------------------------------------------------------------------

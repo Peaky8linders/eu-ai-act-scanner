@@ -11,10 +11,11 @@ Free and open source (Apache-2.0). It runs fully offline, so your code never lea
 
 ## For founders: the 60-second check
 
-**1. Install the engine once** (you need [pipx](https://pipx.pypa.io) and git):
+**1. Install [uv](https://docs.astral.sh/uv/) once**, unless `uv --version` already works. The plugin uses it to run the engine it carries, so there is nothing else to install.
 
 ```bash
-pipx install "antifragile-harness[mcp] @ git+https://github.com/Peaky8linders/antifragile-harness"
+curl -LsSf https://astral.sh/uv/install.sh | sh                                     # macOS / Linux
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"  # Windows
 ```
 
 **2. Add the plugin inside Claude Code**, then restart Claude Code:
@@ -30,7 +31,9 @@ pipx install "antifragile-harness[mcp] @ git+https://github.com/Peaky8linders/an
 /ai-act-quickstart
 ```
 
-No Claude Code? Run `antifragile-scan . --founder` from your project folder instead.
+The first start after installing takes a little longer while uv fetches the engine's dependencies; after that it runs offline.
+
+Using Cursor, Claude Desktop or another MCP client? See [MCP server for other clients](#mcp-server-for-other-clients).
 
 ### What you get back
 
@@ -160,91 +163,80 @@ Findings aggregate into **23 compliance dimensions** (`scanner/kb.py`), auto-tag
 
 The scanner never calls an LLM headlessly. When you want more than deterministic scores:
 
-- **In Claude Code (assisted mode):** `python -m scanner.cli --set mode=assisted` — slash commands use your host session (your existing subscription, no API key) for semantic review, grounded Q&A, and applying fixes. The deterministic scores stay the objective baseline.
-- **Outside Claude Code:** run the **MCP server** (`antifragile-scan-mcp`, installed from this repository — see [Install](#install)) from any MCP client — same engine, client's own model, no wrapper.
+- **In Claude Code (assisted mode):** run `/ai-act-settings` and set `mode=assisted` — slash commands use your host session (your existing subscription, no API key) for semantic review, grounded Q&A, and applying fixes. The deterministic scores stay the objective baseline.
+- **Outside Claude Code:** run the **MCP server** (see [MCP server for other clients](#mcp-server-for-other-clients)) from any MCP client — same engine, client's own model, no wrapper.
 
 ---
 
 ## Install
 
-**Claude Code plugin (`antifragile-harness`)** — the 11 commands, 15 article-grounded skills and the
-bundled MCP server. This repository is its own plugin marketplace
-(`.claude-plugin/marketplace.json`), so inside Claude Code run:
+**Claude Code plugin (`antifragile-harness`)**: the 11 commands, 15 article-grounded skills and the
+13-tool MCP server. It needs [uv](https://docs.astral.sh/uv/) on your `PATH`, which it uses to
+start the engine bundled in its own files, so there is no separate engine install. Install uv
+once, unless `uv --version` already works:
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh                                     # macOS / Linux
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"  # Windows
+```
+
+This repository is its own plugin marketplace (`.claude-plugin/marketplace.json`), so inside
+Claude Code run:
 
 ```bash
 /plugin marketplace add Peaky8linders/antifragile-harness
 /plugin install antifragile-harness@antifragile-harness
 ```
 
-Installed it before the rename, as `eu-ai-act-scanner`? That copy stops loading
-once its marketplace picks up the new name, and the engine's commands are now
-`antifragile-scan*`. Remove the old plugin and engine from a terminal, then run
-the two commands above and reinstall the engine as shown below. Settings in an
-existing `.eu-ai-act-scanner.toml` keep working.
+Restart Claude Code. The plugin's MCP server runs `uvx --from ${CLAUDE_PLUGIN_ROOT} antifragile-scan-mcp`,
+so the engine always matches the plugin version and `/plugin update` updates both. The first
+start downloads the engine's dependencies (and Python, if uv has none yet); later starts run
+offline from uv's cache. Slash commands that need the command-line engine run it the same way.
+
+Installed it before the rename, as `eu-ai-act-scanner`? That copy stops loading once its
+marketplace picks up the new name. Remove it from a terminal, then run the two commands above.
+Settings in an existing `.eu-ai-act-scanner.toml` keep working. An engine you installed
+separately with pipx is no longer needed either.
 
 ```bash
 claude plugin uninstall eu-ai-act-scanner@eu-ai-act-scanner
 claude plugin marketplace remove eu-ai-act-scanner
-pipx uninstall eu-ai-act-scanner-plugin    # or: pip uninstall eu-ai-act-scanner-plugin
+pipx uninstall eu-ai-act-scanner-plugin    # only if you installed the old engine with pipx
 ```
 
-The plugin drives the local Python engine, so install the engine once, straight
-from this repository. [pipx](https://pipx.pypa.io) puts `antifragile-scan`,
-`antifragile-scan-mcp` and `antifragile-fix` on your `PATH` in their own isolated
-environment, which is where Claude Code looks for `antifragile-scan-mcp`:
+**Troubleshooting: `/mcp` shows `plugin:antifragile-harness:antifragile-harness` as "Failed to
+connect".** The usual causes:
 
-```bash
-pipx install "antifragile-harness[mcp] @ git+https://github.com/Peaky8linders/antifragile-harness"
-```
+- uv is not on the `PATH` Claude Code was started with. Run `uv --version` in the shell you
+  start Claude Code from; if it is not found, install uv as above and restart Claude Code.
+- The first start ran past Claude Code's 30-second startup limit while uv downloaded
+  dependencies. Reconnect from `/mcp`. On a slow connection, set the `MCP_TIMEOUT`
+  environment variable to `120000` (milliseconds) before starting Claude Code.
 
-Restart Claude Code after installing. To update later, run the same command
-with `--force`.
+The slash commands still load without the server, but Claude cannot call the 13 scanner tools
+until `/mcp` shows it connected.
 
-Working on the engine itself? Clone the repository and install it editable
-instead, so it follows your checkout:
+### MCP server for other clients
 
-```bash
-git clone https://github.com/Peaky8linders/antifragile-harness
-cd antifragile-harness
-pipx install --editable ".[mcp]"    # or, in a virtualenv: pip install -e ".[mcp,dev]"
-```
-
-**Troubleshooting: `/mcp` shows `plugin:antifragile-harness:antifragile-harness`
-(or `antifragile-harness`, if you registered the server yourself) as "Failed to
-connect" (`CONNECTION_CLOSED`).** Claude Code could not start `antifragile-scan-mcp`
-because it is not on the `PATH` Claude Code was launched with, usually because
-the engine went into a virtualenv that is not active. Check from the same shell
-you start Claude Code from:
-
-```bash
-antifragile-scan --version              # should print the scanner version
-command -v antifragile-scan-mcp         # macOS / Linux: should print a path
-Get-Command antifragile-scan-mcp        # Windows PowerShell: should list it
-```
-
-If either is not found, activate the environment you installed into before
-launching Claude Code, or reinstall with pipx as above, then restart Claude
-Code. The slash commands still load without the server, but Claude cannot call
-the 13 scanner tools until `/mcp` shows it connected.
-
-**MCP server** — same engine, any MCP client, the client's own model:
-
-```bash
-antifragile-scan-mcp          # stdio transport
-```
-
-> **There is no PyPI package.** Always install from this repository; no PyPI
-> package is this project. `pip install antifragile-harness` is not ours, and
-> `pip install eu-ai-act-scanner` installs an unrelated third-party project that
-> owns that name. The package installed from this repository is
-> `antifragile-harness`, and the console scripts are `antifragile-scan`,
-> `antifragile-scan-mcp` and `antifragile-fix`.
-
-Register with any MCP client via [`.mcp.json`](.mcp.json):
+Same engine, any MCP client, the client's own model. With uv installed, add this to the
+client's MCP configuration:
 
 ```json
-{ "mcpServers": { "antifragile-harness": { "command": "antifragile-scan-mcp", "args": [] } } }
+{ "mcpServers": { "antifragile-harness": { "command": "uvx", "args": ["--from", "git+https://github.com/Peaky8linders/antifragile-harness", "antifragile-scan-mcp"] } } }
 ```
+
+Append `@<release tag>` to the URL to pin a version. The command-line engine runs the same way,
+for example `uvx --from git+https://github.com/Peaky8linders/antifragile-harness antifragile-scan ./my-app --founder`.
+
+> **There is no PyPI package.** Always run the engine from this repository; no PyPI package
+> is this project. `pip install antifragile-harness` is not ours, and
+> `pip install eu-ai-act-scanner` installs an unrelated third-party project that owns that
+> name. The engine's commands are `antifragile-scan`, `antifragile-scan-mcp` and
+> `antifragile-fix`.
+
+Working on the engine itself? See [CONTRIBUTING.md](CONTRIBUTING.md). With its development
+install active, this repository's own [`.mcp.json`](.mcp.json) runs `antifragile-scan-mcp` from
+your environment.
 
 **13 MCP Tools:** `founder_triage` (start here), `scan_project`, `project_cross_framework`, `ingest_security_reports` (Claude Code Security, SARIF, Claude Compliance API), `remediation_loop`, `export_sarif`, `generate_dossier`, `generate_visual_graph`, `regulatory_applicability`, `get_article`, `list_dimensions`, `incidents`, `agentic_taxonomy`. Responses are **concise by default** (scores, top gaps with file:line, a plain-English brief); pass `response_format="detailed"` for full data, and page large scans with `area`, `limit` and `offset`.
 
