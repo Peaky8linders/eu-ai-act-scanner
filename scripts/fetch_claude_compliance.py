@@ -5,7 +5,7 @@ Claude Compliance API (``https://api.anthropic.com/v1/compliance/*``) and
 writes an atomic local JSON snapshot ready for offline EU AI Act ingestion:
 
     python scripts/fetch_claude_compliance.py --output compliance-api-export.json
-    eu-ai-act-scan . --ingest-compliance-api compliance-api-export.json --dossier release-dossier.json
+    antifragile-scan . --ingest-compliance-api compliance-api-export.json --dossier release-dossier.json
 
 Security & Privacy Guarantees:
 - Lives in ``scripts/`` (outside ``scanner/``); the core scanner stays 100% offline.
@@ -189,7 +189,7 @@ def _fetch_paginated_endpoint(
                 "x-api-key": api_key,
                 "anthropic-version": ANTHROPIC_COMPLIANCE_VERSION,
                 "accept": "application/json",
-                "user-agent": "eu-ai-act-scanner-compliance-fetcher/1.0",
+                "user-agent": "antifragile-harness-compliance-fetcher/1.0",
             },
         )
         with urllib.request.urlopen(req, timeout=timeout) as resp:  # noqa: S310 (URL validated above)
@@ -413,7 +413,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     print(
         f"Next step (100% offline): "
-        f"eu-ai-act-scan . --ingest-compliance-api {output_path} --dossier release-dossier.json"
+        f"antifragile-scan . --ingest-compliance-api {output_path} --dossier release-dossier.json"
     )
     return 0
 

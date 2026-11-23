@@ -1,4 +1,4 @@
-# Adjacent legislation & regulatory perimeter — eu-ai-act-scanner
+# Adjacent legislation & regulatory perimeter — antifragile-harness
 
 Step 9 of the compliance sequence (Nannini et al. 2026): after classifying the
 AI Act perimeter, map the **adjacent** EU instruments the system actually
@@ -16,7 +16,7 @@ points.
 
 | Instrument | Signal in this repo | Why it does / does not bind | If it binds |
 |---|---|---|---|
-| **Cyber Resilience Act** — Reg. (EU) 2024/2847 | `pyproject.toml` `[project.scripts]` ships three CLI entry points (`eu-ai-act-scan`, `eu-ai-act-scan-mcp`, `eu-ai-act-fix`); the MCP server opens a logical connection to its host — i.e. software with digital elements | In scope only if **made available on the market**, which the CRA ties to supply *in the course of commercial activity* — paid or free, but commercial. A non-commercial Apache-2.0 publication is not that, so **not triggered today** | If commercially supplied (or the maintainer becomes an open-source *steward* — systematic, sustained support of OSS for commercial use): vulnerability handling, security updates for the support period, SBOM/component transparency, coordinated disclosure, no known exploitable vulnerabilities at release, ENISA reporting from **11 Sept 2026**, full conformity from **11 Dec 2027** |
+| **Cyber Resilience Act** — Reg. (EU) 2024/2847 | `pyproject.toml` `[project.scripts]` ships three CLI entry points (`antifragile-scan`, `antifragile-scan-mcp`, `antifragile-fix`); the MCP server opens a logical connection to its host — i.e. software with digital elements | In scope only if **made available on the market**, which the CRA ties to supply *in the course of commercial activity* — paid or free, but commercial. A non-commercial Apache-2.0 publication is not that, so **not triggered today** | If commercially supplied (or the maintainer becomes an open-source *steward* — systematic, sustained support of OSS for commercial use): vulnerability handling, security updates for the support period, SBOM/component transparency, coordinated disclosure, no known exploitable vulnerabilities at release, ENISA reporting from **11 Sept 2026**, full conformity from **11 Dec 2027** |
 | **AI Act itself** — Reg. (EU) 2024/1689 | Static analysis, no model, no inference, no output about persons (`model_typology` reports `none` for this repo) | Not an AI system under Art. 3(1). Provider/deployer duties under Arts. 16/26 attach to its **users** | If an integrator adds a model or generative component, the resulting system is theirs and this note no longer describes it |
 
 > **Art. 64(10)(b) is not a general open-source exemption.** It disapplies only
@@ -59,7 +59,7 @@ Applied here, since the scanner is a *component* its users may embed:
 
 ## How to keep this current
 
-`eu-ai-act-scan . --article art25` re-checks the perimeter and role mapping;
+`antifragile-scan . --article art25` re-checks the perimeter and role mapping;
 `regulatory_perimeter` fails the maintainer scan when a trigger exists without
 this artefact. Add a row when a new runtime capability, distribution channel or
 bundled dataset appears.

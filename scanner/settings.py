@@ -1,4 +1,4 @@
-"""User-configurable settings for the EU AI Act scanner.
+"""User-configurable settings for Antifragile Harness.
 
 Two orthogonal behaviour layers, resolved with precedence
 **env var > project file > user file > built-in default**:
@@ -17,16 +17,18 @@ Two orthogonal behaviour layers, resolved with precedence
   never destructive without an explicit opt-in.
 
 Semantic depth outside Claude Code comes from the **MCP server**
-(``eu-ai-act-scan-mcp``): any MCP-capable agent calls the same deterministic
+(``antifragile-scan-mcp``): any MCP-capable agent calls the same deterministic
 engine over the Model Context Protocol using its own model subscription — no
 API key and no local wrapper required. ``assisted`` mode inside Claude Code
 simply means the host session (your existing subscription) narrates and
 remediates over the deterministic baseline.
 
-Config file: ``.eu-ai-act-scanner.toml`` at the project root (checked in or
+Config file: ``.antifragile-harness.toml`` at the project root (checked in or
 git-ignored, your call), with an optional user-level fallback at
-``$XDG_CONFIG_HOME/eu-ai-act-scanner.toml`` (``~/.config/...`` when unset). Both
-use a ``[scanner]`` table.
+``$XDG_CONFIG_HOME/antifragile-harness.toml`` (``~/.config/...`` when unset). Both
+use a ``[scanner]`` table. Files and environment variables saved under the
+pre-rename names (``.eu-ai-act-scanner.toml``, ``EU_AI_ACT_SCANNER_*``) are
+still read when the new ones are absent, so existing settings keep working.
 """
 
 from __future__ import annotations
@@ -40,10 +42,19 @@ from typing import Literal
 Mode = Literal["deterministic", "assisted"]
 
 _VALID_MODES: tuple[str, ...] = ("deterministic", "assisted")
-PROJECT_CONFIG_NAME = ".eu-ai-act-scanner.toml"
+PROJECT_CONFIG_NAME = ".antifragile-harness.toml"
+USER_CONFIG_NAME = "antifragile-harness.toml"
 
-_ENV_MODE = "EU_AI_ACT_SCANNER_MODE"
-_ENV_AUTO_APPLY = "EU_AI_ACT_SCANNER_AUTO_APPLY"
+_ENV_MODE = "ANTIFRAGILE_HARNESS_MODE"
+_ENV_AUTO_APPLY = "ANTIFRAGILE_HARNESS_AUTO_APPLY"
+
+# Pre-rename names, read only when the new file or variable is absent.
+LEGACY_PROJECT_CONFIG_NAME = ".eu-ai-act-scanner.toml"
+LEGACY_USER_CONFIG_NAME = "eu-ai-act-scanner.toml"
+_LEGACY_ENV = {
+    _ENV_MODE: "EU_AI_ACT_SCANNER_MODE",
+    _ENV_AUTO_APPLY: "EU_AI_ACT_SCANNER_AUTO_APPLY",
+}
 
 
 @dataclass(frozen=True)
@@ -72,10 +83,24 @@ class Settings:
         }
 
 
+def _prefer_current(current: Path, legacy: Path) -> Path:
+    """The current-name file, unless only the pre-rename file exists."""
+    return legacy if legacy.exists() and not current.exists() else current
+
+
 def _user_config_path() -> Path:
     base = os.getenv("XDG_CONFIG_HOME")
     root = Path(base) if base else Path.home() / ".config"
-    return root / "eu-ai-act-scanner.toml"
+    return _prefer_current(root / USER_CONFIG_NAME, root / LEGACY_USER_CONFIG_NAME)
+
+
+def _project_config_path(root: Path) -> Path:
+    return _prefer_current(root / PROJECT_CONFIG_NAME, root / LEGACY_PROJECT_CONFIG_NAME)
+
+
+def _env(name: str) -> str | None:
+    """Read an override variable, falling back to its pre-rename name."""
+    return os.getenv(name) or os.getenv(_LEGACY_ENV[name])
 
 
 def _coerce_mode(value: object) -> Mode | None:
@@ -118,14 +143,14 @@ def load_settings(project_root: str | Path | None = None) -> Settings:
     user = _read_toml(_user_config_path())
     if user:
         layers.append(("user-config", user))
-    proj = _read_toml(root / PROJECT_CONFIG_NAME)
+    proj = _read_toml(_project_config_path(root))
     if proj:
         layers.append(("project-config", proj))
     env: dict = {}
-    if os.getenv(_ENV_MODE):
-        env["mode"] = os.getenv(_ENV_MODE)
-    if os.getenv(_ENV_AUTO_APPLY):
-        env["auto_apply"] = os.getenv(_ENV_AUTO_APPLY)
+    if _env(_ENV_MODE):
+        env["mode"] = _env(_ENV_MODE)
+    if _env(_ENV_AUTO_APPLY):
+        env["auto_apply"] = _env(_ENV_AUTO_APPLY)
     if env:
         layers.append(("env", env))
 
@@ -150,7 +175,7 @@ def save_settings(
     auto_apply: bool | str | None = None,
     project_root: str | Path | None = None,
 ) -> tuple[Path, Settings]:
-    """Persist ``mode`` / ``auto_apply`` to the project ``.eu-ai-act-scanner.toml``.
+    """Persist ``mode`` / ``auto_apply`` to the project ``.antifragile-harness.toml``.
 
     Only the provided fields change; the rest keep their current resolved value.
     Returns ``(path, new_settings)``. Raises ``ValueError`` on an invalid mode
@@ -175,8 +200,8 @@ def save_settings(
 
     path = root / PROJECT_CONFIG_NAME
     body = (
-        "# EU AI Act scanner settings — manage via `/ai-act-settings` or\n"
-        "# `eu-ai-act-scan settings --set mode=assisted`.\n"
+        "# Antifragile Harness settings — manage via `/ai-act-settings` or\n"
+        "# `antifragile-scan --set mode=assisted`.\n"
         "[scanner]\n"
         f'mode = "{new_mode}"\n'
         f"auto_apply = {'true' if new_auto else 'false'}\n"

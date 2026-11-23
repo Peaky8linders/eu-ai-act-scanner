@@ -73,6 +73,6 @@ def test_advertised_mcp_tool_counts_match_registered_tools() -> None:
     for rel, pattern in claims.items():
         assert re.search(pattern, (REPO_ROOT / rel).read_text(encoding="utf-8")), rel
     mcp_desc = json.loads((REPO_ROOT / ".mcp.json").read_text(encoding="utf-8"))
-    assert f"{count} tools" in mcp_desc["mcpServers"]["eu-ai-act-scanner"]["description"]
+    assert f"{count} tools" in mcp_desc["mcpServers"]["antifragile-harness"]["description"]
     for rel in ("README.md", "pyproject.toml", ".claude-plugin/plugin.json", ".mcp.json"):
         assert not re.search(r"\b17[- ]tool", (REPO_ROOT / rel).read_text(encoding="utf-8")), rel

@@ -1,4 +1,4 @@
-"""Cross-framework projection engine for EU AI Act Scanner.
+"""Cross-framework projection engine for Antifragile Harness.
 
 Projects an EU AI Act `ScanResult` onto other AI governance, security and
 privacy frameworks: NIST AI RMF 1.0, NIST AI 600-1, ISO/IEC 42001:2023,

@@ -110,7 +110,7 @@ def test_sarif_export_writes_offline_sarif(tmp_path, capsys) -> None:
     doc = json.loads(sarif_out.read_text(encoding="utf-8"))
     assert doc["version"] == "2.1.0"
     assert "$schema" not in doc
-    assert doc["runs"][0]["tool"]["driver"]["name"] == "eu-ai-act-scanner"
+    assert doc["runs"][0]["tool"]["driver"]["name"] == "antifragile-harness"
 
 
 def test_ingest_sarif_merges_external_findings(tmp_path, capsys) -> None:
@@ -269,5 +269,5 @@ def test_benchmark_flag_outputs_metrics(capsys) -> None:
 
     assert main(["--benchmark"]) == 0
     md = capsys.readouterr().out
-    assert "# EU AI Act Scanner — Accuracy Benchmark" in md
+    assert "# Antifragile Harness — Accuracy Benchmark" in md
     assert "Per-analyzer breakdown" in md

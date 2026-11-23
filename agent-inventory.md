@@ -1,4 +1,4 @@
-# Agent inventory — eu-ai-act-scanner
+# Agent inventory — antifragile-harness
 
 This is the external-action inventory for **this repository**, written to the
 four facets the `agent_inventory` analyzer checks (Nannini et al. 2026,
@@ -13,14 +13,14 @@ Reviewed: 2026-10-19 · Owner: maintainer ([@Peaky8linders](https://github.com/P
 |---|---|
 | Runtime posture | **Looped** — an MCP client or Claude Code session may call the 11 tools repeatedly; the engine itself is stateless per call |
 | Multi-agent chaining | None inside the engine (no agent framework dependency; `agent_cascade` reports no chained agents) |
-| Writes without a human decision | **None** — every writer is behind an explicit argument (`--dossier`, `--graph`, `--set`) or defaults to dry-run (`remediation_loop(apply=False)`, `eu-ai-act-fix`) |
+| Writes without a human decision | **None** — every writer is behind an explicit argument (`--dossier`, `--graph`, `--set`) or defaults to dry-run (`remediation_loop(apply=False)`, `antifragile-fix`) |
 | Stops on its own | Yes — each call returns; no background process, daemon, scheduler or listener socket |
 
 ## 2. External actions (what can touch the world)
 
 | Action class | Where | Gate |
 |---|---|---|
-| `write_file` | `scanner/dossier.py` (sealed JSON dossier), `scanner/visual_graph.py` (HTML graph), `scanner/settings.py` (`--set` writes `.eu-ai-act-scanner.toml`), `scanner/fix_loop.py` (`--apply` remediations) | Explicit path/flag; fix loop is dry-run by default and reverts any fix that regresses another dimension |
+| `write_file` | `scanner/dossier.py` (sealed JSON dossier), `scanner/visual_graph.py` (HTML graph), `scanner/settings.py` (`--set` writes `.antifragile-harness.toml`), `scanner/fix_loop.py` (`--apply` remediations) | Explicit path/flag; fix loop is dry-run by default and reverts any fix that regresses another dimension |
 | `execute_code` | `scanner/dossier.py` — `subprocess.run(["git", ...])` to bind the scanned commit into the dossier | Read-only git plumbing; no shell, no `shell=True`, argv list only |
 | `read_file` | Whole scan path: walks the target tree (default 2 MB/file cap, standard exclusions) | Read-only; refuses non-directories |
 | `send_email`, `authorize_payment`, `post_content`, `infra_mutation`, `modify_db` | **Not present** — no cloud/billing/social/database clients anywhere in the package | n/a |
@@ -44,7 +44,7 @@ scanned repo (local)  ──►  engine (in-process)  ──►  stdout / JSON /
 |---|---|---|
 | Local filesystem | read + explicit writes | the scan target and the exported artefacts |
 | `git` binary | read-only invocation | commit hash binding for the dossier (`AML`/provenance) |
-| MCP client (stdio) | in-process pipe | `eu-ai-act-scan-mcp` — no TCP port, no listening socket |
+| MCP client (stdio) | in-process pipe | `antifragile-scan-mcp` — no TCP port, no listening socket |
 | Claude Code | host session | slash commands, skills, assisted-mode narrative |
 | HuggingFace dataset | **not at runtime** | only when a maintainer regenerates the vendored incident corpus |
 

@@ -86,7 +86,7 @@ class TestSarifExport:
 
         run = sarif["runs"][0]
         driver = run["tool"]["driver"]
-        assert driver["name"] == "eu-ai-act-scanner"
+        assert driver["name"] == "antifragile-harness"
         assert driver["version"] == "0.11.3"
         assert "informationUri" not in driver
         assert len(driver["rules"]) == 3
@@ -154,7 +154,7 @@ class TestSarifExport:
         assert out_path.is_file()
 
         findings, tools = ingest_sarif_files([out_path])
-        assert tools == ["eu-ai-act-scanner"]
+        assert tools == ["antifragile-harness"]
         # 3 gap results were error, warning, note -> note is skipped on ingest, leaving 2 findings.
         assert len(findings) == 2
         assert all(f.category == "external_security_sarif" for f in findings)

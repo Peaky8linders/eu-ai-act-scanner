@@ -1,9 +1,10 @@
 """Docs guard: no tracked file may tell users to install this project from PyPI.
 
 The scanner ships as a Claude Code plugin plus an MCP server, installed from this
-repository. The `eu-ai-act-scanner` name on PyPI belongs to an unrelated project,
-so an install instruction pointing there does not just fail — it installs someone
-else's code. That mistake lived in two changelog entries and a README section
+repository. No PyPI package is this project: the pre-rename `eu-ai-act-scanner`
+name there belongs to an unrelated project, and anyone could claim
+`antifragile-harness`, so an install instruction pointing at either does not just
+fail — it can install someone else's code. That mistake lived in two changelog entries and a README section
 before it was corrected, which is exactly the kind of copy-paste that comes back.
 
 The only allowed mention is the warning itself ("there is no PyPI package", "the
@@ -16,17 +17,18 @@ unavailable (source archive), and skips files that are not valid UTF-8.
 
 from __future__ import annotations
 
+import json
 import re
 import subprocess
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
-# An install of this project's PyPI name, with the usual flag, quote and extra
-# spellings.
+# An install of this project's current or pre-rename name from PyPI, with the
+# usual flag, quote and extra spellings.
 _PYPI_INSTALL = re.compile(
     r"(?i)\b(?:pip3?|pipx|uv\s+pip|python\s+-m\s+pip)\s+install\b"
-    r"[^\n]*?[\"']?eu-ai-act-scanner(?:-plugin)?\b"
+    r"[^\n]*?[\"']?(?:eu-ai-act-scanner(?:-plugin)?|antifragile-harness)\b"
 )
 
 # Text that marks a mention as a warning rather than an instruction.
@@ -116,6 +118,8 @@ def test_guard_flags_instructions_but_not_warnings() -> None:
     """The exemption must be narrow: only a nearby warning makes a mention legal."""
     bare = f"Install with `{_BAD}` and run the CLI.\n"
     assert _violations(bare) == [1]
+    current = "pip install " + "antifragile-" + "harness"  # assembled: this file is scanned too
+    assert _violations(f"Install with `{current}`.\n") == [1]
 
     warning = (
         f"> **There is no PyPI package.** `{_BAD}` installs\n"
@@ -134,10 +138,63 @@ def test_guard_flags_instructions_but_not_warnings() -> None:
     # package in prose ("installed from this repository") is not an instruction.
     repo_install = (
         "pip install -e \".[mcp]\"\n"
-        "The package installed from this repository is `eu-ai-act-scanner-plugin`.\n"
+        "The package installed from this repository is `antifragile-harness`.\n"
     )
     assert _violations(repo_install) == []
 
     # A warning several paragraphs away does not license an instruction.
     far_warning = "There is no PyPI package.\n\n\n\n\n\n" f"Quick start: {_BAD}\n"
     assert _violations(far_warning) == [7]
+
+
+# ---------------------------------------------------------------------------
+# Plugin install commands name the current plugin and marketplace
+# ---------------------------------------------------------------------------
+
+# `/plugin install <plugin>@<marketplace>` inside Claude Code, or the same id
+# through `claude plugin install` in a terminal.
+_PLUGIN_INSTALL = re.compile(r"(?:/plugin|\bclaude\s+plugins?)\s+(?:install|i)\s+([\w.-]+)@([\w.-]+)")
+
+# Names this plugin shipped under before; an install command that uses one of
+# them (or a current name) is about this plugin, not another project's.
+_FORMER_NAMES = {"eu-ai-act-scanner"}
+
+
+def _install_id() -> str:
+    claude_plugin = REPO_ROOT / ".claude-plugin"
+    manifest = json.loads((claude_plugin / "plugin.json").read_text(encoding="utf-8"))
+    market = json.loads((claude_plugin / "marketplace.json").read_text(encoding="utf-8"))
+    return f"{manifest['name']}@{market['name']}"
+
+
+def test_documented_plugin_installs_use_the_current_names() -> None:
+    """A rename must reach every install instruction, or founders copy a dead id."""
+    expected = _install_id()
+    ours = _FORMER_NAMES | set(expected.split("@"))
+    seen = 0
+    offenders: list[str] = []
+    for path in _tracked_files():
+        if path.name == "CHANGELOG.md":  # release history keeps the names of its day
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+        except (UnicodeDecodeError, OSError):
+            continue
+        for number, line in enumerate(text.splitlines(), 1):
+            for match in _PLUGIN_INSTALL.finditer(line):
+                if not ours & set(match.groups()):
+                    continue  # another plugin, e.g. claude-security@claude-plugins-official
+                seen += 1
+                if f"{match.group(1)}@{match.group(2)}" != expected:
+                    offenders.append(f"{path.relative_to(REPO_ROOT)}:{number}: {match.group(0)}")
+
+    assert seen >= 3, f"found only {seen} install commands; the pattern no longer matches the docs"
+    assert not offenders, f"install commands must say `{expected}`:\n  " + "\n  ".join(offenders)
+
+
+def test_install_pattern_reads_both_spellings_and_skips_uninstall() -> None:
+    for line in ("/plugin install a@b", "claude plugin install a@b"):
+        match = _PLUGIN_INSTALL.search(line)
+        assert match is not None and match.groups() == ("a", "b"), line
+    assert _PLUGIN_INSTALL.search("claude plugin uninstall a@b") is None
+    assert _PLUGIN_INSTALL.search("/plugin marketplace add owner/repo") is None

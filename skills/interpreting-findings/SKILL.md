@@ -4,7 +4,7 @@ description: "Explains scanner results in plain language, including scores, what
 user_invocable: true
 ---
 
-# Interpreting EU AI Act Scanner Findings
+# Interpreting Antifragile Harness Findings
 
 Translate scanner output into decisions. Serves compliance officers deciding what to act on, engineers prioritising fixes, and legal counsel assessing whether the evidence will hold up in a conformity assessment (Art. 43).
 
@@ -18,7 +18,7 @@ Translate scanner output into decisions. Serves compliance officers deciding wha
 
 ## Applies to
 
-- Any output produced by `/ai-act-scan` or the `eu-ai-act-scan` CLI.
+- Any output produced by `/ai-act-scan` or the `antifragile-scan` CLI.
 - **In scope**: dimension score meaning, gap prioritisation, false-positive diagnosis, remediation sequencing.
 - **Out of scope**: drafting the actual fix (route to `/ai-act-scan-fix`), legal verdicts on compliance (requires human counsel + conformity procedure under Art. 43).
 
@@ -98,13 +98,13 @@ The scanner is deliberately conservative. False negatives (missed controls) are 
 
 1. Ask what pattern they use.
 2. Verify the control exists by reading the referenced file.
-3. Suggest opening an issue at [github.com/Peaky8linders/eu-ai-act-scanner/issues](https://github.com/Peaky8linders/eu-ai-act-scanner/issues) with the pattern so the analyzer can be extended.
+3. Suggest opening an issue at [github.com/Peaky8linders/antifragile-harness/issues](https://github.com/Peaky8linders/antifragile-harness/issues) with the pattern so the analyzer can be extended.
 
 Contributions improve every future scan. That is the point of making this public.
 
 ## Cross-references
 
-- [using-eu-ai-act-scanner](../using-eu-ai-act-scanner/SKILL.md) — orchestration, when to scan
+- [using-antifragile-harness](../using-antifragile-harness/SKILL.md) — orchestration, when to scan
 - [eu-ai-act-reference](../eu-ai-act-reference/SKILL.md) — article → dimension map
 - [eu-ai-act-fria-guide](../eu-ai-act-fria-guide/SKILL.md) — for deployer-side obligations the scanner cannot evaluate
 

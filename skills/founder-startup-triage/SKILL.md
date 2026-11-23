@@ -76,7 +76,7 @@ Generate automatically via `/ai-act-quickstart` (`brief_markdown`), or adapt thi
   - **Art. 14 / OWASP Agentic Oversight:** <Human approval gates for high-impact tool actions & clean user instructions>
 - **Cross-Framework Alignment:** Mapped locally to 12 frameworks (SOC 2, ISO/IEC 27002 and 42001, NIST AI RMF, OWASP, GDPR and more), each with its legal force: code evidence supports voluntary controls, while binding law such as GDPR is reported as not assessed.
 - **2027 Roadmap (Digital Omnibus Reg. 2026/1744):** Tracking Annex III obligations ahead of 2 Dec 2027 (Annex I: 2 Aug 2028).
-- **Evidence Artifact:** Reproducible local scan baseline + optional signed release dossier (`eu-ai-act-scan --dossier`).
+- **Evidence Artifact:** Reproducible local scan baseline + optional signed release dossier (`antifragile-scan --dossier`).
 ```
 
 ## Claude Ecosystem Fast-Track (Security + Org Compliance)
@@ -86,7 +86,7 @@ If your team already builds with Claude Code or Claude Enterprise/Team, two 5-mi
 1. **Claude Code Security (`https://code.claude.com/docs/en/claude-security`) — Art. 15(4) & Art. 9(2)**:
    - Install `claude-security@claude-plugins-official` and `security-guidance@claude-plugins-official`.
    - Run `/threat-model` to produce `THREAT_MODEL.md`, then run `/claude-security` or `/security-review`.
-   - Feed the local report into `eu-ai-act-scan . --ingest-claude-security <report>` — Claude Security's **adversarial verification panel** verdicts are honored automatically (mitigated/false-positive items are filtered out).
+   - Feed the local report into `antifragile-scan . --ingest-claude-security <report>` — Claude Security's **adversarial verification panel** verdicts are honored automatically (mitigated/false-positive items are filtered out).
    - Lock team-wide `permissions.allow` / `permissions.deny` with **managed settings** and stream session audit metrics via **OpenTelemetry**.
 2. **Anthropic Claude Compliance API — Art. 12(1), Art. 14, Art. 26(2)/(6), Art. 50(1)**:
    - Generate a read-only **Compliance Access Key** in `claude.ai` (*Organization settings > Data and privacy*, scopes `read:compliance_activities`, `read:compliance_org_data`, `read:compliance_user_data`) and set `ANTHROPIC_COMPLIANCE_ACCESS_KEY`.
@@ -94,9 +94,9 @@ If your team already builds with Claude Code or Claude Enterprise/Team, two 5-mi
      ```bash
      python <scanner-clone>/scripts/fetch_claude_compliance.py --dry-run
      python <scanner-clone>/scripts/fetch_claude_compliance.py --output compliance-api-export.json --org-uuid "$ORG_UUID"
-     eu-ai-act-scan . --ingest-compliance-api compliance-api-export.json --dossier release-dossier.json
+     antifragile-scan . --ingest-compliance-api compliance-api-export.json --dossier release-dossier.json
      ```
-     (`<scanner-clone>` is the folder where you cloned eu-ai-act-scanner; the fetcher is not part of the installed engine.)
+     (`<scanner-clone>` is the folder where you cloned antifragile-harness; the fetcher is not part of the installed engine.)
    - Automatically verifies >=180-day audit retention, RBAC group governance, clean *Instructions for Claude* / *Cowork Global instructions*, and reviewed remote-session tool executions.
 
 ## Vendor Contract Review Handoff (Anthropic Official Legal Plugin)
@@ -120,4 +120,4 @@ Hand off vendor MSAs/DPAs to **Anthropic's official Legal Plugin** using the bun
 
 ## Source of truth
 
-EU Regulation 2024/1689 (EU AI Act) & Regulation (EU) 2026/1744 (Digital Omnibus). Install from this repo with `/plugin marketplace add Peaky8linders/eu-ai-act-scanner`, then `/plugin install eu-ai-act-scanner@eu-ai-act-scanner`, and `pip install -e ".[mcp]"`.
+EU Regulation 2024/1689 (EU AI Act) & Regulation (EU) 2026/1744 (Digital Omnibus). Install from this repo with `/plugin marketplace add Peaky8linders/antifragile-harness`, then `/plugin install antifragile-harness@antifragile-harness`, and `pip install -e ".[mcp]"`.

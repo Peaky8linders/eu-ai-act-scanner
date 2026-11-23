@@ -1,10 +1,10 @@
 {
-  "name": "eu-ai-act-scanner",
-  "version": "0.13.1",
+  "name": "antifragile-harness",
+  "version": "0.14.0",
   "description": "EU AI Act (Regulation 2024/1689) and Digital Omnibus (Regulation 2026/1744) compliance harness for Claude Code and MCP clients. 24 deterministic analyzers (including MCP toolchain & Claude Code security + AST-gated Art. 50), 60-second Founder/Startup quickstart (/ai-act-quickstart), diff-aware security review (/ai-act-security-review) interoperating with claude-security@claude-plugins-official, Claude Compliance API & SARIF 2.1.0, interactive visual context graph (/ai-act-graph), cryptographic release dossier (/ai-act-dossier), 12-framework projection (/ai-act-cross-framework including EN 18286:2026), and autonomous startup/regulatory remediation (/ai-act-scan-fix).",
   "author": "Andrei Bacu (@Peaky8linders)",
   "license": "Apache-2.0",
-  "homepage": "https://github.com/Peaky8linders/eu-ai-act-scanner",
+  "homepage": "https://github.com/Peaky8linders/antifragile-harness",
   "regulation": "EU Regulation 2024/1689 & Regulation 2026/1744",
   "commands": [
     "ai-act-quickstart",
@@ -22,7 +22,7 @@
   "skills": [
     "founder-startup-triage",
     "claude-code-security-hardening",
-    "using-eu-ai-act-scanner",
+    "using-antifragile-harness",
     "interpreting-findings",
     "eu-ai-act-reference",
     "eu-ai-act-article-5-prohibited",
@@ -52,6 +52,6 @@
   },
   "install": {
     "pip": "pip install -e \".[mcp]\"",
-    "note": "No PyPI package: install the engine from this repository (the `eu-ai-act-scanner` name on PyPI is an unrelated third-party project)."
+    "note": "No PyPI package: install the engine from this repository (no PyPI package is this project; the pre-rename `eu-ai-act-scanner` name there is an unrelated third-party project)."
   }
 }

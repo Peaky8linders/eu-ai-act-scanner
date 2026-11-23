@@ -56,7 +56,7 @@ def test_plain_non_ai_repo_with_ci_workflow_is_neutral():
 def test_mcp_server_config_alone_does_not_imply_ai_pr_review_gap():
     res = analyze_claude_code_security(_ctx(
         files={
-            ".mcp.json": '{"mcpServers":{"scanner":{"command":"eu-ai-act-scan-mcp"}}}',
+            ".mcp.json": '{"mcpServers":{"scanner":{"command":"antifragile-scan-mcp"}}}',
             ".github/workflows/ci.yml": "on: [push]\njobs:\n  test:\n    runs-on: ubuntu-latest\n",
         },
     ))
@@ -142,7 +142,7 @@ def test_settings_unrestricted_mcp_autoapprove_flagged_unless_allowlisted():
     allowlisted = analyze_claude_code_security(_ctx(
         agent_config_files={
             ".claude/settings.json": (
-                '{"enableAllProjectMcpServers": true, "enabledMcpjsonServers": ["eu-ai-act-scanner"]}'
+                '{"enableAllProjectMcpServers": true, "enabledMcpjsonServers": ["antifragile-harness"]}'
             )
         }
     ))

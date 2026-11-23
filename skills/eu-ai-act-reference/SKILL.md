@@ -128,7 +128,7 @@ Art. 113 (as amended by Digital Omnibus Regulation (EU) 2026/1744) sets staggere
 
 ## Cross-references
 
-- [using-eu-ai-act-scanner](../using-eu-ai-act-scanner/SKILL.md) — when to scan and how
+- [using-antifragile-harness](../using-antifragile-harness/SKILL.md) — when to scan and how
 - [interpreting-findings](../interpreting-findings/SKILL.md) — how to read dimension scores
 - [eu-ai-act-article-5-prohibited](../eu-ai-act-article-5-prohibited/SKILL.md)
 - [eu-ai-act-article-6-classification](../eu-ai-act-article-6-classification/SKILL.md)

@@ -1,4 +1,4 @@
-"""EU AI Act Scanner — static analysis for EU Regulation 2024/1689 compliance.
+"""Antifragile Harness — static analysis for EU Regulation 2024/1689 compliance.
 
 Scans a codebase for evidence and gaps across 23 compliance dimensions
 mapped to EU AI Act articles, including 4 agent-aware dimensions per
@@ -11,7 +11,7 @@ Quick start:
     print(result.overall_compliance_pct)
 """
 
-__version__ = "0.13.1"
+__version__ = "0.14.0"
 
 from scanner.cross_framework import (
     CrossFrameworkScanProjection,
