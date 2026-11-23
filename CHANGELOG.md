@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed — a founder-first README and a one-command install
+
+- The README opens with what a founder gets: a one-line promise, a three-step
+  quickstart, the three buckets of the brief and a real, trimmed brief for a
+  small demo chatbot. The technical detail follows under "Under the hood".
+- The engine installs with one command, straight from this repository:
+  `pipx install "antifragile-harness[mcp] @ git+https://github.com/Peaky8linders/antifragile-harness"`.
+  The README, both plugin manifests, the MCP server's missing-dependency
+  message and two skills now say so. Cloning and installing editable is for
+  working on the engine itself.
+- `tests/test_docs_install.py` accepts installs from this repository's URL and
+  still rejects installs by name from PyPI, or the same command pointing at
+  anyone else's copy.
+
+### Added — a manual PyPI publishing workflow
+
+- `.github/workflows/publish-pypi.yml` builds the package, checks its metadata
+  and publishes it with PyPI trusted publishing, so no token is stored. It does
+  nothing until a pending publisher is set up on pypi.org; the steps are in the
+  file.
+
 ## [0.14.1] - 2026-11-23
 
 ### Fixed — logging never reaches stdout or a closed stream

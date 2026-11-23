@@ -28,10 +28,9 @@ Security posture (aligned with MCP spec 2025-11-25 + 2026 hardening guidance):
   export) are annotated destructive and default to read-only dry-run.
 * No network calls, no telemetry, no secrets in tool surfaces.
 
-Install the MCP extra from this repository (there is no PyPI package):
+Install the engine with its MCP extra from this repository (there is no PyPI package):
 
-    git clone https://github.com/Peaky8linders/antifragile-harness
-    cd antifragile-harness && pip install -e ".[mcp]"
+    pipx install "antifragile-harness[mcp] @ git+https://github.com/Peaky8linders/antifragile-harness"
 
 Run the server (stdio transport):
     antifragile-scan-mcp
@@ -1052,9 +1051,9 @@ def _load_server_class():
         return FastMCP
     except ImportError as exc:
         raise RuntimeError(
-            "MCP SDK not installed. Install the engine from this repository: "
-            "pip install -e \".[mcp]\" (there is no PyPI package; no PyPI "
-            "package is this project)"
+            "MCP SDK not installed. Reinstall the engine with its mcp extra from this "
+            "repository: pipx install --force \"antifragile-harness[mcp] @ git+https://github.com/Peaky8linders/antifragile-harness\" "
+            "(there is no PyPI package; no PyPI package is this project)"
         ) from exc
 
 
@@ -1064,8 +1063,7 @@ def build_server():  # noqa: ANN201  (returns MCPServer/FastMCP — type only av
     Raises :exc:`RuntimeError` if the ``mcp`` optional dependency is not
     installed.  Install it from this repository with::
 
-        git clone https://github.com/Peaky8linders/antifragile-harness
-        cd antifragile-harness && pip install -e ".[mcp]"
+        pipx install "antifragile-harness[mcp] @ git+https://github.com/Peaky8linders/antifragile-harness"
 
     HTTP serving (Streamable HTTP) is left to the deployer: serve the app
     returned by ``mcp.http_app()`` behind TLS + authentication, bind
