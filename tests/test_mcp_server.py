@@ -371,8 +371,21 @@ def test_mcp_json_parses_and_has_command() -> None:
     mcp_json_path = Path(__file__).parent.parent / ".mcp.json"
     with mcp_json_path.open(encoding="utf-8") as fh:
         manifest = json.load(fh)
-    cmd = manifest["mcpServers"]["eu-ai-act-scanner"]["command"]
-    assert cmd == "eu-ai-act-scan-mcp"
+    cmd = manifest["mcpServers"]["antifragile-harness"]["command"]
+    assert cmd == "antifragile-scan-mcp"
+
+
+def test_mcp_server_is_named_after_the_plugin() -> None:
+    """Claude Code lists a plugin's server as plugin:<plugin>:<server>.
+
+    Naming the server after the plugin keeps that label to the one brand
+    (plugin:antifragile-harness:antifragile-harness) instead of leaking an
+    older product name.
+    """
+    root = Path(__file__).parent.parent
+    plugin = json.loads((root / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))["name"]
+    servers = json.loads((root / ".mcp.json").read_text(encoding="utf-8"))["mcpServers"]
+    assert list(servers) == [plugin]
 
 
 # ---------------------------------------------------------------------------
@@ -386,7 +399,7 @@ def test_build_server_returns_fastmcp_instance() -> None:
     assert server is not None
     # FastMCP instances carry a `name` attribute set in their constructor.
     assert hasattr(server, "name")
-    assert server.name == "eu-ai-act-scanner"
+    assert server.name == "antifragile-harness"
 
 
 # ---------------------------------------------------------------------------

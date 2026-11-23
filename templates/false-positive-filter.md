@@ -1,7 +1,7 @@
 # AI Startup False-Positive Filter
 
 Universal suppression rules for security reviews, consumable by both:
-- **`/ai-act-security-review`** (built into `eu-ai-act-scanner`)
+- **`/ai-act-security-review`** (built into the `antifragile-harness` plugin)
 - **`anthropics/claude-code-security-review`** (copy or reference as `.claude/false-positive-filter.md`)
 
 When reviewing candidate findings, **suppress** (do not report as confirmed vulnerabilities) the categories below unless the finding demonstrates a concrete production exploit path outside the suppressed scope.

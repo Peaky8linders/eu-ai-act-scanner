@@ -1,4 +1,4 @@
-"""Interactive Context Graph Visual generator for EU AI Act Scanner.
+"""Interactive Context Graph Visual generator for Antifragile Harness.
 
 Produces a standalone, self-contained interactive visual HTML graph that allows users
 to browse the discovered AI system architecture, inspect each node for compliance gaps,

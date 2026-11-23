@@ -1,5 +1,5 @@
 {
-  "name": "eu-ai-act-scanner",
+  "name": "antifragile-harness",
   "owner": {
     "name": "Andrei Bacu",
     "url": "https://github.com/Peaky8linders"
@@ -9,10 +9,10 @@
   },
   "plugins": [
     {
-      "name": "eu-ai-act-scanner",
+      "name": "antifragile-harness",
       "source": "./",
       "description": "EU AI Act + Digital Omnibus compliance scanner, founder triage, and Claude security/compliance ingestion for Claude Code.",
-      "version": "0.13.1",
+      "version": "0.14.0",
       "license": "Apache-2.0",
       "category": "security"
     }

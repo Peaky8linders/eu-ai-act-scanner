@@ -1,8 +1,8 @@
 """Command-line interface for the EU AI Act scanner.
 
 Usage:
-    eu-ai-act-scan [PATH] [--json | --markdown] [--article ARTN]
-    eu-ai-act-scan --incidents KEY [--limit N]   # KEY = dimension | artNN | threat
+    antifragile-scan [PATH] [--json | --markdown] [--article ARTN]
+    antifragile-scan --incidents KEY [--limit N]   # KEY = dimension | artNN | threat
     python -m scanner.cli ./my-project --json
 """
 
@@ -261,7 +261,7 @@ def _format_qa(result) -> str:
 def _format_benchmark(report) -> str:
     """Render an offline deterministic benchmark summary as Markdown."""
     lines = [
-        "# EU AI Act Scanner — Accuracy Benchmark",
+        "# Antifragile Harness — Accuracy Benchmark",
         "",
         f"- **Corpus size**: {report.corpus_size} ({report.positive_samples} positive, {report.negative_samples} negative)",
         f"- **TP / FP / FN / TN**: {report.true_positives} / {report.false_positives} / {report.false_negatives} / {report.true_negatives}",
@@ -286,7 +286,7 @@ def _format_benchmark(report) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="eu-ai-act-scan",
+        prog="antifragile-scan",
         description="Scan a codebase for EU AI Act (Regulation 2024/1689) compliance evidence and gaps.",
     )
     parser.add_argument(
@@ -356,7 +356,7 @@ def main(argv: list[str] | None = None) -> int:
         metavar="KEY=VALUE",
         action="append",
         help=(
-            "Persist a setting to .eu-ai-act-scanner.toml, e.g. "
+            "Persist a setting to .antifragile-harness.toml, e.g. "
             "--set mode=assisted --set auto-apply=true. Repeatable."
         ),
     )

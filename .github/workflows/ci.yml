@@ -48,7 +48,7 @@ jobs:
 
       - name: Smoke-test CLI & accuracy benchmark
         run: |
-          eu-ai-act-scan tests/fixtures/sample_project --markdown
-          eu-ai-act-scan tests/fixtures/sample_project --founder
-          eu-ai-act-scan tests/fixtures/sample_project --article art14
-          eu-ai-act-scan --benchmark
+          antifragile-scan tests/fixtures/sample_project --markdown
+          antifragile-scan tests/fixtures/sample_project --founder
+          antifragile-scan tests/fixtures/sample_project --article art14
+          antifragile-scan --benchmark

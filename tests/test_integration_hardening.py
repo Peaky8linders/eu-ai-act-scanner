@@ -434,8 +434,11 @@ def test_plugin_manifest_lives_in_claude_plugin_dir_and_versions_agree() -> None
     )
     version = _pyproject_version()
 
-    assert manifest["name"] == "eu-ai-act-scanner"
+    assert manifest["name"] == "antifragile-harness"
     assert not manifest["name"].startswith("claude-")  # reserved prefix
+    # One name for plugin, marketplace and the legacy manifest, so the install
+    # id stays antifragile-harness@antifragile-harness.
+    assert market["name"] == legacy["name"] == manifest["name"]
     assert manifest["version"] == legacy["version"] == version
     assert isinstance(manifest["author"], dict) and manifest["author"]["name"]
 
@@ -475,7 +478,7 @@ def _plugin_docs() -> list[Path]:
 def test_plugin_docs_use_console_script_not_python_module() -> None:
     """Commands run in the founder's project, where `python` rarely has the engine.
 
-    A pipx or separate-venv install puts `eu-ai-act-scan` on PATH but leaves the
+    A pipx or separate-venv install puts `antifragile-scan` on PATH but leaves the
     system `python` without the `scanner` module, so `python -m scanner.cli`
     fails with ModuleNotFoundError. The console script works everywhere.
     """

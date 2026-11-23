@@ -1,7 +1,7 @@
 {
   "mcpServers": {
-    "eu-ai-act-scanner": {
-      "command": "eu-ai-act-scan-mcp",
+    "antifragile-harness": {
+      "command": "antifragile-scan-mcp",
       "args": [],
       "description": "EU AI Act (Regulation 2024/1689 + Digital Omnibus 2026/1744) offline code scanner & incident grounding MCP server. 13 tools: founder_triage, scan_project, project_cross_framework (12 frameworks incl. EN 18286:2026, with legal force), ingest_security_reports (Claude Code Security, SARIF, Claude Compliance API), remediation_loop, export_sarif, generate_dossier, generate_visual_graph, regulatory_applicability, get_article, list_dimensions, incidents, agentic_taxonomy. Concise responses by default."
     }

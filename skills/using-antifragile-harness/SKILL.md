@@ -1,10 +1,10 @@
 ---
-name: using-eu-ai-act-scanner
+name: using-antifragile-harness
 description: "Runs the EU AI Act scanner on a codebase and explains the results. Use when asked to scan, audit or check a repo for EU AI Act compliance."
 user_invocable: true
 ---
 
-# Using the EU AI Act Scanner
+# Using the Antifragile Harness
 
 Route the request to the right command, then keep the answer short and in plain language.
 

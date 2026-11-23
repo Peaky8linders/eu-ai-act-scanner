@@ -5,6 +5,44 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.0] - 2026-11-23
+
+### Changed — the project is now Antifragile Harness
+
+- **One name everywhere.** The plugin, its marketplace, its MCP server, the
+  Python package and the GitHub repository are now `antifragile-harness`
+  (`github.com/Peaky8linders/antifragile-harness`; GitHub redirects the old
+  URL). Install with `/plugin marketplace add Peaky8linders/antifragile-harness`,
+  then `/plugin install antifragile-harness@antifragile-harness`. Commands and
+  skills run as `/antifragile-harness:<name>`, and `/mcp` lists the server as
+  `plugin:antifragile-harness:antifragile-harness`.
+- **New command names:** `eu-ai-act-scan` is now `antifragile-scan`,
+  `eu-ai-act-scan-mcp` is `antifragile-scan-mcp` and `eu-ai-act-fix` is
+  `antifragile-fix`. The orchestration skill `using-eu-ai-act-scanner` is now
+  `using-antifragile-harness`.
+- **Settings carry over.** The config file is now `.antifragile-harness.toml`
+  (user level `antifragile-harness.toml`), and the overrides are
+  `ANTIFRAGILE_HARNESS_MODE` and `ANTIFRAGILE_HARNESS_AUTO_APPLY`. The
+  pre-rename file and variables are still read when the new ones are absent.
+- **The SARIF tool name is now `antifragile-harness`.** GitHub code scanning
+  treats it as a new tool, so alerts uploaded under `eu-ai-act-scanner` can stay
+  open until you remove that tool's analyses.
+- **Existing installs must switch.** Once the marketplace picks up the new name,
+  the old `eu-ai-act-scanner@eu-ai-act-scanner` plugin fails to load and
+  `claude plugin update` reports it not found. Run `claude plugin uninstall
+  eu-ai-act-scanner@eu-ai-act-scanner`, `claude plugin marketplace remove
+  eu-ai-act-scanner` and `pipx uninstall eu-ai-act-scanner-plugin` (or `pip
+  uninstall`), then install the plugin and the engine again as the README shows.
+  Permission rules for `mcp__plugin_eu-ai-act-scanner_eu-ai-act-scanner__*`
+  need the new prefix `mcp__plugin_antifragile-harness_antifragile-harness__`,
+  and scripts or CI jobs that call `eu-ai-act-scan` need `antifragile-scan`.
+- New tests: every documented `/plugin install` names the current plugin and
+  marketplace; plugin, marketplace and legacy manifest share one name; the MCP
+  server is named after the plugin; pre-rename settings are still read; and the
+  PyPI-install guard covers the new package name.
+- README: corrected stale counts (13 MCP tools, not 17, in two places; 15
+  skills, not 16).
+
 ## [0.13.1] - 2026-11-22
 
 ### Added — 208 more framework controls per article (ported from legit-ai)

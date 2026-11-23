@@ -1,12 +1,12 @@
-# Contributing to EU AI Act Scanner
+# Contributing to Antifragile Harness
 
 Thanks for considering a contribution. The regulation is moving fast and the patterns teams use for compliance evidence evolve with it — we need the community's help to keep the analyzers sharp.
 
 ## Quick dev loop
 
 ```bash
-git clone https://github.com/Peaky8linders/eu-ai-act-scanner
-cd eu-ai-act-scanner
+git clone https://github.com/Peaky8linders/antifragile-harness
+cd antifragile-harness
 pip install -e ".[dev]"
 
 # Run tests
@@ -16,7 +16,7 @@ pytest
 ruff check .
 
 # Try the CLI against the fixture
-eu-ai-act-scan tests/fixtures/sample_project --markdown
+antifragile-scan tests/fixtures/sample_project --markdown
 ```
 
 ## What makes a good contribution
@@ -77,4 +77,4 @@ Be kind. Assume good faith. Regulation is hard, compliance is harder, and everyo
 
 ## Questions
 
-Open an issue at [github.com/Peaky8linders/eu-ai-act-scanner/issues](https://github.com/Peaky8linders/eu-ai-act-scanner/issues). Label with `question` if you're not sure whether something is a bug.
+Open an issue at [github.com/Peaky8linders/antifragile-harness/issues](https://github.com/Peaky8linders/antifragile-harness/issues). Label with `question` if you're not sure whether something is a bug.

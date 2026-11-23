@@ -132,7 +132,7 @@ def incidents_for_article(article: str, limit: int = 5) -> list[Incident]:
 def incidents_for_key(key: str, limit: int = 5) -> tuple[str | None, list[Incident]]:
     """Resolve one free-form lookup key to ``(kind, incidents)``.
 
-    Backs both ``eu-ai-act-scan --incidents`` and the MCP ``incidents`` tool so
+    Backs both ``antifragile-scan --incidents`` and the MCP ``incidents`` tool so
     they accept the same spellings. Tries, in order: a KB dimension id
     (``security``), an agentic threat id (``prompt_injection``), then any
     article spelling (``art15``, ``Art. 15``, ``Article 15(4)``, ``15``).

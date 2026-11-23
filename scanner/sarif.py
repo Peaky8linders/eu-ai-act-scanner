@@ -1,4 +1,4 @@
-"""SARIF 2.1.0 export and ingestion for EU AI Act Scanner.
+"""SARIF 2.1.0 export and ingestion for Antifragile Harness.
 
 Provides two-way interoperability with cybersecurity tools (Semgrep, Bandit,
 Snyk, CodeQL, GitHub Advanced Security, and Claude Code `/ai-act-security-review`):
@@ -27,7 +27,7 @@ from scanner.kb import DIMENSIONS
 from scanner.models import DiscoveredComponent, ScanResult
 
 _SARIF_VERSION = "2.1.0"
-_TOOL_NAME = "eu-ai-act-scanner"
+_TOOL_NAME = "antifragile-harness"
 
 _SLUG_RE = re.compile(r"[^a-z0-9]+")
 _URL_RE = re.compile(r"https?://[^\s\"'<>()]+")

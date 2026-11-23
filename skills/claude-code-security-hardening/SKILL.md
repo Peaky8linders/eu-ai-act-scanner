@@ -79,8 +79,8 @@ Example hardened `.mcp.json`:
 ```json
 {
   "mcpServers": {
-    "eu-ai-act-scanner": {
-      "command": ".venv/bin/eu-ai-act-scan-mcp",
+    "antifragile-harness": {
+      "command": ".venv/bin/antifragile-scan-mcp",
       "args": []
     }
   }
@@ -113,7 +113,7 @@ Anthropic's official **Claude Code Security** workflow complements this scanner'
 2. **Generate a living `THREAT_MODEL.md` (Art. 9(2))**:
    - Run `/threat-model` to create `THREAT_MODEL.md` documenting trust boundaries, attacker goals, and high-value assets. Commit it alongside your AI docs.
 3. **Run `/claude-security` or built-in `/security-review` & ingest offline**:
-   - Save the report locally (SARIF 2.1.0, JSON, or structured Markdown) and pass it to `eu-ai-act-scan . --ingest-claude-security <report>` (or `scanner.claude_ecosystem.ingest_claude_security_report(...)`).
+   - Save the report locally (SARIF 2.1.0, JSON, or structured Markdown) and pass it to `antifragile-scan . --ingest-claude-security <report>` (or `scanner.claude_ecosystem.ingest_claude_security_report(...)`).
    - **Adversarial verification panel honored**: findings marked `verified: false`, `confirmed: false`, or `status` in `{"mitigated", "false_positive", "dismissed", "refuted"}` are automatically excluded; confirmed issues map to **EU AI Act Art. 15(4)** & **Art. 9(2)** with `file:line` and remediation hints.
 4. **Enterprise governance — Managed Settings & OpenTelemetry**:
    - Lock org-wide `permissions.allow` / `permissions.deny` rules and disable `bypassPermissions` via enterprise **managed settings** (`managed-settings.json`) so individual repos cannot weaken security boundaries.
@@ -135,9 +135,9 @@ For startups on Claude Enterprise / Team plans, pull read-only organizational au
    ```bash
    python <scanner-clone>/scripts/fetch_claude_compliance.py --dry-run
    python <scanner-clone>/scripts/fetch_claude_compliance.py --output compliance-api-export.json --org-uuid "$ORG_UUID"
-   eu-ai-act-scan . --ingest-compliance-api compliance-api-export.json --dossier release-dossier.json
+   antifragile-scan . --ingest-compliance-api compliance-api-export.json --dossier release-dossier.json
    ```
-   (`<scanner-clone>` is the folder where you cloned eu-ai-act-scanner; the fetcher is not part of the installed engine.)
+   (`<scanner-clone>` is the folder where you cloned antifragile-harness; the fetcher is not part of the installed engine.)
 4. **What `ingest_compliance_api_export` checks automatically**:
    - **Art. 12(1) & Art. 26(6)**: verifies activity audit trail exists and flags `< 180` day retention (`cca-short-log-retention`).
    - **Art. 26(2)**: verifies organization group/RBAC governance (`cca-org-group-governance`).
@@ -161,8 +161,8 @@ Combine deterministic EU AI Act scanning with Anthropic's **`anthropics/claude-c
 Install from this repository:
 
 ```bash
-/plugin marketplace add Peaky8linders/eu-ai-act-scanner
-/plugin install eu-ai-act-scanner@eu-ai-act-scanner
+/plugin marketplace add Peaky8linders/antifragile-harness
+/plugin install antifragile-harness@antifragile-harness
 pip install -e ".[mcp]"
 ```
 

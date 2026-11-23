@@ -1,4 +1,4 @@
-"""Per-repo opt-in local baseline tracking and diffing for EU AI Act Scanner.
+"""Per-repo opt-in local baseline tracking and diffing for Antifragile Harness.
 
 Allows teams to snapshot a local scan baseline (e.g. `.ai-act-baseline.json`)
 and compare subsequent scans to track progress, detect regressions, and prove

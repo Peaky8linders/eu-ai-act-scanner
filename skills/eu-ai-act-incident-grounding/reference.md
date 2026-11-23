@@ -121,7 +121,7 @@ Each returned `Incident` is a frozen dataclass with:
 
 **Incident grounding**:
 ```bash
-eu-ai-act-scan --incidents lethal_trifecta --limit 3
+antifragile-scan --incidents lethal_trifecta --limit 3
 ```
 
 Illustrative results drawn from the corpus:
@@ -146,7 +146,7 @@ Published mitigations for this incident class (from `incident.mitigations`):
 
 **Incident grounding**:
 ```bash
-eu-ai-act-scan --incidents art15 --limit 5
+antifragile-scan --incidents art15 --limit 5
 ```
 
 The top `art15` incidents will include a spread across:
@@ -187,7 +187,7 @@ User has a scanner gap finding
 - [interpreting-findings](../interpreting-findings/SKILL.md) — gap prioritisation; how scanner scores map to Art. 43 evidence weight
 - [eu-ai-act-reference](../eu-ai-act-reference/SKILL.md) — article to dimension mapping; use to confirm which articles a dimension covers
 - [eu-ai-act-article-6-classification](../eu-ai-act-article-6-classification/SKILL.md) — confirm whether the system is high-risk before invoking Art. 9 / 15 / 72 obligations
-- [using-eu-ai-act-scanner](../using-eu-ai-act-scanner/SKILL.md) — orchestration; when and how to run the scanner
+- [using-antifragile-harness](../using-antifragile-harness/SKILL.md) — orchestration; when and how to run the scanner
 
 ## Common rationalizations
 
@@ -212,7 +212,7 @@ The incident corpus bundled with this scanner is a curated subset of the **GenAI
 - **Full dataset access**: `pip install genai-incidents` or `load_dataset("emmanuelgjr/genai-incidents")`
 - **`last_synced`**: inspect via `incident_corpus_stats()["last_synced"]`
 
-Attribution when citing the corpus in an Art. 9 risk register or Art. 73 incident report: "Incident data sourced from GenAI & Agentic AI Security Incidents dataset (emmanuelgjr/genai-incidents, HuggingFace, CC-BY-4.0), curated subset used in eu-ai-act-scanner v0.4.0."
+Attribution when citing the corpus in an Art. 9 risk register or Art. 73 incident report: "Incident data sourced from GenAI & Agentic AI Security Incidents dataset (emmanuelgjr/genai-incidents, HuggingFace, CC-BY-4.0), curated subset bundled with antifragile-harness."
 
 ## Source of truth
 

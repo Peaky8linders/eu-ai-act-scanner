@@ -1,7 +1,7 @@
 # AI Startup Security Scan Instructions
 
 Reusable diff-aware security review rules for AI codebases, consumable by both:
-- **`/ai-act-security-review`** (built into `eu-ai-act-scanner`)
+- **`/ai-act-security-review`** (built into the `antifragile-harness` plugin)
 - **`anthropics/claude-code-security-review`** (copy or reference as `.claude/security-scan-instructions.md`)
 
 Report every confirmed finding with:

@@ -643,7 +643,7 @@ def _fix_tool_governance(root: Path) -> FixProposal:
         "}\n\n"
         "# Version-pinned MCP server references (OWASP MCP04 supply-chain integrity).\n"
         "PINNED_MCP_SERVERS: dict[str, str] = {\n"
-        '    "eu-ai-act-scanner": "eu-ai-act-scanner@1.0.0",\n'
+        '    "antifragile-harness": "antifragile-harness@1.0.0",\n'
         "}\n\n\n"
         "def validate_url(url: str) -> bool:\n"
         '    """Return True only when ``url`` targets an allowlisted host over HTTPS."""\n'
@@ -1088,7 +1088,7 @@ def _render_markdown(result: FixLoopResult, *, applied_mode: bool) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """CLI entry point for the ``eu-ai-act-fix`` console script.
+    """CLI entry point for the ``antifragile-fix`` console script.
 
     Scans ``path`` (default ``.``), ranks gaps, and prints a remediation plan.
     Default is a safe dry-run — pass ``--apply`` to actually write fixes (each
@@ -1096,7 +1096,7 @@ def main(argv: list[str] | None = None) -> int:
     :class:`FixLoopResult` as JSON; otherwise a markdown summary is printed.
     """
     parser = argparse.ArgumentParser(
-        prog="eu-ai-act-fix",
+        prog="antifragile-fix",
         description="Autonomous EU AI Act scan -> fix -> rescan loop.",
     )
     parser.add_argument("path", nargs="?", default=".", help="Project directory (default: .)")

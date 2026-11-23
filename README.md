@@ -1,4 +1,4 @@
-# EU AI Act Scanner
+# Antifragile Harness
 
 > Scan any codebase for EU AI Act (Regulation 2024/1689 + Digital Omnibus 2026/1744) compliance evidence and gaps — from Claude Code, any MCP client, or a Python script.
 
@@ -13,17 +13,17 @@ Shipping an AI product or agent and need to know **what actually blocks launch t
 
 ```bash
 # 1. Install the local offline engine (from this repo) ...
-git clone https://github.com/Peaky8linders/eu-ai-act-scanner && cd eu-ai-act-scanner && pip install -e ".[mcp]"
+git clone https://github.com/Peaky8linders/antifragile-harness && cd antifragile-harness && pip install -e ".[mcp]"
 # ... then, inside Claude Code, add this repo as a marketplace and install the plugin
-/plugin marketplace add Peaky8linders/eu-ai-act-scanner
-/plugin install eu-ai-act-scanner@eu-ai-act-scanner
+/plugin marketplace add Peaky8linders/antifragile-harness
+/plugin install antifragile-harness@antifragile-harness
 
 # 2. Run the 60-second plain-English triage in Claude Code
 /ai-act-quickstart ./my-app
-# (or from your terminal: eu-ai-act-scan ./my-app --founder)
+# (or from your terminal: antifragile-scan ./my-app --founder)
 
 # 3. Preview and fix live blockers first (Art. 50 + MCP / Claude Code / security)
-eu-ai-act-scan ./my-app --fix --startup
+antifragile-scan ./my-app --fix --startup
 ```
 
 `/ai-act-quickstart` (`--founder`) translates technical scan output into three jargon-free buckets — plus a <50-line copy-pasteable brief for customer security questionnaires and investor memos:
@@ -35,9 +35,9 @@ eu-ai-act-scan ./my-app --fix --startup
 ---
 
 **One repo, three ways to run it:**
-1. A **Claude Code plugin** — **11 slash commands** (`/ai-act-quickstart`, `/ai-act-scan`, `/ai-act-security-review`, `/ai-act-scan-fix`, `/ai-act-article`, `/ai-act-incidents`, `/ai-act-ask`, `/ai-act-graph`, `/ai-act-cross-framework`, `/ai-act-dossier`, `/ai-act-settings`) backed by **16 article-grounded skills**. Semantic depth comes from **your own Claude Code session** — your existing subscription, no API key, no wrapper.
-2. A **Python library & CLI** (`from scanner import scan_project` / `eu-ai-act-scan`) — **24 deterministic analyzers** (including `mcp_toolchain`, `claude_code_security`, and AST-gated Art. 50 transparency), operator-role inference, incident grounding, offline SARIF 2.1.0, local baselines, autonomous startup/regulatory fix loop, deterministic precision/recall/F1 meta-benchmark, and a **versioned 12-framework projection** (including OJ-cited **EN 18286:2026** CEN/CENELEC JTC 21 QMS).
-3. An **MCP server** (`eu-ai-act-scan-mcp`) — **17 hardened MCP tools** over stdio (or behind your own authenticated Streamable HTTP proxy), with validated paths, symlink/traversal guards, `openWorldHint=False`, destructive-action annotations, and stdout hygiene.
+1. A **Claude Code plugin** — **11 slash commands** (`/ai-act-quickstart`, `/ai-act-scan`, `/ai-act-security-review`, `/ai-act-scan-fix`, `/ai-act-article`, `/ai-act-incidents`, `/ai-act-ask`, `/ai-act-graph`, `/ai-act-cross-framework`, `/ai-act-dossier`, `/ai-act-settings`) backed by **15 article-grounded skills**. Semantic depth comes from **your own Claude Code session** — your existing subscription, no API key, no wrapper.
+2. A **Python library & CLI** (`from scanner import scan_project` / `antifragile-scan`) — **24 deterministic analyzers** (including `mcp_toolchain`, `claude_code_security`, and AST-gated Art. 50 transparency), operator-role inference, incident grounding, offline SARIF 2.1.0, local baselines, autonomous startup/regulatory fix loop, deterministic precision/recall/F1 meta-benchmark, and a **versioned 12-framework projection** (including OJ-cited **EN 18286:2026** CEN/CENELEC JTC 21 QMS).
+3. An **MCP server** (`antifragile-scan-mcp`) — **13 hardened MCP tools** over stdio (or behind your own authenticated Streamable HTTP proxy), with validated paths, symlink/traversal guards, `openWorldHint=False`, destructive-action annotations, and stdout hygiene.
 
 Every finding is **grounded twice**: in the regulation text (article + paragraph citations, EUR-Lex verbatim) and in **real-world incidents** — a vendored, reviewed-tier subset of the open [GenAI & Agentic AI Security Incidents dataset](https://huggingface.co/datasets/emmanuelgjr/genai-incidents) (CC-BY-4.0, mapped to OWASP LLM Top 10 2025, OWASP Agentic Top 10, NIST AI RMF, MITRE ATLAS). A gap stops being "you have no prompt-injection defence" and becomes "…and here are the documented incidents where exactly that gap was exploited, with the published mitigations."
 
@@ -107,7 +107,7 @@ Or the one-line Claude Code versions:
 - **Incident-grounded gaps.** Each gap links to documented real-world incidents (OWASP/MITRE/NIST IDs + mitigations) — evidence input for Art. 9 risk management and Art. 72 post-market monitoring.
 - **Role-aware obligations & Digital Omnibus applicability.** Deterministic provider / deployer / GPAI-provider inference scopes which articles *you* actually owe, backed by `regulatory_applicability` for exact as-of dates under Regulation (EU) 2026/1744.
 - **Local-first, offline by default.** Pure static analysis, no network, no telemetry. Semantic review happens in *your* Claude Code session or MCP client — never a headless credential wrapper.
-- **Closed loop with a regression guard & local baselines.** `eu-ai-act-fix` (`--fix --startup` or regulatory profile) proposes deterministic fixes, applies them, re-scans, and **reverts anything that regresses any dimension**. Track progress per PR with `--save-baseline` / `--diff-baseline`.
+- **Closed loop with a regression guard & local baselines.** `antifragile-fix` (`--fix --startup` or regulatory profile) proposes deterministic fixes, applies them, re-scans, and **reverts anything that regresses any dimension**. Track progress per PR with `--save-baseline` / `--diff-baseline`.
 
 ---
 
@@ -120,7 +120,7 @@ Or the one-line Claude Code versions:
 - **Agentic Supply Chain & Claude Code DevSecOps (2):** **`mcp_toolchain`** (MCP tool poisoning, SSRF, unpinned `npx -y`/`uvx`, hardcoded `.mcp.json` secrets, unauthenticated remote servers) · **`claude_code_security`** (`.claude/settings.json` least-privilege permissions, `enableAllProjectMcpServers`, unsafe hooks, `claude-security@claude-plugins-official` & PR review workflows).
 - **Transparency (1):** **AST-gated Article 50** — chatbot disclosure (50(1)), executable synthetic-content C2PA/watermark marking (50(2), immune to disabled literals and roadmap comments), emotion/biometric notice (50(3)), deep-fake labelling (50(4)). In force since 2 August 2026.
 
-Findings aggregate into **23 compliance dimensions** (`scanner/kb.py`), auto-tagged with compound-risk axis and operator roles. Run `eu-ai-act-scan --benchmark` to verify analyzer precision/recall/F1 deterministically offline.
+Findings aggregate into **23 compliance dimensions** (`scanner/kb.py`), auto-tagged with compound-risk axis and operator roles. Run `antifragile-scan --benchmark` to verify analyzer precision/recall/F1 deterministically offline.
 
 **Precision rules, learned from real startup repos.** A placeholder key in a README, a `print()` in a docs example or a planning note is never reported as a code gap; generated build output (`.next/`, `coverage/`, ...) is skipped; rate-limit and input-validation checks apply only to code that serves an endpoint; Art. 10 training-data checks need actual training code; agent checks need a real agent framework, not the word "agent". The founder brief also leaves out duties owed only by other roles (for example provider-only Annex IV paperwork for a deployer) and says so. Each rule has a decoy in the benchmark corpus.
 
@@ -131,69 +131,83 @@ Findings aggregate into **23 compliance dimensions** (`scanner/kb.py`), auto-tag
 The scanner never calls an LLM headlessly. When you want more than deterministic scores:
 
 - **In Claude Code (assisted mode):** `python -m scanner.cli --set mode=assisted` — slash commands use your host session (your existing subscription, no API key) for semantic review, grounded Q&A, and applying fixes. The deterministic scores stay the objective baseline.
-- **Outside Claude Code:** run the **MCP server** (`eu-ai-act-scan-mcp`, installed from this repository — see [Install](#install)) from any MCP client — same engine, client's own model, no wrapper.
+- **Outside Claude Code:** run the **MCP server** (`antifragile-scan-mcp`, installed from this repository — see [Install](#install)) from any MCP client — same engine, client's own model, no wrapper.
 
 ---
 
 ## Install
 
-**Claude Code plugin** — the 11 commands, 16 article-grounded skills and the
+**Claude Code plugin (`antifragile-harness`)** — the 11 commands, 15 article-grounded skills and the
 bundled MCP server. This repository is its own plugin marketplace
 (`.claude-plugin/marketplace.json`), so inside Claude Code run:
 
 ```bash
-/plugin marketplace add Peaky8linders/eu-ai-act-scanner
-/plugin install eu-ai-act-scanner@eu-ai-act-scanner
+/plugin marketplace add Peaky8linders/antifragile-harness
+/plugin install antifragile-harness@antifragile-harness
+```
+
+Installed it before the rename, as `eu-ai-act-scanner`? That copy stops loading
+once its marketplace picks up the new name, and the engine's commands are now
+`antifragile-scan*`. Remove the old plugin and engine from a terminal, then run
+the two commands above and reinstall the engine as shown below. Settings in an
+existing `.eu-ai-act-scanner.toml` keep working.
+
+```bash
+claude plugin uninstall eu-ai-act-scanner@eu-ai-act-scanner
+claude plugin marketplace remove eu-ai-act-scanner
+pipx uninstall eu-ai-act-scanner-plugin    # or: pip uninstall eu-ai-act-scanner-plugin
 ```
 
 The plugin drives the local Python engine, so install the engine once from this
 repository (into an environment whose `bin`/`Scripts` directory is on your
-`PATH`, so Claude Code can start `eu-ai-act-scan-mcp`):
+`PATH`, so Claude Code can start `antifragile-scan-mcp`):
 
 ```bash
-git clone https://github.com/Peaky8linders/eu-ai-act-scanner
-cd eu-ai-act-scanner
+git clone https://github.com/Peaky8linders/antifragile-harness
+cd antifragile-harness
 pip install -e ".[mcp]"
 ```
 
 Prefer [pipx](https://pipx.pypa.io) if you do not want to keep a virtualenv
 activated: from the clone, `pipx install --editable ".[mcp]"` puts
-`eu-ai-act-scan`, `eu-ai-act-scan-mcp` and `eu-ai-act-fix` on your `PATH` in
+`antifragile-scan`, `antifragile-scan-mcp` and `antifragile-fix` on your `PATH` in
 their own isolated environment. Restart Claude Code after installing.
 
-**Troubleshooting: `/mcp` shows `eu-ai-act-scanner` as "Failed to connect"
-(`CONNECTION_CLOSED`).** Claude Code could not start `eu-ai-act-scan-mcp`
+**Troubleshooting: `/mcp` shows `plugin:antifragile-harness:antifragile-harness`
+(or `antifragile-harness`, if you registered the server yourself) as "Failed to
+connect" (`CONNECTION_CLOSED`).** Claude Code could not start `antifragile-scan-mcp`
 because it is not on the `PATH` Claude Code was launched with, usually because
 the engine went into a virtualenv that is not active. Check from the same shell
 you start Claude Code from:
 
 ```bash
-eu-ai-act-scan --version              # should print the scanner version
-command -v eu-ai-act-scan-mcp         # macOS / Linux: should print a path
-Get-Command eu-ai-act-scan-mcp        # Windows PowerShell: should list it
+antifragile-scan --version              # should print the scanner version
+command -v antifragile-scan-mcp         # macOS / Linux: should print a path
+Get-Command antifragile-scan-mcp        # Windows PowerShell: should list it
 ```
 
 If either is not found, activate the environment you installed into before
 launching Claude Code, or reinstall with pipx as above, then restart Claude
 Code. The slash commands still load without the server, but Claude cannot call
-the 17 scanner tools until `/mcp` shows it connected.
+the 13 scanner tools until `/mcp` shows it connected.
 
 **MCP server** — same engine, any MCP client, the client's own model:
 
 ```bash
-eu-ai-act-scan-mcp          # stdio transport
+antifragile-scan-mcp          # stdio transport
 ```
 
-> **There is no PyPI package.** `pip install eu-ai-act-scanner` installs an
-> unrelated third-party project that owns that name — always install from this
-> repository. The package installed from this repository is
-> `eu-ai-act-scanner-plugin`, and the console scripts are `eu-ai-act-scan`,
-> `eu-ai-act-scan-mcp` and `eu-ai-act-fix`.
+> **There is no PyPI package.** Always install from this repository; no PyPI
+> package is this project. `pip install antifragile-harness` is not ours, and
+> `pip install eu-ai-act-scanner` installs an unrelated third-party project that
+> owns that name. The package installed from this repository is
+> `antifragile-harness`, and the console scripts are `antifragile-scan`,
+> `antifragile-scan-mcp` and `antifragile-fix`.
 
 Register with any MCP client via [`.mcp.json`](.mcp.json):
 
 ```json
-{ "mcpServers": { "eu-ai-act-scanner": { "command": "eu-ai-act-scan-mcp", "args": [] } } }
+{ "mcpServers": { "antifragile-harness": { "command": "antifragile-scan-mcp", "args": [] } } }
 ```
 
 **13 MCP Tools:** `founder_triage` (start here), `scan_project`, `project_cross_framework`, `ingest_security_reports` (Claude Code Security, SARIF, Claude Compliance API), `remediation_loop`, `export_sarif`, `generate_dossier`, `generate_visual_graph`, `regulatory_applicability`, `get_article`, `list_dimensions`, `incidents`, `agentic_taxonomy`. Responses are **concise by default** (scores, top gaps with file:line, a plain-English brief); pass `response_format="detailed"` for full data, and page large scans with `area`, `limit` and `offset`.
@@ -218,7 +232,7 @@ for inc in incidents_for_article("art15", limit=3):
 fix = run_fix_loop("./my-app", apply=False, profile="startup")  # dry-run plan; --apply to write
 ```
 
-**CLI:** `eu-ai-act-scan ./my-app --founder` · `--markdown` · `--article art50` · `--cross-framework` · `--sarif [FILE]` · `--ingest-sarif FILE` · `--ingest-compliance-api FILE` · `--ingest-claude-security FILE` · `--save-baseline [FILE]` · `--diff-baseline [FILE]` · `--fix [--startup] [--apply]` · `--benchmark` · `--incidents art15` · `--ask "…"` · `--dossier` · `--graph` · `--settings` / `--set mode=assisted`
+**CLI:** `antifragile-scan ./my-app --founder` · `--markdown` · `--article art50` · `--cross-framework` · `--sarif [FILE]` · `--ingest-sarif FILE` · `--ingest-compliance-api FILE` · `--ingest-claude-security FILE` · `--save-baseline [FILE]` · `--diff-baseline [FILE]` · `--fix [--startup] [--apply]` · `--benchmark` · `--incidents art15` · `--ask "…"` · `--dossier` · `--graph` · `--settings` / `--set mode=assisted`
 
 ---
 
