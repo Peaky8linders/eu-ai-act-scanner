@@ -69,11 +69,23 @@ target-version = "py311"
 select = ["E", "F", "W", "I", "UP", "B"]
 ignore = ["E501"]
 
+[tool.mypy]
+# tests/fixtures/ holds sample apps the scanner reads as input (they import
+# torch and other frameworks this project does not depend on), not code of this
+# project, so `mypy .` leaves them out.
+exclude = ["^tests/fixtures/"]
+
 [[tool.mypy.overrides]]
 # The MCP SDK is the optional `[mcp]` extra, imported lazily inside
 # scanner.mcp_server._load_server_class (1.x and 2.x module paths). CI type-checks
 # with `.[dev]` only, so a missing install must not fail mypy.
 module = ["mcp", "mcp.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# pyarrow is the optional `[sync]` extra, imported only inside
+# scripts/sync_incident_corpus.py, so a missing install must not fail mypy.
+module = ["pyarrow", "pyarrow.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from typing import Any
 
 from scanner.analyzers._base import AnalyzerResult, Finding
 from scanner.orchestrator import (
@@ -27,8 +28,8 @@ from scanner.orchestrator import (
 )
 
 
-def _sample_finding(**overrides) -> Finding:
-    base = {
+def _sample_finding(**overrides: Any) -> Finding:
+    base: dict[str, Any] = {
         "id": "f-1",
         "category": "security_controls",
         "title": "Sample gap",

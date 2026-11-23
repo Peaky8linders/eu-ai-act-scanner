@@ -1353,15 +1353,12 @@ def _compact_registered_schemas(server: Any) -> None:
 
 def main() -> None:
     """Entry point for the ``antifragile-scan-mcp`` console script (stdio transport)."""
-    import structlog
+    from scanner.log_config import configure_console_logging
 
     # stdio hygiene: MCP messages own stdout. Both stdlib logging and structlog
     # (whose default printer writes to stdout) go to stderr.
     logging.basicConfig(level=logging.WARNING, stream=sys.stderr)
-    structlog.configure(
-        wrapper_class=structlog.make_filtering_bound_logger(logging.WARNING),
-        logger_factory=structlog.PrintLoggerFactory(file=sys.stderr),
-    )
+    configure_console_logging()
     build_server().run()
 
 

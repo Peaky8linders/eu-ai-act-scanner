@@ -34,7 +34,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import logging
 from collections.abc import Callable
 from pathlib import Path
 from typing import Literal
@@ -44,6 +43,7 @@ from pydantic import BaseModel, Field
 
 from scanner import grounding
 from scanner.kb import get_dimension
+from scanner.log_config import configure_console_logging
 from scanner.models import ScanResult
 from scanner.orchestrator import scan_project
 from scanner.refs import split_dimension_articles
@@ -1113,11 +1113,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--json", action="store_true", help="Emit JSON instead of markdown.")
     args = parser.parse_args(argv)
 
-    # CLI mode: suppress info-level structlog output so stdout stays clean for
-    # the JSON/markdown payload. Library users keep their own logging config.
-    structlog.configure(
-        wrapper_class=structlog.make_filtering_bound_logger(logging.WARNING),
-    )
+    # CLI mode: only warnings and errors are logged, and they go to stderr, so
+    # stdout stays clean for the JSON/markdown payload. Library users keep their
+    # own logging config.
+    configure_console_logging()
 
     try:
         result = run_fix_loop(

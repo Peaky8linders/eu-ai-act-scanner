@@ -46,8 +46,9 @@ def test_every_canonical_framework_has_a_prose_name() -> None:
 
 def test_readme_framework_claim_matches_the_catalogue() -> None:
     line = next(ln for ln in _readme().splitlines() if "framework projection, not label soup" in ln)
-    count = int(re.search(r"(\d+) frameworks", line).group(1))
-    assert count == len(CANONICAL_FRAMEWORK_IDS)
+    claim = re.search(r"(\d+) frameworks", line)
+    assert claim, f"README framework line names no count: {line}"
+    assert int(claim.group(1)) == len(CANONICAL_FRAMEWORK_IDS)
     missing = [name for name in _PROSE_NAME.values() if name not in line]
     assert not missing, f"README framework list omits {missing}"
     assert "Digital Omnibus alignment" not in line  # a regulation, not a projected framework
