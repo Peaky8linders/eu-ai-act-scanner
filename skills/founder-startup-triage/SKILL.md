@@ -120,4 +120,4 @@ Hand off vendor MSAs/DPAs to **Anthropic's official Legal Plugin** using the bun
 
 ## Source of truth
 
-EU Regulation 2024/1689 (EU AI Act) & Regulation (EU) 2026/1744 (Digital Omnibus). Install from this repo with `/plugin marketplace add Peaky8linders/antifragile-harness`, then `/plugin install antifragile-harness@antifragile-harness`, and `pip install -e ".[mcp]"`.
+EU Regulation 2024/1689 (EU AI Act) & Regulation (EU) 2026/1744 (Digital Omnibus). Install from this repo with `/plugin marketplace add Peaky8linders/antifragile-harness`, then `/plugin install antifragile-harness@antifragile-harness`, and install the engine with `pipx install "antifragile-harness[mcp] @ git+https://github.com/Peaky8linders/antifragile-harness"`.

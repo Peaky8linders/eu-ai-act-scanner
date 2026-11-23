@@ -7,7 +7,11 @@ name there belongs to an unrelated project, and anyone could claim
 fail — it can install someone else's code. That mistake lived in two changelog entries and a README section
 before it was corrected, which is exactly the kind of copy-paste that comes back.
 
-The only allowed mention is the warning itself ("there is no PyPI package", "the
+Installing straight from this repository's URL is the supported route and is
+allowed (`pipx install "<name>[mcp] @ git+https://github.com/Peaky8linders/..."`);
+the same command pointing at anyone else's copy is still flagged.
+
+The only other allowed mention is the warning itself ("there is no PyPI package", "the
 name on PyPI is an unrelated project", …). Those warnings necessarily spell the
 bad command out, so the guard exempts a mention that sits next to one of them.
 
@@ -29,6 +33,15 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 _PYPI_INSTALL = re.compile(
     r"(?i)\b(?:pip3?|pipx|uv\s+pip|python\s+-m\s+pip)\s+install\b"
     r"[^\n]*?[\"']?(?:eu-ai-act-scanner(?:-plugin)?|antifragile-harness)\b"
+)
+
+# An install straight from this repository: the URL, optionally preceded by the
+# package name and extras (`name[mcp] @ git+https://...`) and followed by `.git`
+# or an `@ref`. It is removed before matching, so a PyPI name elsewhere on the
+# same line still counts.
+_REPO_REFERENCE = re.compile(
+    r"(?:antifragile-harness(?:\[[^\]]*\])?\s*@\s*)?"
+    r"git\+https://github\.com/Peaky8linders/antifragile-harness(?:\.git)?(?:@[\w./-]+)?(?![\w-])"
 )
 
 # Text that marks a mention as a warning rather than an instruction.
@@ -78,7 +91,7 @@ def _violations(text: str) -> list[int]:
     lines = text.splitlines()
     found: list[int] = []
     for index, line in enumerate(lines):
-        if not _PYPI_INSTALL.search(line):
+        if not _PYPI_INSTALL.search(_REPO_REFERENCE.sub("", line)):
             continue
         window = "\n".join(lines[max(0, index - _CONTEXT_LINES) : index + _CONTEXT_LINES + 1]).lower()
         if any(marker in window for marker in _WARNING_MARKERS):
@@ -103,7 +116,8 @@ def test_no_tracked_file_instructs_a_pypi_install() -> None:
     assert not offenders, (
         "tracked files tell users to install from PyPI; this project is the "
         "Claude Code plugin + MCP server, installed from the repository "
-        "(use `pip install -e \".[mcp]\"`), and the PyPI name belongs to an "
+        "(use `pipx install \"antifragile-harness[mcp] @ git+https://github.com/Peaky8linders/antifragile-harness\"`), "
+        "and the PyPI name belongs to an "
         "unrelated project:\n  " + "\n  ".join(offenders)
     )
 
@@ -145,6 +159,25 @@ def test_guard_flags_instructions_but_not_warnings() -> None:
     # A warning several paragraphs away does not license an instruction.
     far_warning = "There is no PyPI package.\n\n\n\n\n\n" f"Quick start: {_BAD}\n"
     assert _violations(far_warning) == [7]
+
+
+def test_guard_allows_installs_from_this_repository_only() -> None:
+    """Installing from this repository's URL is the supported route; a fork is not."""
+    name = "antifragile-" + "harness"  # assembled: this file is scanned too
+    ours = "git+https://github.com/Peaky8linders/" + name
+    allowed = (
+        f'pipx install "{name}[mcp] @ {ours}"',
+        f"pipx install --force '{name}[mcp] @ {ours}.git@v0.14.1'",
+        f"pip install {ours}",
+    )
+    for line in allowed:
+        assert _violations(line + "\n") == [], line
+
+    fork = f'pipx install "{name}[mcp] @ git+https://github.com/someone-else/{name}"'
+    assert _violations(fork + "\n") == [1]
+    # The repository URL elsewhere on the line does not excuse a PyPI install.
+    mixed = f"pipx install {name}  # source: {ours}"
+    assert _violations(mixed + "\n") == [1]
 
 
 # ---------------------------------------------------------------------------

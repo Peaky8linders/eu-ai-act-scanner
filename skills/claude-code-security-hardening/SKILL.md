@@ -163,7 +163,7 @@ Install from this repository:
 ```bash
 /plugin marketplace add Peaky8linders/antifragile-harness
 /plugin install antifragile-harness@antifragile-harness
-pip install -e ".[mcp]"
+pipx install "antifragile-harness[mcp] @ git+https://github.com/Peaky8linders/antifragile-harness"
 ```
 
 ## Cross-references

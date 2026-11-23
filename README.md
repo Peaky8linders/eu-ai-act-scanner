@@ -1,38 +1,68 @@
 # Antifragile Harness
 
-> Scan any codebase for EU AI Act (Regulation 2024/1689 + Digital Omnibus 2026/1744) compliance evidence and gaps — from Claude Code, any MCP client, or a Python script.
+> **Know in 60 seconds what the EU AI Act and enterprise security reviews will ask of your AI product:** what to fix before launch, what unblocks enterprise deals, and what can wait until December 2027.
+
+Free and open source (Apache-2.0). It runs fully offline, so your code never leaves your machine. Use it from Claude Code, any MCP client, or a terminal.
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 ![Status: alpha](https://img.shields.io/badge/status-alpha-orange)
 <!-- countdown-badge -->![Article 50 countdown](https://img.shields.io/badge/Art.%2050%20transparency-in%20force-brightgreen)<!-- /countdown-badge -->
 
-## Startups & Founders: 60-Second Quickstart in Claude Code
+## For founders: the 60-second check
 
-Shipping an AI product or agent and need to know **what actually blocks launch today** versus what can wait until **2 December 2027**?
+**1. Install the engine once** (you need [pipx](https://pipx.pypa.io) and git):
 
 ```bash
-# 1. Install the local offline engine (from this repo) ...
-git clone https://github.com/Peaky8linders/antifragile-harness && cd antifragile-harness && pip install -e ".[mcp]"
-# ... then, inside Claude Code, add this repo as a marketplace and install the plugin
-/plugin marketplace add Peaky8linders/antifragile-harness
-/plugin install antifragile-harness@antifragile-harness
-
-# 2. Run the 60-second plain-English triage in Claude Code
-/ai-act-quickstart ./my-app
-# (or from your terminal: antifragile-scan ./my-app --founder)
-
-# 3. Preview and fix live blockers first (Art. 50 + MCP / Claude Code / security)
-antifragile-scan ./my-app --fix --startup
+pipx install "antifragile-harness[mcp] @ git+https://github.com/Peaky8linders/antifragile-harness"
 ```
 
-`/ai-act-quickstart` (`--founder`) translates technical scan output into three jargon-free buckets — plus a <50-line copy-pasteable brief for customer security questionnaires and investor memos:
+**2. Add the plugin inside Claude Code**, then restart Claude Code:
 
-1. **Ship Now (Live Today)** — **Art. 50 transparency** (in force since 2 Aug 2026), MCP tool poisoning / SSRF / unauthenticated servers / hardcoded `.mcp.json` secrets, dangerous `.claude/settings.json` (`Bash(*)`, `bypassPermissions`), lethal trifecta, hardcoded credentials, and unbounded agent loops.
-2. **Enterprise Deals (Unblock SOC 2 / GDPR / OWASP)** — missing PR security review, unpinned supply chains, structured audit logging, safety/bias tests, top 3 **"Satisfy Once, Comply Everywhere"** levers, and a **Deployer Vendor-Contract Checklist**.
-3. **Later 2027 (Roadmap)** — Annex III high-risk governance & documentation deferred to **2 December 2027** by **Digital Omnibus (Regulation (EU) 2026/1744)** (and Annex I safety-component products to **2 August 2028**).
+```bash
+/plugin marketplace add Peaky8linders/antifragile-harness
+/plugin install antifragile-harness@antifragile-harness
+```
+
+**3. Open your project in Claude Code and run:**
+
+```bash
+/ai-act-quickstart
+```
+
+No Claude Code? Run `antifragile-scan . --founder` from your project folder instead.
+
+### What you get back
+
+A plain-English brief in three buckets, short enough to paste into a customer security questionnaire or an investor memo:
+
+1. **Fix before shipping (live today):** the Art. 50 transparency duties (in force since 2 August 2026), exposed secrets, and risky MCP servers or Claude Code settings.
+2. **Unblock enterprise deals:** what SOC 2, GDPR and OWASP reviews will ask for, plus the single fixes that count toward several frameworks at once.
+3. **Roadmap:** the high-risk duties the Digital Omnibus moved to 2 December 2027, so you know what can wait.
+
+Here is the brief for a small demo support chatbot (an OpenAI-backed FastAPI endpoint plus a permissive `.claude/settings.json`), trimmed:
+
+```text
+# Founder AI Compliance Brief
+
+**Headline:** demo-chatbot: fix 2 ship-blocker(s) first (live Art. 50 / security risks), then 7 enterprise deal item(s).
+**Action Summary:** 2 fix before shipping | 7 enterprise deal blockers | 2 roadmap (2 Dec 2027)
+
+## 1. Fix Before Shipping (Live Today)
+- **Conversational AI surface with no Art. 50(1) AI-interaction disclosure** (`app.py`) — _30 min_. Add a clear UI/API notice ('You are interacting with an AI assistant') …
+- **Overprivileged Claude Code permissions configuration** (`.claude/settings.json`) — _15 min_. Remove `bypassPermissions` and `Bash(*)`; allowlist only the specific test/lint commands your repo needs.
+
+## 2. Unblock Enterprise Deals (SOC 2 / GDPR / OWASP)
+- **No adversarial testing detected** — _Half day_. Add a `tests/` suite covering prompt-injection refusal, schema validation, and domain accuracy/bias checks in CI.
+- **LLM system lacks prompt injection guards** — _1-2 hours_. Add system/user prompt boundaries and input/output guardrails around untrusted user text passed to LLMs.
+…
+```
+
+**What it is not:** legal advice or a compliance verdict. It reads code and configuration, cites the article text behind each finding, and leaves the legal judgement to you and your counsel.
 
 ---
+
+## Under the hood
 
 **One repo, three ways to run it:**
 1. A **Claude Code plugin** — **11 slash commands** (`/ai-act-quickstart`, `/ai-act-scan`, `/ai-act-security-review`, `/ai-act-scan-fix`, `/ai-act-article`, `/ai-act-incidents`, `/ai-act-ask`, `/ai-act-graph`, `/ai-act-cross-framework`, `/ai-act-dossier`, `/ai-act-settings`) backed by **15 article-grounded skills**. Semantic depth comes from **your own Claude Code session** — your existing subscription, no API key, no wrapper.
@@ -158,20 +188,26 @@ claude plugin marketplace remove eu-ai-act-scanner
 pipx uninstall eu-ai-act-scanner-plugin    # or: pip uninstall eu-ai-act-scanner-plugin
 ```
 
-The plugin drives the local Python engine, so install the engine once from this
-repository (into an environment whose `bin`/`Scripts` directory is on your
-`PATH`, so Claude Code can start `antifragile-scan-mcp`):
+The plugin drives the local Python engine, so install the engine once, straight
+from this repository. [pipx](https://pipx.pypa.io) puts `antifragile-scan`,
+`antifragile-scan-mcp` and `antifragile-fix` on your `PATH` in their own isolated
+environment, which is where Claude Code looks for `antifragile-scan-mcp`:
+
+```bash
+pipx install "antifragile-harness[mcp] @ git+https://github.com/Peaky8linders/antifragile-harness"
+```
+
+Restart Claude Code after installing. To update later, run the same command
+with `--force`.
+
+Working on the engine itself? Clone the repository and install it editable
+instead, so it follows your checkout:
 
 ```bash
 git clone https://github.com/Peaky8linders/antifragile-harness
 cd antifragile-harness
-pip install -e ".[mcp]"
+pipx install --editable ".[mcp]"    # or, in a virtualenv: pip install -e ".[mcp,dev]"
 ```
-
-Prefer [pipx](https://pipx.pypa.io) if you do not want to keep a virtualenv
-activated: from the clone, `pipx install --editable ".[mcp]"` puts
-`antifragile-scan`, `antifragile-scan-mcp` and `antifragile-fix` on your `PATH` in
-their own isolated environment. Restart Claude Code after installing.
 
 **Troubleshooting: `/mcp` shows `plugin:antifragile-harness:antifragile-harness`
 (or `antifragile-harness`, if you registered the server yourself) as "Failed to

@@ -51,7 +51,8 @@
     "python": ">=3.11"
   },
   "install": {
-    "pip": "pip install -e \".[mcp]\"",
+    "pipx": "pipx install \"antifragile-harness[mcp] @ git+https://github.com/Peaky8linders/antifragile-harness\"",
+    "pip": "pip install \"antifragile-harness[mcp] @ git+https://github.com/Peaky8linders/antifragile-harness\"",
     "note": "No PyPI package: install the engine from this repository (no PyPI package is this project; the pre-rename `eu-ai-act-scanner` name there is an unrelated third-party project)."
   }
 }
