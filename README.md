@@ -188,10 +188,12 @@ Claude Code run:
 /plugin install antifragile-harness@antifragile-harness
 ```
 
-Restart Claude Code. The plugin's MCP server runs `uvx --from ${CLAUDE_PLUGIN_ROOT} antifragile-scan-mcp`,
+Restart Claude Code. The plugin's MCP server runs `uvx --native-tls --from ${CLAUDE_PLUGIN_ROOT} antifragile-scan-mcp`,
 so the engine always matches the plugin version and `/plugin update` updates both. The first
 start downloads the engine's dependencies (and Python, if uv has none yet); later starts run
 offline from uv's cache. Slash commands that need the command-line engine run it the same way.
+`--native-tls` makes uv trust your system's certificates, so the first start also works behind
+antivirus software or a company proxy that inspects HTTPS.
 
 Installed it before the rename, as `eu-ai-act-scanner`? That copy stops loading once its
 marketplace picks up the new name. Remove it from a terminal, then run the two commands above.
@@ -222,11 +224,11 @@ Same engine, any MCP client, the client's own model. With uv installed, add this
 client's MCP configuration:
 
 ```json
-{ "mcpServers": { "antifragile-harness": { "command": "uvx", "args": ["--from", "git+https://github.com/Peaky8linders/antifragile-harness", "antifragile-scan-mcp"] } } }
+{ "mcpServers": { "antifragile-harness": { "command": "uvx", "args": ["--native-tls", "--from", "git+https://github.com/Peaky8linders/antifragile-harness", "antifragile-scan-mcp"] } } }
 ```
 
 Append `@<release tag>` to the URL to pin a version. The command-line engine runs the same way,
-for example `uvx --from git+https://github.com/Peaky8linders/antifragile-harness antifragile-scan ./my-app --founder`.
+for example `uvx --native-tls --from git+https://github.com/Peaky8linders/antifragile-harness antifragile-scan ./my-app --founder`.
 
 > **There is no PyPI package.** Always run the engine from this repository; no PyPI package
 > is this project. `pip install antifragile-harness` is not ours, and

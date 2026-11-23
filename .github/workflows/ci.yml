@@ -54,7 +54,7 @@ jobs:
           antifragile-scan --benchmark
 
   # The Claude Code plugin starts its MCP server with
-  # `uvx --from ${CLAUDE_PLUGIN_ROOT} antifragile-scan-mcp` (.claude-plugin/plugin.json).
+  # `uvx --native-tls --from ${CLAUDE_PLUGIN_ROOT} antifragile-scan-mcp` (.claude-plugin/plugin.json).
   # Start it exactly that way on each OS, with a cold uv cache like a founder's
   # first start, and check it answers the MCP handshake with every tool.
   plugin-mcp:

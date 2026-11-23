@@ -402,7 +402,9 @@ def test_plugin_starts_its_bundled_engine_with_uv() -> None:
     assert list(servers) == [manifest["name"]]
     server = servers[manifest["name"]]
     assert server["command"] == "uvx"
-    assert server["args"] == ["--from", "${CLAUDE_PLUGIN_ROOT}", "antifragile-scan-mcp"]
+    # --native-tls: trust the system certificate store, or the first start fails
+    # behind antivirus or proxies that inspect HTTPS ("invalid peer certificate").
+    assert server["args"] == ["--native-tls", "--from", "${CLAUDE_PLUGIN_ROOT}", "antifragile-scan-mcp"]
 
     pyproject = (root / "pyproject.toml").read_text(encoding="utf-8")
     assert 'antifragile-scan-mcp = "scanner.mcp_server:main"' in pyproject

@@ -13,7 +13,7 @@
   "mcpServers": {
     "antifragile-harness": {
       "command": "uvx",
-      "args": ["--from", "${CLAUDE_PLUGIN_ROOT}", "antifragile-scan-mcp"],
+      "args": ["--native-tls", "--from", "${CLAUDE_PLUGIN_ROOT}", "antifragile-scan-mcp"],
       "description": "Runs the engine bundled with this plugin through uv, so its version always matches the plugin. Replaces the root .mcp.json entry of the same name, which runs antifragile-scan-mcp from PATH for development and other MCP clients."
     }
   }

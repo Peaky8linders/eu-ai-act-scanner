@@ -118,9 +118,15 @@ class _Server:
             self.proc.wait()
 
 
+def _build_output(root: Path = ROOT) -> set[str]:
+    """Build artefacts in the plugin folder, which must stay untouched."""
+    return {p.name for p in (root / "build", *root.glob("*.egg-info")) if p.exists()}
+
+
 def main() -> int:
     command = server_command()
     expected = claimed_tool_count()
+    before = _build_output()
     print("starting:", " ".join(command), flush=True)
     started = time.monotonic()
     deadline = started + TIMEOUT_S
@@ -169,8 +175,11 @@ def main() -> int:
     problems = check_tools(names, expected)
     for problem in problems:
         print(f"::error::{problem}")
-    leftovers = [p.name for p in (ROOT / "build", *ROOT.glob("*.egg-info")) if p.exists()]
-    print("build output left in the plugin folder:", ", ".join(leftovers) or "none")
+    left_behind = sorted(_build_output() - before)
+    print("build output left in the plugin folder:", ", ".join(left_behind) or "none")
+    if left_behind:
+        problems.append(f"starting the server wrote {left_behind} into the plugin folder")
+        print(f"::error::{problems[-1]}")
     return 1 if problems else 0
 
 

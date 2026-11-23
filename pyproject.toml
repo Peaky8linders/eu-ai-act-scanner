@@ -1,6 +1,9 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
-build-backend = "setuptools.build_meta"
+# hatchling builds out of tree: the Claude Code plugin starts the engine with
+# `uvx --native-tls --from ${CLAUDE_PLUGIN_ROOT}`, and a setuptools build would leave build/
+# and *.egg-info inside the plugin folder, which must stay read-only.
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
 
 [project]
 # Installed from this repository only: the engine ships with a Claude Code
@@ -59,11 +62,10 @@ Homepage = "https://github.com/Peaky8linders/antifragile-harness"
 Repository = "https://github.com/Peaky8linders/antifragile-harness"
 Issues = "https://github.com/Peaky8linders/antifragile-harness/issues"
 
-[tool.setuptools.packages.find]
-include = ["scanner*"]
-
-[tool.setuptools.package-data]
-"scanner.data" = ["*.json", "*.css"]
+[tool.hatch.build.targets.wheel]
+# The package and its data files (scanner/data/*.json, *.css) ship; tests,
+# docs and plugin files do not.
+packages = ["scanner"]
 
 [tool.ruff]
 line-length = 110

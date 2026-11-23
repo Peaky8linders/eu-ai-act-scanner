@@ -11,18 +11,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The Claude Code plugin no longer needs a separate engine install. Its MCP
   server, declared in `.claude-plugin/plugin.json`, runs the engine bundled in
-  the plugin's own files with `uvx --from ${CLAUDE_PLUGIN_ROOT}
+  the plugin's own files with `uvx --native-tls --from ${CLAUDE_PLUGIN_ROOT}
   antifragile-scan-mcp`. It has the same name as the root `.mcp.json` entry, so
   Claude Code uses it for the plugin, while `.mcp.json` keeps serving
   development and other MCP clients. Setup is uv plus the two `/plugin`
   commands, and the engine always matches the plugin version.
 - Commands and skills that run the command-line engine call it the same way
-  (`uvx --from "${CLAUDE_PLUGIN_ROOT}" antifragile-scan ...`), and the Claude
+  (`uvx --native-tls --from "${CLAUDE_PLUGIN_ROOT}" antifragile-scan ...`), and the Claude
   Compliance API fetcher runs from the plugin's files instead of a clone.
+- Every uv call passes `--native-tls`, so uv trusts the system certificate
+  store. Without it the first start failed with "invalid peer certificate:
+  UnknownIssuer" on machines where antivirus software or a company proxy
+  inspects HTTPS.
+- The build backend is now hatchling, which builds out of tree. A setuptools
+  build left `build/` and `*.egg-info` inside the plugin folder on first start,
+  which the plugin docs say must not hold state, and a read-only plugin folder
+  would have failed. The CI check now fails if starting the server writes there.
 - The MCP SDK is now a core dependency, since the MCP server is how the plugin
   and other agents use the engine. `antifragile-harness[mcp]` still works.
 - Other MCP clients run the server with
-  `uvx --from git+https://github.com/Peaky8linders/antifragile-harness antifragile-scan-mcp`.
+  `uvx --native-tls --from git+https://github.com/Peaky8linders/antifragile-harness antifragile-scan-mcp`.
 - A new CI job starts the plugin's MCP server exactly as Claude Code does
   (`scripts/check_plugin_mcp.py`) on Linux, macOS and Windows with a cold uv
   cache. It checks the server lists every advertised tool and reports how long
