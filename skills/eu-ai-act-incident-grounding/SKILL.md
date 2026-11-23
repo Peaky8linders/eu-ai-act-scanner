@@ -13,7 +13,7 @@ Turn a gap ("no prompt-injection defence") into evidence ("here are documented i
 The key can be an area (`security`, `human_oversight`, `logging`, `lethal_trifecta`), an article (`art15`, `Art. 9`) or a threat (`prompt_injection`, `data_exfiltration`, `privilege_escalation`).
 
 - With the scanner MCP server: `incidents(key="security")`. It returns compact entries; add `response_format="detailed"` for full records.
-- Otherwise: `antifragile-scan --incidents security --limit 5` (or `/ai-act-incidents security`).
+- Otherwise: `uvx --native-tls --from "${CLAUDE_PLUGIN_ROOT}" antifragile-scan --incidents security --limit 5` (or `/ai-act-incidents security`).
 
 Pick the key from the finding: an agent finding (lethal trifecta, privilege, runtime drift) maps to its threat, plus `security`; a low area score maps to the area id; an article question maps to the article; a named attack maps to the threat.
 

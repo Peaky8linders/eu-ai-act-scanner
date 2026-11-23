@@ -7,26 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed — a founder-first README and a one-command install
+### Changed — the plugin starts its own engine
+
+- The Claude Code plugin no longer needs a separate engine install. Its MCP
+  server, declared in `.claude-plugin/plugin.json`, runs the engine bundled in
+  the plugin's own files with `uvx --native-tls --from ${CLAUDE_PLUGIN_ROOT}
+  antifragile-scan-mcp`. It has the same name as the root `.mcp.json` entry, so
+  Claude Code uses it for the plugin, while `.mcp.json` keeps serving
+  development and other MCP clients. Setup is uv plus the two `/plugin`
+  commands, and the engine always matches the plugin version.
+- Commands and skills that run the command-line engine call it the same way
+  (`uvx --native-tls --from "${CLAUDE_PLUGIN_ROOT}" antifragile-scan ...`), and the Claude
+  Compliance API fetcher runs from the plugin's files instead of a clone.
+- Every uv call passes `--native-tls`, so uv trusts the system certificate
+  store. Without it the first start failed with "invalid peer certificate:
+  UnknownIssuer" on machines where antivirus software or a company proxy
+  inspects HTTPS.
+- The build backend is now hatchling, which builds out of tree. A setuptools
+  build left `build/` and `*.egg-info` inside the plugin folder on first start,
+  which the plugin docs say must not hold state, and a read-only plugin folder
+  would have failed. The CI check now fails if starting the server writes there.
+- The MCP SDK is now a core dependency, since the MCP server is how the plugin
+  and other agents use the engine. `antifragile-harness[mcp]` still works.
+- Other MCP clients run the server with
+  `uvx --native-tls --from git+https://github.com/Peaky8linders/antifragile-harness antifragile-scan-mcp`.
+- A new CI job starts the plugin's MCP server exactly as Claude Code does
+  (`scripts/check_plugin_mcp.py`) on Linux, macOS and Windows with a cold uv
+  cache. It checks the server lists every advertised tool and reports how long
+  the first start took against Claude Code's 30-second startup limit.
+- `tests/test_repo_workflows.py` checks this repository's workflows: each
+  declares its token permissions, CI keeps gating main, the plugin job runs on
+  all three systems, and none publishes to PyPI.
+
+### Changed — a founder-first README
 
 - The README opens with what a founder gets: a one-line promise, a three-step
-  quickstart, the three buckets of the brief and a real, trimmed brief for a
-  small demo chatbot. The technical detail follows under "Under the hood".
-- The engine installs with one command, straight from this repository:
-  `pipx install "antifragile-harness[mcp] @ git+https://github.com/Peaky8linders/antifragile-harness"`.
-  The README, both plugin manifests, the MCP server's missing-dependency
-  message and two skills now say so. Cloning and installing editable is for
-  working on the engine itself.
+  quickstart (uv, the plugin, `/ai-act-quickstart`), the three buckets of the
+  brief and a real, trimmed brief for a small demo chatbot. The technical
+  detail follows under "Under the hood".
 - `tests/test_docs_install.py` accepts installs from this repository's URL and
   still rejects installs by name from PyPI, or the same command pointing at
   anyone else's copy.
-
-### Added — a manual PyPI publishing workflow
-
-- `.github/workflows/publish-pypi.yml` builds the package, checks its metadata
-  and publishes it with PyPI trusted publishing, so no token is stored. It does
-  nothing until a pending publisher is set up on pypi.org; the steps are in the
-  file.
 
 ## [0.14.1] - 2026-11-23
 

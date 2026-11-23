@@ -28,9 +28,11 @@ Security posture (aligned with MCP spec 2025-11-25 + 2026 hardening guidance):
   export) are annotated destructive and default to read-only dry-run.
 * No network calls, no telemetry, no secrets in tool surfaces.
 
-Install the engine with its MCP extra from this repository (there is no PyPI package):
+The Claude Code plugin starts this server from its own files with uv
+(``uvx --native-tls --from ${CLAUDE_PLUGIN_ROOT} antifragile-scan-mcp``). Any other MCP
+client can run it straight from this repository (there is no PyPI package):
 
-    pipx install "antifragile-harness[mcp] @ git+https://github.com/Peaky8linders/antifragile-harness"
+    uvx --native-tls --from git+https://github.com/Peaky8linders/antifragile-harness antifragile-scan-mcp
 
 Run the server (stdio transport):
     antifragile-scan-mcp
@@ -1051,8 +1053,8 @@ def _load_server_class():
         return FastMCP
     except ImportError as exc:
         raise RuntimeError(
-            "MCP SDK not installed. Reinstall the engine with its mcp extra from this "
-            "repository: pipx install --force \"antifragile-harness[mcp] @ git+https://github.com/Peaky8linders/antifragile-harness\" "
+            "MCP SDK not installed, although it is a core dependency. Run the server "
+            "with uv so its dependencies are installed: uvx --native-tls --from git+https://github.com/Peaky8linders/antifragile-harness antifragile-scan-mcp "
             "(there is no PyPI package; no PyPI package is this project)"
         ) from exc
 
@@ -1061,9 +1063,9 @@ def build_server():  # noqa: ANN201  (returns MCPServer/FastMCP — type only av
     """Construct and return a configured MCP server (``MCPServer`` / ``FastMCP``).
 
     Raises :exc:`RuntimeError` if the ``mcp`` optional dependency is not
-    installed.  Install it from this repository with::
+    installed (it is a core dependency).  Run it from this repository with::
 
-        pipx install "antifragile-harness[mcp] @ git+https://github.com/Peaky8linders/antifragile-harness"
+        uvx --native-tls --from git+https://github.com/Peaky8linders/antifragile-harness antifragile-scan-mcp
 
     HTTP serving (Streamable HTTP) is left to the deployer: serve the app
     returned by ``mcp.http_app()`` behind TLS + authentication, bind

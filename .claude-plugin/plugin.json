@@ -1,7 +1,7 @@
 {
   "name": "antifragile-harness",
   "version": "0.14.1",
-  "description": "EU AI Act (Reg. 2024/1689) + Digital Omnibus (Reg. 2026/1744) compliance harness for Claude Code: 24 offline analyzers (incl. MCP toolchain and Claude Code security), founder 3-bucket triage, SARIF 2.1.0 and Claude Compliance API / claude-security ingestion, release dossier, and a 13-tool MCP server. Requires the local engine, installed from this repository: pipx install \"antifragile-harness[mcp] @ git+https://github.com/Peaky8linders/antifragile-harness\"",
+  "description": "EU AI Act (Reg. 2024/1689) + Digital Omnibus (Reg. 2026/1744) compliance harness for Claude Code: 24 offline analyzers (incl. MCP toolchain and Claude Code security), founder 3-bucket triage, SARIF 2.1.0 and Claude Compliance API / claude-security ingestion, release dossier, and a 13-tool MCP server. The plugin starts its bundled engine with uv (https://docs.astral.sh/uv/), so uv must be on PATH; there is nothing else to install.",
   "author": {
     "name": "Andrei Bacu",
     "url": "https://github.com/Peaky8linders"
@@ -9,5 +9,12 @@
   "homepage": "https://github.com/Peaky8linders/antifragile-harness",
   "repository": "https://github.com/Peaky8linders/antifragile-harness",
   "license": "Apache-2.0",
-  "keywords": ["eu-ai-act", "compliance", "security", "mcp", "sarif", "founder", "regulation-2024-1689"]
+  "keywords": ["eu-ai-act", "compliance", "security", "mcp", "sarif", "founder", "regulation-2024-1689"],
+  "mcpServers": {
+    "antifragile-harness": {
+      "command": "uvx",
+      "args": ["--native-tls", "--from", "${CLAUDE_PLUGIN_ROOT}", "antifragile-scan-mcp"],
+      "description": "Runs the engine bundled with this plugin through uv, so its version always matches the plugin. Replaces the root .mcp.json entry of the same name, which runs antifragile-scan-mcp from PATH for development and other MCP clients."
+    }
+  }
 }

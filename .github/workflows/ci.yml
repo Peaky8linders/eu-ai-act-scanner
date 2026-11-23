@@ -52,3 +52,26 @@ jobs:
           antifragile-scan tests/fixtures/sample_project --founder
           antifragile-scan tests/fixtures/sample_project --article art14
           antifragile-scan --benchmark
+
+  # The Claude Code plugin starts its MCP server with
+  # `uvx --native-tls --from ${CLAUDE_PLUGIN_ROOT} antifragile-scan-mcp` (.claude-plugin/plugin.json).
+  # Start it exactly that way on each OS, with a cold uv cache like a founder's
+  # first start, and check it answers the MCP handshake with every tool.
+  plugin-mcp:
+    name: plugin MCP server via uvx (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: false
+
+      - name: Start the plugin's MCP server as Claude Code does
+        run: uv run --no-project scripts/check_plugin_mcp.py

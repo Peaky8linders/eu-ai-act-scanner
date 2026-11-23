@@ -48,11 +48,10 @@
     "playbooks/ai-act-contract-positions.yaml"
   ],
   "requires": {
-    "python": ">=3.11"
+    "uv": "https://docs.astral.sh/uv/"
   },
   "install": {
-    "pipx": "pipx install \"antifragile-harness[mcp] @ git+https://github.com/Peaky8linders/antifragile-harness\"",
-    "pip": "pip install \"antifragile-harness[mcp] @ git+https://github.com/Peaky8linders/antifragile-harness\"",
-    "note": "No PyPI package: install the engine from this repository (no PyPI package is this project; the pre-rename `eu-ai-act-scanner` name there is an unrelated third-party project)."
+    "claude-code": "/plugin marketplace add Peaky8linders/antifragile-harness, then /plugin install antifragile-harness@antifragile-harness",
+    "note": "The plugin starts its bundled engine with uvx (uv fetches Python and the dependencies on first start), so there is no separate engine install. There is no PyPI package; the pre-rename `eu-ai-act-scanner` name there is an unrelated third-party project."
   }
 }

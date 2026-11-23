@@ -8,7 +8,7 @@ argument-hint: "[path] [--role deployer|provider]"
 
 A 60-second, jargon-free EU AI Act and AI-security check for founders.
 
-1. Get the founder triage for `$1` (default: the current folder). If the scanner MCP server is connected, call `founder_triage(path="$1")`; its default concise response is the ready-made brief. Otherwise run `antifragile-scan "$1" --founder` (add `--role provider` or similar if the user names their role).
+1. Get the founder triage for `$1` (default: the current folder). If the scanner MCP server is connected, call `founder_triage(path="$1")`; its default concise response is the ready-made brief. Otherwise run `uvx --native-tls --from "${CLAUDE_PLUGIN_ROOT}" antifragile-scan "$1" --founder` (add `--role provider` or similar if the user names their role).
 2. If it says no AI system was detected, say that EU AI Act obligations do not appear to apply and stop. Do not invent obligations or scores.
 3. Otherwise present the brief in plain language, in this order:
    1. **Your role** and what would change it.
@@ -21,6 +21,6 @@ A 60-second, jargon-free EU AI Act and AI-security check for founders.
    2. Print the copy-paste security brief for questionnaires or investors.
    3. Review this branch for security issues (`/ai-act-security-review`). For a deeper pass, use Claude Code Security (https://code.claude.com/docs/en/claude-security): install `claude-security@claude-plugins-official`, run `/threat-model` (writes `THREAT_MODEL.md`) and `/claude-security`, then add its report with `--ingest-claude-security <file>`.
    4. Block secrets from being written or committed: copy `hooks/sensitive_data_guard.py` and the `hooks` block of `hooks/sensitive-data-guard.json` from the scanner repo into this project's `.claude/`.
-   5. Claude Enterprise or Team: add org audit evidence from the Claude Compliance API (`anthropic-version: 2026-10-21`, key in `ANTHROPIC_COMPLIANCE_ACCESS_KEY`). Run `python <scanner-clone>/scripts/fetch_claude_compliance.py --output compliance-api-export.json` (`<scanner-clone>` is where you cloned antifragile-harness), then `antifragile-scan . --ingest-compliance-api compliance-api-export.json`.
+   5. Claude Enterprise or Team: add org audit evidence from the Claude Compliance API (`anthropic-version: 2026-10-21`, key in `ANTHROPIC_COMPLIANCE_ACCESS_KEY`). Run `uv run --native-tls --no-project "${CLAUDE_PLUGIN_ROOT}/scripts/fetch_claude_compliance.py" --output compliance-api-export.json`, then `uvx --native-tls --from "${CLAUDE_PLUGIN_ROOT}" antifragile-scan . --ingest-compliance-api compliance-api-export.json`.
 
 The scan is local static analysis: no code leaves the machine, and results are evidence for human review, not a legal verdict.
