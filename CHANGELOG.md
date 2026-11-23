@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed — logging never reaches stdout or a closed stream
+
+- The CLI, `antifragile-fix` and the MCP server now share one logging setup
+  (`scanner/log_config.py`). It prints warnings and errors to whatever stderr is
+  current when they happen. The old setup kept the stream that existed at
+  start-up, so a host or test harness that swapped stderr and later closed it
+  made every following log call raise "I/O operation on closed file". That is
+  why one test failed only when gstack ran part of the suite.
+- `antifragile-fix --json` no longer prints warnings into its JSON output; they
+  go to stderr, like the other entry points.
+
+### Changed — gstack's checks pass on this repo
+
+- `mypy .` is clean: nine type errors in tests are fixed, `tests/fixtures/`
+  (sample apps the scanner reads) is excluded, and the optional `pyarrow` import
+  is ignored like `mcp`.
+- `.gstack/pregate.json` runs the covering tests with `pytest` (the default
+  runner called `python3`, which is the Microsoft Store stub on Windows) and
+  maps the manifests, hooks, commands, skills and docs to the tests that check
+  them.
+
 ## [0.14.0] - 2026-11-23
 
 ### Changed — the project is now Antifragile Harness

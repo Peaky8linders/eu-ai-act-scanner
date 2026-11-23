@@ -10,22 +10,9 @@ from __future__ import annotations
 
 import argparse
 import json
-import logging
 import sys
 from pathlib import Path
 from typing import Literal
-
-import structlog
-
-# CLI mode: suppress info-level structlog output so stdout stays clean for
-# the JSON/markdown payload. Library users can re-enable logs by calling
-# structlog.configure() themselves.
-structlog.configure(
-    wrapper_class=structlog.make_filtering_bound_logger(logging.WARNING),
-    # stdout carries the JSON/markdown payload (and is what an agent reads);
-    # a warning printed there would corrupt `--json` output.
-    logger_factory=structlog.PrintLoggerFactory(file=sys.stderr),
-)
 
 # Ensure UTF-8 output regardless of the host console code page. Windows cmd /
 # PowerShell default to cp1252/cp437, which can't encode the em-dashes, smart
@@ -41,6 +28,13 @@ from scanner import __version__, scan_project  # noqa: E402
 from scanner.data.incident_corpus import get_incident  # noqa: E402
 from scanner.data.role_obligations import CANONICAL_ROLE_IDS  # noqa: E402
 from scanner.kb import DIMENSIONS, dimensions_for_article  # noqa: E402
+from scanner.log_config import configure_console_logging  # noqa: E402
+
+# CLI mode: only warnings and errors are logged, and they go to stderr, so stdout
+# stays clean for the JSON/markdown payload an agent reads (a warning printed
+# there would corrupt `--json` output). Library users can re-enable logs by
+# calling structlog.configure() themselves.
+configure_console_logging()
 
 
 def _format_markdown(result, top_gaps: int = 10) -> str:

@@ -25,6 +25,7 @@ import shutil
 import subprocess
 import sys
 import tomllib
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
@@ -266,7 +267,7 @@ class _FakeResponse(io.BytesIO):
         self.close()
 
 
-def _serve(pages: dict[str, dict], seen: list[str]):
+def _serve(pages: Mapping[str, object], seen: list[str]):
     def fake_urlopen(req, timeout=30):  # noqa: ANN001, ARG001
         seen.append(req.full_url)
         for marker, body in pages.items():
