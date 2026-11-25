@@ -63,6 +63,32 @@ class TaggedRecommendation(BaseModel):
     ref: str = ""
 
 
+class SuppressionRule(BaseModel):
+    """One ``[[suppress]]`` entry from the scanned project's ``.antifragile-harness.toml``.
+
+    Every field that is set must match (an empty field matches anything), at
+    least one of ``analyzer``, ``title``, ``path`` or ``area`` is set, and
+    ``reason`` is required, so a suppression is always an explained decision a
+    reviewer can see. See scanner.suppressions.
+    """
+
+    reason: str
+    analyzer: str = ""  # analyzer id, e.g. "article_50_transparency"
+    title: str = ""  # text the finding title contains (case-insensitive)
+    path: str = ""  # glob on the project-relative path, e.g. "src/legacy/*" or "vendor/"
+    area: str = ""  # KB dimension id, e.g. "transparency"
+
+
+class SuppressedFinding(BaseModel):
+    """A gap left out of scores and reports because a suppression rule matched it."""
+
+    title: str
+    analyzer: str = ""
+    file_path: str = ""
+    line_number: int | None = None
+    reason: str
+
+
 class ScanResult(BaseModel):
     """Complete scan result."""
     project_name: str = "Project"
@@ -120,3 +146,14 @@ class ScanResult(BaseModel):
     semantic_audit: dict | None = None
     # External security / compliance sources ingested (SARIF, Claude Code Security, Compliance API).
     external_security_sources: list[str] = Field(default_factory=list)
+    # Gaps the team marked not applicable with ``[[suppress]]`` entries in the
+    # project's ``.antifragile-harness.toml``. They are left out of scores,
+    # components and briefs, and listed here with their reasons so nothing
+    # disappears silently. Positive evidence and the AI-system scope gate are
+    # never suppressed.
+    suppressed_findings: list[SuppressedFinding] = Field(default_factory=list)
+    # The valid rules that were applied; founder triage also applies them to the
+    # area-level items it derives from low scores.
+    suppression_rules: list[SuppressionRule] = Field(default_factory=list)
+    # ``[[suppress]]`` entries that were ignored, each with the reason.
+    suppression_problems: list[str] = Field(default_factory=list)

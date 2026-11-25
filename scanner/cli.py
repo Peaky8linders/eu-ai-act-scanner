@@ -136,6 +136,18 @@ def _format_markdown(result, top_gaps: int = 10) -> str:
         for r in result.recommendations[:top_gaps]:
             lines.append(f"- {r}")
 
+    suppressed = getattr(result, "suppressed_findings", None) or []
+    problems = getattr(result, "suppression_problems", None) or []
+    if suppressed or problems:
+        lines += ["", "## Marked not applicable (`.antifragile-harness.toml`)", ""]
+        for s in suppressed[:top_gaps]:
+            where = f" in `{s.file_path}`" if s.file_path else ""
+            lines.append(f"- {s.title}{where}: {s.reason}")
+        if len(suppressed) > top_gaps:
+            lines.append(f"- … and {len(suppressed) - top_gaps} more")
+        for p in problems:
+            lines.append(f"- _Ignored entry:_ {p}")
+
     tagged = getattr(result, "agentic_recommendations", None) or []
     if tagged:
         act = [r for r in tagged if r.source == "act_required"]

@@ -68,7 +68,7 @@ Here is the brief for a small demo support chatbot (an OpenAI-backed FastAPI end
 ## Under the hood
 
 **One repo, three ways to run it:**
-1. A **Claude Code plugin** — **11 slash commands** (`/ai-act-quickstart`, `/ai-act-scan`, `/ai-act-security-review`, `/ai-act-scan-fix`, `/ai-act-article`, `/ai-act-incidents`, `/ai-act-ask`, `/ai-act-graph`, `/ai-act-cross-framework`, `/ai-act-dossier`, `/ai-act-settings`) backed by **15 article-grounded skills**. Semantic depth comes from **your own Claude Code session** — your existing subscription, no API key, no wrapper.
+1. A **Claude Code plugin** — **12 slash commands** (`/ai-act-quickstart`, `/ai-act-scan`, `/ai-act-security-review`, `/ai-act-scan-fix`, `/ai-act-article`, `/ai-act-incidents`, `/ai-act-ask`, `/ai-act-graph`, `/ai-act-cross-framework`, `/ai-act-dossier`, `/ai-act-settings`, `/ai-act-feedback`) backed by **15 article-grounded skills**. Semantic depth comes from **your own Claude Code session** — your existing subscription, no API key, no wrapper.
 2. A **Python library & CLI** (`from scanner import scan_project` / `antifragile-scan`) — **24 deterministic analyzers** (including `mcp_toolchain`, `claude_code_security`, and AST-gated Art. 50 transparency), operator-role inference, incident grounding, offline SARIF 2.1.0, local baselines, autonomous startup/regulatory fix loop, deterministic precision/recall/F1 meta-benchmark, and a **versioned 12-framework projection** (including OJ-cited **EN 18286:2026** CEN/CENELEC JTC 21 QMS).
 3. An **MCP server** (`antifragile-scan-mcp`) — **13 hardened MCP tools** over stdio (or behind your own authenticated Streamable HTTP proxy), with validated paths, symlink/traversal guards, `openWorldHint=False`, destructive-action annotations, and stdout hygiene.
 
@@ -170,7 +170,7 @@ The scanner never calls an LLM headlessly. When you want more than deterministic
 
 ## Install
 
-**Claude Code plugin (`antifragile-harness`)**: the 11 commands, 15 article-grounded skills and the
+**Claude Code plugin (`antifragile-harness`)**: the 12 commands, 15 article-grounded skills and the
 13-tool MCP server. It needs [uv](https://docs.astral.sh/uv/) on your `PATH`, which it uses to
 start the engine bundled in its own files, so there is no separate engine install. Install uv
 once, unless `uv --version` already works:
@@ -248,7 +248,7 @@ your environment.
 
 ## Usage
 
-**Claude Code:** `/ai-act-quickstart ./my-app` · `/ai-act-scan ./my-app` · `/ai-act-security-review` · `/ai-act-scan-fix --startup --top 3` · `/ai-act-article art50` · `/ai-act-incidents art15` · `/ai-act-ask "…"` · `/ai-act-graph` · `/ai-act-cross-framework` · `/ai-act-dossier` · `/ai-act-settings`
+**Claude Code:** `/ai-act-quickstart ./my-app` · `/ai-act-scan ./my-app` · `/ai-act-security-review` · `/ai-act-scan-fix --startup --top 3` · `/ai-act-article art50` · `/ai-act-incidents art15` · `/ai-act-ask "…"` · `/ai-act-graph` · `/ai-act-cross-framework` · `/ai-act-dossier` · `/ai-act-settings` · `/ai-act-feedback`
 
 **Python:**
 
@@ -277,6 +277,29 @@ fix = run_fix_loop("./my-app", apply=False, profile="startup")  # dry-run plan; 
 - **No LLM calls, no network, no telemetry.** Offline by default; only opt-in scripts (`scripts/fetch_claude_compliance.py` for Enterprise/Team users and `scripts/sync_incident_corpus.py` for maintainers) touch the network.
 - **No risk-tier classification for you.** High-risk vs limited-risk (Art. 6 + Annex III) needs human judgment.
 - **No legal advice.** Use alongside counsel, not instead of it.
+
+## Feedback and exceptions
+
+- **A finding doesn't apply to your project?** Mark it not applicable, with a reason, in
+  `.antifragile-harness.toml` at your project root. It leaves the scores and the founder brief,
+  but stays on record: the brief, `--markdown` and the release dossier list every exception
+  with its reason, and nothing else about the scan changes.
+
+  ```toml
+  [[suppress]]
+  title = "AI-interaction disclosure"  # text the finding title contains
+  path = "app.py"                      # optional: a file, a glob like "src/legacy/*", or a folder like "vendor/"
+  reason = "The disclosure banner is rendered by our web frontend (separate repo)."
+  ```
+
+  An entry can also match on `analyzer` (for example `article_50_transparency`) or `area`
+  (for example `logging`); every key you set must match, and `reason` is required.
+- **Something wrong, missing or unclear?** Run `/ai-act-feedback`. It can add the exception for
+  you, and drafts a GitHub issue for the maintainers. You see the full text before anything is
+  sent, and it never includes your code. You can also open an
+  [issue](https://github.com/Peaky8linders/antifragile-harness/issues/new/choose) directly.
+  Confirmed false positives and missed gaps become benchmark cases, so each report turns into a
+  regression test.
 
 ## Contributing
 

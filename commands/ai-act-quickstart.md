@@ -22,5 +22,6 @@ A 60-second, jargon-free EU AI Act and AI-security check for founders.
    3. Review this branch for security issues (`/ai-act-security-review`). For a deeper pass, use Claude Code Security (https://code.claude.com/docs/en/claude-security): install `claude-security@claude-plugins-official`, run `/threat-model` (writes `THREAT_MODEL.md`) and `/claude-security`, then add its report with `--ingest-claude-security <file>`.
    4. Block secrets from being written or committed: copy `hooks/sensitive_data_guard.py` and the `hooks` block of `hooks/sensitive-data-guard.json` from the scanner repo into this project's `.claude/`.
    5. Claude Enterprise or Team: add org audit evidence from the Claude Compliance API (`anthropic-version: 2026-10-21`, key in `ANTHROPIC_COMPLIANCE_ACCESS_KEY`). Run `uv run --native-tls --no-project "${CLAUDE_PLUGIN_ROOT}/scripts/fetch_claude_compliance.py" --output compliance-api-export.json`, then `uvx --native-tls --from "${CLAUDE_PLUGIN_ROOT}" antifragile-scan . --ingest-compliance-api compliance-api-export.json`.
+   6. Something wrong, missing or unclear? `/ai-act-feedback` marks a finding not applicable here (with a reason) or drafts a report for the maintainers, and shows everything first.
 
 The scan is local static analysis: no code leaves the machine, and results are evidence for human review, not a legal verdict.

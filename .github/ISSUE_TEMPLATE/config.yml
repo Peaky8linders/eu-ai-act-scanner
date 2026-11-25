@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Founders guide and README
+    url: https://github.com/Peaky8linders/antifragile-harness#readme
+    about: Setup, troubleshooting and how to mark a finding not applicable.

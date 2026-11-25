@@ -33,6 +33,8 @@ from scanner.models import (
     TaggedRecommendation,
 )
 from scanner.paths import is_excluded
+from scanner.suppressions import apply_to_results as apply_suppressions
+from scanner.suppressions import load_rules as load_suppression_rules
 
 logger = structlog.get_logger()
 
@@ -405,14 +407,21 @@ def scan_project(
         else ctx.files
     )
     stripped_lines: dict[str, list[str]] = {}
-    all_findings: list[Finding] = []
     for ar in analyzer_results:
-        recovered = [
+        ar.findings = [
             _recover_line_number(f, lookup_files, stripped_lines)
             for f in ar.findings
         ]
-        ar.findings = recovered
-        all_findings.extend(recovered)
+
+    # Gaps the team marked not applicable ([[suppress]] in the project's
+    # .antifragile-harness.toml) leave every score and report from here on and
+    # are listed on the result with their reasons. Applied after line recovery
+    # so the record points at the right line; external findings are included.
+    suppression_rules, suppression_problems = load_suppression_rules(root_path)
+    suppressed_findings = apply_suppressions(analyzer_results, suppression_rules)
+    if suppressed_findings:
+        logger.debug("suppressed_gaps", count=len(suppressed_findings))
+    all_findings: list[Finding] = [f for ar in analyzer_results for f in ar.findings]
 
     # Tag the taxonomy recommendations for the compound-risk axes this scan
     # actually detected. Provenance is structural, not prose: every row says
@@ -706,4 +715,7 @@ def scan_project(
         cross_framework_summary=cross_framework_summary,
         semantic_audit=semantic_audit_dict,
         external_security_sources=resolved_external_sources,
+        suppressed_findings=suppressed_findings,
+        suppression_rules=suppression_rules,
+        suppression_problems=suppression_problems,
     )

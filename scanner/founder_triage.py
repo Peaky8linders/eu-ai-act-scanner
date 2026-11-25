@@ -29,6 +29,7 @@ from scanner.cross_framework import CrossFrameworkScanProjection, project_scan_t
 from scanner.data.frameworks import FRAMEWORK_LABELS
 from scanner.kb import DIMENSIONS
 from scanner.models import DiscoveredComponent, ScanResult
+from scanner.suppressions import first_match
 
 _SLUG_RE = re.compile(r"[^a-z0-9]+")
 _URL_RE = re.compile(r"https?://[^\s\"'<>()]+")
@@ -266,6 +267,11 @@ class FounderTriage(BaseModel):
     # Gap titles left out because every area they touch is owed only by other
     # operator roles (e.g. provider-only Annex IV paperwork for a deployer).
     not_for_your_role: list[str] = Field(default_factory=list)
+    # Items left out because the team marked them not applicable with a reason
+    # (``[[suppress]]`` in .antifragile-harness.toml), as "title: reason".
+    suppressed: list[str] = Field(default_factory=list)
+    # ``[[suppress]]`` entries that were ignored, each with the reason.
+    suppression_problems: list[str] = Field(default_factory=list)
     summary_counts: dict[str, int] = Field(default_factory=dict)
     brief_markdown: str = ""
 
@@ -837,6 +843,17 @@ def format_founder_brief(triage: FounderTriage) -> str:
             "re-run with `--role provider`._"
         )
 
+    if triage.suppressed:
+        lines.append("")
+        lines.append(
+            f"_{len(triage.suppressed)} item(s) were marked not applicable in `.antifragile-harness.toml` "
+            f"and left out, for example \"{triage.suppressed[0]}\"._"
+        )
+    if triage.suppression_problems:
+        lines.append("")
+        more = f" (+{len(triage.suppression_problems) - 1} more)" if len(triage.suppression_problems) > 1 else ""
+        lines.append(f"_Suppression ignored: {triage.suppression_problems[0]}{more}_")
+
     lines.append("")
     lines.append(
         "_This scan reads code and configuration only. Policies, contracts, training and "
@@ -935,6 +952,7 @@ def build_founder_triage(
     _synthesize_dimension_items(
         result, ship_now, enterprise_deals, later_2027, high_risk_verticals, out_of_scope=out_of_scope,
     )
+    suppressed = _apply_suppressions(result, (ship_now, enterprise_deals, later_2027))
 
     top_levers = _extract_top_levers(result, cross_framework)
     vendor_checklist = list(_DEPLOYER_VENDOR_CONTRACT_CHECKLIST) if operator_role == "deployer" else []
@@ -945,6 +963,7 @@ def build_founder_triage(
         "later_2027": len(later_2027),
         "total_gaps": len(ship_now) + len(enterprise_deals) + len(later_2027),
         "not_for_your_role": len(not_for_your_role),
+        "suppressed": len(suppressed),
     }
 
     if ship_now:
@@ -979,10 +998,45 @@ def build_founder_triage(
         top_cross_framework_levers=top_levers,
         vendor_contract_checklist=vendor_checklist,
         not_for_your_role=not_for_your_role,
+        suppressed=suppressed,
+        suppression_problems=list(result.suppression_problems),
         summary_counts=summary_counts,
     )
     triage.brief_markdown = format_founder_brief(triage)
     return triage
+
+
+def _apply_suppressions(result: ScanResult, buckets: tuple[list[TriageItem], ...]) -> list[str]:
+    """Drop items the team marked not applicable; return ``"title: reason"`` notes.
+
+    The engine already removed suppressed gaps from the scan; this also covers
+    the area-level items built from low scores, which no single finding backs.
+    """
+    notes: list[str] = []
+
+    def note(title: str, reason: str) -> None:
+        line = f"{_clean_text(title)}: {_clean_text(reason)}"
+        if line not in notes:
+            notes.append(line)
+
+    for finding in result.suppressed_findings:
+        note(finding.title, finding.reason)
+    if result.suppression_rules:
+        for items in buckets:
+            kept: list[TriageItem] = []
+            for item in items:
+                rule = first_match(
+                    result.suppression_rules,
+                    title=item.title,
+                    file_path=item.file_path,
+                    dimensions=item.dimensions,
+                )
+                if rule is None:
+                    kept.append(item)
+                else:
+                    note(item.title, rule.reason)
+            items[:] = kept
+    return notes
 
 
 __all__ = [

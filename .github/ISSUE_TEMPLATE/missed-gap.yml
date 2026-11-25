@@ -1,0 +1,32 @@
+name: Missed gap
+description: The scan did not report a problem it should have caught.
+title: "[missed gap] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks. **Please don't paste your code, secrets or customer details.** A small made-up example that shows the problem is the most useful part, because it becomes a benchmark case.
+  - type: textarea
+    id: what
+    attributes:
+      label: What should have been reported
+      description: The risk or duty, and where it applies (EU AI Act article, OWASP item, and so on, if you know it).
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: Made-up example that shows it (optional)
+      description: A few lines written for this report, not copied from your project.
+      render: text
+  - type: input
+    id: version
+    attributes:
+      label: Plugin version
+      placeholder: "0.15.0"
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options: [macOS, Linux, Windows]
