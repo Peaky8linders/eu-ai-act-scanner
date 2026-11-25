@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed — current Python
+
+- The plugin runs its engine on Python 3.14 or newer. Every uv call (the MCP
+  server, commands, skills and the other-client config) passes
+  `--python ">=3.14"`, so uv uses an installed 3.14+ or downloads a current
+  build once. Before, uv took the first suitable Python it found, which on a
+  typical machine was a 3.11 or 3.12 that no longer gets bug fixes.
+- CI tests Python 3.11 through 3.15. It used to test only 3.11 and 3.12. The
+  package metadata lists the same versions, and the plugin job shows which
+  Python uv used.
+- The supported minimum stays at 3.11, which gets security fixes until October
+  2027, for other setups.
+- A test keeps the CI matrix, the package metadata and the plugin's minimum in
+  step.
+
 ### Added — an opt-in feedback loop
 
 - `/ai-act-feedback` reports a false positive, a missed gap, a confusing result

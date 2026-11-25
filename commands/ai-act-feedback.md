@@ -24,7 +24,7 @@ Help the user give feedback on a scan result. Nothing leaves the machine unless 
    reason = "<the user's reason, in their words>"
    ```
 
-   A reason is required. Show the exact lines and append them only on a yes; never rewrite or reorder the rest of the file. Then re-run the founder triage (`founder_triage(path=".")`, or `uvx --native-tls --from "${CLAUDE_PLUGIN_ROOT}" antifragile-scan . --founder`) and confirm the brief lists it as marked not applicable. Suggest committing the file, so teammates and reviewers see every exception and its reason; the release dossier records them too.
+   A reason is required. Show the exact lines and append them only on a yes; never rewrite or reorder the rest of the file. Then re-run the founder triage (`founder_triage(path=".")`, or `uvx --native-tls --python ">=3.14" --from "${CLAUDE_PLUGIN_ROOT}" antifragile-scan . --founder`) and confirm the brief lists it as marked not applicable. Suggest committing the file, so teammates and reviewers see every exception and its reason; the release dossier records them too.
 3. **Offer to tell the maintainers**, so the rule can be fixed for everyone. Draft a GitHub issue for `Peaky8linders/antifragile-harness`:
    - Title: `[false positive] <finding title>`, `[missed gap] <short summary>`, `[confusing] <short summary>` or `[install] <short summary>`.
    - Body: the kind, the finding title, the area or article, the analyzer if known, what the user expected instead and why, the plugin version (the `version` in `${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json`) and the operating system.

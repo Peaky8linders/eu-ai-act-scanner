@@ -9,6 +9,8 @@ no PyPI package (see tests/test_docs_install.py).
 
 from __future__ import annotations
 
+import json
+import re
 from pathlib import Path
 
 import pytest
@@ -52,6 +54,24 @@ def test_ci_gates_main_with_lint_types_and_tests() -> None:
     )
     for command in ("ruff check", "mypy", "pytest"):
         assert command in runs, f"CI no longer runs {command}"
+
+
+def test_ci_tests_every_listed_python_and_the_plugin_floor() -> None:
+    """CI tests each Python the package lists, from requires-python to the latest release,
+    including the minimum the plugin asks uv for."""
+    root = WORKFLOWS.parent.parent
+    pyproject = (root / "pyproject.toml").read_text(encoding="utf-8")
+    listed = set(re.findall(r'"Programming Language :: Python :: (3\.\d+)"', pyproject))
+    floor = re.search(r'requires-python = ">=(3\.\d+)"', pyproject)
+    assert floor is not None
+    matrix = {str(v) for v in _load(WORKFLOWS / "ci.yml")["jobs"]["test"]["strategy"]["matrix"]["python-version"]}
+    assert listed == matrix, "classifiers and the CI matrix list different Pythons"
+    assert floor.group(1) in matrix, "CI must test the requires-python minimum"
+
+    manifest = json.loads((root / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
+    args = manifest["mcpServers"][manifest["name"]]["args"]
+    plugin_floor = args[args.index("--python") + 1].removeprefix(">=")
+    assert plugin_floor in matrix, "CI must test the Python the plugin asks uv for"
 
 
 def test_ci_starts_the_plugin_mcp_server_on_every_os() -> None:
