@@ -404,7 +404,11 @@ def test_plugin_starts_its_bundled_engine_with_uv() -> None:
     assert server["command"] == "uvx"
     # --native-tls: trust the system certificate store, or the first start fails
     # behind antivirus or proxies that inspect HTTPS ("invalid peer certificate").
-    assert server["args"] == ["--native-tls", "--from", "${CLAUDE_PLUGIN_ROOT}", "antifragile-scan-mcp"]
+    # --python ">=3.14": a Python that still gets bug fixes (uv uses an installed one
+    # or downloads a current build once).
+    assert server["args"] == [
+        "--native-tls", "--python", ">=3.14", "--from", "${CLAUDE_PLUGIN_ROOT}", "antifragile-scan-mcp",
+    ]
 
     pyproject = (root / "pyproject.toml").read_text(encoding="utf-8")
     assert 'antifragile-scan-mcp = "scanner.mcp_server:main"' in pyproject

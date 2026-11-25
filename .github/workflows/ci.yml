@@ -16,7 +16,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.11", "3.12"]
+        # The supported floor (requires-python) through the latest stable release.
+        python-version: ["3.11", "3.12", "3.13", "3.14", "3.15"]
 
     steps:
       - uses: actions/checkout@v4
@@ -54,7 +55,7 @@ jobs:
           antifragile-scan --benchmark
 
   # The Claude Code plugin starts its MCP server with
-  # `uvx --native-tls --from ${CLAUDE_PLUGIN_ROOT} antifragile-scan-mcp` (.claude-plugin/plugin.json).
+  # `uvx --native-tls --python ">=3.14" --from ${CLAUDE_PLUGIN_ROOT} antifragile-scan-mcp` (.claude-plugin/plugin.json).
   # Start it exactly that way on each OS, with a cold uv cache like a founder's
   # first start, and check it answers the MCP handshake with every tool.
   plugin-mcp:
@@ -74,4 +75,13 @@ jobs:
           enable-cache: false
 
       - name: Start the plugin's MCP server as Claude Code does
-        run: uv run --no-project scripts/check_plugin_mcp.py
+        # only-managed makes uv download its own Python 3.14+ for the server, like a
+        # founder with no 3.14+ installed: the slowest first start. The checker
+        # itself runs on the runner's Python (the flag overrides the variable).
+        env:
+          UV_PYTHON_PREFERENCE: only-managed
+        run: uv run --no-project --python-preference system scripts/check_plugin_mcp.py
+
+      - name: Show which Pythons uv found or downloaded
+        if: always()
+        run: uv python list --only-installed

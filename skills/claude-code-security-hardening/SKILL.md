@@ -113,7 +113,7 @@ Anthropic's official **Claude Code Security** workflow complements this scanner'
 2. **Generate a living `THREAT_MODEL.md` (Art. 9(2))**:
    - Run `/threat-model` to create `THREAT_MODEL.md` documenting trust boundaries, attacker goals, and high-value assets. Commit it alongside your AI docs.
 3. **Run `/claude-security` or built-in `/security-review` & ingest offline**:
-   - Save the report locally (SARIF 2.1.0, JSON, or structured Markdown) and pass it to `uvx --native-tls --from "${CLAUDE_PLUGIN_ROOT}" antifragile-scan . --ingest-claude-security <report>` (or `scanner.claude_ecosystem.ingest_claude_security_report(...)`).
+   - Save the report locally (SARIF 2.1.0, JSON, or structured Markdown) and pass it to `uvx --native-tls --python ">=3.14" --from "${CLAUDE_PLUGIN_ROOT}" antifragile-scan . --ingest-claude-security <report>` (or `scanner.claude_ecosystem.ingest_claude_security_report(...)`).
    - **Adversarial verification panel honored**: findings marked `verified: false`, `confirmed: false`, or `status` in `{"mitigated", "false_positive", "dismissed", "refuted"}` are automatically excluded; confirmed issues map to **EU AI Act Art. 15(4)** & **Art. 9(2)** with `file:line` and remediation hints.
 4. **Enterprise governance — Managed Settings & OpenTelemetry**:
    - Lock org-wide `permissions.allow` / `permissions.deny` rules and disable `bypassPermissions` via enterprise **managed settings** (`managed-settings.json`) so individual repos cannot weaken security boundaries.
@@ -133,9 +133,9 @@ For startups on Claude Enterprise / Team plans, pull read-only organizational au
    ```
 3. **Preview offline, fetch locally, and ingest offline** (`anthropic-version: 2026-10-21`):
    ```bash
-   uv run --native-tls --no-project "${CLAUDE_PLUGIN_ROOT}/scripts/fetch_claude_compliance.py" --dry-run
-   uv run --native-tls --no-project "${CLAUDE_PLUGIN_ROOT}/scripts/fetch_claude_compliance.py" --output compliance-api-export.json --org-uuid "$ORG_UUID"
-   uvx --native-tls --from "${CLAUDE_PLUGIN_ROOT}" antifragile-scan . --ingest-compliance-api compliance-api-export.json --dossier release-dossier.json
+   uv run --native-tls --python ">=3.14" --no-project "${CLAUDE_PLUGIN_ROOT}/scripts/fetch_claude_compliance.py" --dry-run
+   uv run --native-tls --python ">=3.14" --no-project "${CLAUDE_PLUGIN_ROOT}/scripts/fetch_claude_compliance.py" --output compliance-api-export.json --org-uuid "$ORG_UUID"
+   uvx --native-tls --python ">=3.14" --from "${CLAUDE_PLUGIN_ROOT}" antifragile-scan . --ingest-compliance-api compliance-api-export.json --dossier release-dossier.json
    ```
    (The fetcher ships with the plugin and only reads from the Claude Compliance API.)
 4. **What `ingest_compliance_api_export` checks automatically**:

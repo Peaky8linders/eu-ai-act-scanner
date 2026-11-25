@@ -1,6 +1,6 @@
 [build-system]
 # hatchling builds out of tree: the Claude Code plugin starts the engine with
-# `uvx --native-tls --from ${CLAUDE_PLUGIN_ROOT}`, and a setuptools build would leave build/
+# `uvx --native-tls --python ">=3.14" --from ${CLAUDE_PLUGIN_ROOT}`, and a setuptools build would leave build/
 # and *.egg-info inside the plugin folder, which must stay read-only.
 requires = ["hatchling>=1.25"]
 build-backend = "hatchling.build"
@@ -26,6 +26,9 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
     "Topic :: Software Development :: Quality Assurance",
     "Topic :: Security",
 ]

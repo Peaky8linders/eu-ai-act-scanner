@@ -121,7 +121,7 @@ Each returned `Incident` is a frozen dataclass with:
 
 **Incident grounding**:
 ```bash
-uvx --native-tls --from "${CLAUDE_PLUGIN_ROOT}" antifragile-scan --incidents lethal_trifecta --limit 3
+uvx --native-tls --python ">=3.14" --from "${CLAUDE_PLUGIN_ROOT}" antifragile-scan --incidents lethal_trifecta --limit 3
 ```
 
 Illustrative results drawn from the corpus:
@@ -146,7 +146,7 @@ Published mitigations for this incident class (from `incident.mitigations`):
 
 **Incident grounding**:
 ```bash
-uvx --native-tls --from "${CLAUDE_PLUGIN_ROOT}" antifragile-scan --incidents art15 --limit 5
+uvx --native-tls --python ">=3.14" --from "${CLAUDE_PLUGIN_ROOT}" antifragile-scan --incidents art15 --limit 5
 ```
 
 The top `art15` incidents will include a spread across:
