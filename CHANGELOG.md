@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added — Cyber Resilience Act, first slice
+
+- `/cra-scan` and `antifragile-scan PATH --cra` check a repository against the
+  Cyber Resilience Act, Regulation (EU) 2024/2847. The check is separate from
+  the EU AI Act scan: it has no score and changes none of that scan's results.
+- A scope step decides whether the repository looks like a product with
+  digital elements (Art. 2(1), Art. 3(1)).
+  - A declared entry point, an extension manifest, a release or publish step
+    or an update mechanism decides it. A package manifest or a network
+    listener alone is recorded but does not.
+  - The reasoning and the evidence paths are in the report.
+  - A repository that does not look like a product gets an empty report.
+  - It lives beside the existing CRA trigger in `regulatory_perimeter`, which
+    fires exactly as before.
+- Two checks, each with a stable id, a citation and the file found or the
+  artefact missing:
+  - `cra-cvd-policy`: a disclosure policy with a reporting contact in
+    `SECURITY.md` or `security.txt` (Annex I Part II(5) and (6));
+  - `cra-sbom`: a CycloneDX or SPDX SBOM (Annex I Part II(1)).
+- `antifragile-scan --cra-clock TIME --cra-event EVENT` computes the Art. 14
+  reporting deadlines: early warning within 24 hours of becoming aware,
+  notification within 72 hours, and the final report (14 days after a
+  corrective or mitigating measure is available, or one month after the
+  incident notification).
+  - Hours are counted as elapsed time, so a daylight-saving change does not
+    move a deadline by an hour.
+  - It only calculates. It files nothing and never states that a notification
+    was made.
+- The report says what is live now (Art. 14 reporting, since 11 September
+  2026) and what applies from 11 December 2027, and lists what the slice does
+  not check.
+
 ## [0.16.0] - 2026-11-25
 
 ### Changed — current Python

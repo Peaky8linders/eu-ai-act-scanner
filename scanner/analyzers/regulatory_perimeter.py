@@ -49,11 +49,17 @@ References:
 
 from __future__ import annotations
 
+import json
+from typing import Literal
+
+from pydantic import BaseModel, Field
+
 from scanner.analyzers._base import (
     AnalyzerContext,
     AnalyzerResult,
     Finding,
     has_file,
+    is_non_product_path,
     search_code_files,
 )
 
@@ -90,12 +96,48 @@ _CRA_SIGNALS_FILES = [
     r"vsc(ode)?-?extensions?\.json$|vsce\.config\.",
     # CLI entry-point declarations are inside pyproject.toml/setup.py — checked at content level
 ]
-_CRA_SIGNALS_CONTENT = [
+# Declared entry points: the software is packaged to run on someone else's machine.
+_CRA_ENTRYPOINT_SIGNALS = [
     r'\[project\.scripts\]',  # PEP 621 CLI entry points
     r'console_scripts\s*=',
     r'"bin"\s*:',  # npm CLI
+]
+# Weaker hints. They raise the Table 5 trigger below, but the CRA scope step
+# (assess_cra_scope) does not count them: any internal script has a shebang.
+_CRA_WEAK_ARTEFACT_SIGNALS = [
     r'"main"\s*:\s*"[^"]+\.(js|cjs|mjs)"',
     r'#!\s*/usr/bin/env\s+(python|node|sh)',  # shebang in distributable
+]
+_CRA_SIGNALS_CONTENT = _CRA_ENTRYPOINT_SIGNALS + _CRA_WEAK_ARTEFACT_SIGNALS
+
+# ── CRA scope step only (assess_cra_scope); the Table 5 trigger ignores these ──
+# A release or publish step: the build output is handed to other people.
+_CRA_RELEASE_SIGNALS = [
+    r"pypa/gh-action-pypi-publish|\btwine\s+upload\b",
+    r"\bnpm\s+publish\b|\bvsce\s+publish\b|\bcargo\s+publish\b",
+    r"softprops/action-gh-release|\bgh\s+release\s+create\b|\bgoreleaser\b",
+]
+# The shipped software fetches and installs its own updates.
+_CRA_UPDATE_SIGNALS = [
+    r"\belectron[-_]updater\b|\bautoUpdater\b",
+    r"\bSUFeedURL\b|\bSquirrel\.Windows\b",
+    r"\bself[-_]?update\b|\bcheck[-_]?for[-_]?updates?\b",
+    r"\btufup\b|\bpyupdater\b",
+]
+# The software accepts network connections (a data connection, CRA Art. 2(1)).
+_CRA_LISTENER_SIGNALS = [
+    r"\buvicorn\.run\(|\bFastAPI\(|\bFlask\(|\baiohttp\.web\b",
+    r"\bexpress\(\)|\bcreateServer\(",
+    r"\bsocket\.bind\b|\.bind\(\(|\bHTTPServer\(|\bsocketserver\b",
+    r"\bgrpc\.server\(|\bnet\.Listen\(|\bTcpListener::bind\b",
+    r"\bFastMCP\(",
+]
+# Package manifests of ecosystems the Table 5 file list does not name.
+_CRA_EXTRA_MANIFEST_FILES = [
+    r"(^|/)Cargo\.toml$",
+    r"(^|/)go\.mod$",
+    r"(^|/)pom\.xml$|(^|/)build\.gradle(\.kts)?$",
+    r"\.csproj$|\.gemspec$",
 ]
 _NIS2_SIGNALS = [
     r"\bopcua\b|\bpymodbus\b",
@@ -185,6 +227,147 @@ _PROVIDER_LEANING_ROLES = frozenset({
 def _infer_codebase_role(has_distributable_artifact: bool) -> str:
     """Infer coarse NLF operator role from distributable-artefact content signals."""
     return _ROLE_PROVIDER if has_distributable_artifact else _ROLE_DEPLOYER
+
+
+# ─── CRA scope step ─────────────────────────────────────────────────────
+#
+# The Table 5 trigger further down fires on any packaging manifest, which is
+# right for "another EU law may apply; map it". Deciding whether to run CRA
+# checks needs more: Regulation (EU) 2024/2847 covers a "product with digital
+# elements" (Art. 3(1)) whose use includes a "data connection to a device or
+# network" (Art. 2(1)). A repository shows that only indirectly, through what
+# it builds for other people to run.
+
+CraSignalKind = Literal[
+    "distributable_artifact", "update_mechanism", "network_listener", "package_manifest"
+]
+CRA_SIGNAL_LABELS: dict[CraSignalKind, str] = {
+    "distributable_artifact": "distributable artefact",
+    "update_mechanism": "update mechanism",
+    "network_listener": "network listener",
+    "package_manifest": "package manifest",
+}
+_CRA_MAX_PATHS_PER_KIND = 5
+
+CRA_SCOPE_CAVEAT = (
+    "This is a repository heuristic, not a legal scope decision. A repository cannot show "
+    "whether the software is made available on the market in the course of a commercial "
+    "activity (CRA Art. 3(22)) or whether an exclusion in Art. 2 applies. Confirm scope with counsel."
+)
+
+
+class CraScopeSignal(BaseModel):
+    """One repository signal the CRA scope step relied on."""
+
+    kind: CraSignalKind
+    path: str
+    evidence: str = Field(default="", max_length=200)
+
+
+class CraScopeAssessment(BaseModel):
+    """Whether the repository looks like a product with digital elements, and why."""
+
+    looks_like_product: bool
+    reasoning: str
+    signals: list[CraScopeSignal] = Field(default_factory=list)
+    citations: list[str] = Field(default_factory=lambda: ["CRA Art. 2(1)", "CRA Art. 3(1)"])
+    caveat: str = CRA_SCOPE_CAVEAT
+
+    def paths(self, kind: CraSignalKind) -> list[str]:
+        """Evidence paths recorded for one kind of signal."""
+        return [s.path for s in self.signals if s.kind == kind]
+
+
+def _node_package_signals(ctx: AnalyzerContext) -> list[tuple[str, str]]:
+    """``package.json`` files that declare a CLI (``bin``) or a VS Code extension.
+
+    ``search_code_files`` never reads ``.json``, so the ``"bin"`` pattern above
+    cannot see a real npm manifest; parse it instead.
+    """
+    hits: list[tuple[str, str]] = []
+    for path in sorted(ctx.files):
+        if path.lower().rsplit("/", 1)[-1] != "package.json" or is_non_product_path(path):
+            continue
+        try:
+            manifest = json.loads(ctx.files[path])
+        except (ValueError, RecursionError):
+            continue
+        if not isinstance(manifest, dict):
+            continue
+        engines = manifest.get("engines")
+        if manifest.get("bin"):
+            hits.append((path, 'package.json declares "bin" (npm CLI)'))
+        elif isinstance(engines, dict) and "vscode" in engines:
+            hits.append((path, 'package.json declares "engines.vscode" (VS Code extension)'))
+    return hits
+
+
+def assess_cra_scope(ctx: AnalyzerContext) -> CraScopeAssessment:
+    """Decide from repository signals whether CRA checks are worth running.
+
+    The repository *looks like* a product with digital elements when it builds
+    something for other people to run: a declared entry point, an extension
+    manifest, a release or publish step, or a mechanism that updates installed
+    copies. A package manifest or a network listener alone is recorded as
+    supporting evidence but does not decide it: an internal service has both.
+
+    Deterministic: the same files give the same assessment, signals in a fixed order.
+    """
+    found: dict[CraSignalKind, list[tuple[str, str]]] = {
+        "distributable_artifact": (
+            _match_any(ctx, _CRA_ENTRYPOINT_SIGNALS)
+            + _node_package_signals(ctx)
+            + _match_any(ctx, _CRA_RELEASE_SIGNALS)
+        ),
+        "update_mechanism": _match_any(ctx, _CRA_UPDATE_SIGNALS),
+        "network_listener": _match_any(ctx, _CRA_LISTENER_SIGNALS),
+        "package_manifest": [
+            (path, "")
+            for path in _match_files(ctx, _CRA_SIGNALS_FILES + _CRA_EXTRA_MANIFEST_FILES)
+            if not is_non_product_path(path)
+        ],
+    }
+
+    signals: list[CraScopeSignal] = []
+    for kind, hits in found.items():
+        seen: set[str] = set()
+        for path, line in sorted(hits):
+            if path in seen or len(seen) >= _CRA_MAX_PATHS_PER_KIND:
+                continue
+            seen.add(path)
+            signals.append(CraScopeSignal(kind=kind, path=path, evidence=line[:200]))
+
+    def summary(*kinds: CraSignalKind) -> str:
+        parts = []
+        for kind in kinds:
+            paths = [s.path for s in signals if s.kind == kind]
+            if paths:
+                parts.append(f"{CRA_SIGNAL_LABELS[kind]} ({', '.join(paths)})")
+        return "; ".join(parts)
+
+    deciding = summary("distributable_artifact", "update_mechanism")
+    supporting = summary("network_listener", "package_manifest")
+    if deciding:
+        reasoning = (
+            "Looks like a product with digital elements: the repository builds software for "
+            f"other people to run. Deciding signals: {deciding}."
+        )
+        if supporting:
+            reasoning += f" Supporting signals: {supporting}."
+    else:
+        reasoning = (
+            "No sign that this repository is supplied to others as a product: no declared entry "
+            "point, extension manifest, release or publish step, and no update mechanism."
+        )
+        if supporting:
+            reasoning += f" Found only: {supporting}, which an internal service also has."
+        reasoning += (
+            " The CRA report is therefore empty. If you do distribute this software, the "
+            "heuristic missed it: treat the result as unknown, not as out of scope in law."
+        )
+    return CraScopeAssessment(
+        looks_like_product=bool(deciding), reasoning=reasoning, signals=signals
+    )
 
 
 def analyze_regulatory_perimeter(ctx: AnalyzerContext) -> AnalyzerResult:

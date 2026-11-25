@@ -53,6 +53,9 @@ dev = [
     "ruff>=0.4",
     "mypy>=1.11",
     "types-PyYAML>=6.0",
+    # Windows has no system time zone database; tests/test_cra_clock.py checks the
+    # CRA Art. 14 deadlines across daylight-saving changes in Europe/Brussels.
+    "tzdata>=2024.1; sys_platform == 'win32'",
 ]
 
 [project.scripts]

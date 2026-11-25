@@ -12,6 +12,7 @@ import os
 from collections import Counter, defaultdict
 from collections.abc import Iterator
 from pathlib import Path
+from typing import NamedTuple
 
 import structlog
 
@@ -285,6 +286,77 @@ def _component_details(finding: Finding) -> dict:
     return details
 
 
+class _ProjectFiles(NamedTuple):
+    files: dict[str, str]
+    file_list: list[str]
+    binary_files: dict[str, int]
+    languages: Counter
+    total_files: int
+    total_size: int
+
+
+def _load_project_files(root_path: Path) -> _ProjectFiles:
+    """Read the project tree once: text contents, every path, sizes and languages."""
+    languages: Counter = Counter()
+    total_files = 0
+    total_size = 0
+    files: dict[str, str] = {}
+    file_list: list[str] = []
+    binary_files: dict[str, int] = {}
+
+    for file_path in _walk_project_files(root_path):
+        # Compare components *below* the root: matching the absolute path would
+        # exclude every file in a project that lives under `.hidden/` or `build/`.
+        rel_path_obj = file_path.relative_to(root_path)
+        if is_excluded(rel_path_obj):
+            continue
+
+        total_files += 1
+        try:
+            total_size += file_path.stat().st_size
+        except OSError:
+            continue
+        rel_path = str(rel_path_obj).replace("\\", "/")
+        ext = file_path.suffix.lower()
+        file_list.append(rel_path)
+
+        if ext in _LANGUAGE_EXTENSIONS:
+            languages[_LANGUAGE_EXTENSIONS[ext]] += 1
+
+        if ext in _TEXT_EXTENSIONS or file_path.name.lower() in _SPECIAL_FILENAMES:
+            content = _safe_read(file_path)
+            if content is not None:
+                files[rel_path] = content
+            else:
+                binary_files[rel_path] = file_path.stat().st_size
+        else:
+            try:
+                binary_files[rel_path] = file_path.stat().st_size
+            except OSError:
+                pass
+
+    return _ProjectFiles(files, file_list, binary_files, languages, total_files, total_size)
+
+
+def build_analyzer_context(root: Path | str, *, role: str | None = None) -> AnalyzerContext:
+    """The same ``AnalyzerContext`` ``scan_project`` builds, without running the analyzers.
+
+    For checks that sit outside the EU AI Act scan and its scores (``scanner.cra``).
+    """
+    root_path = Path(root).resolve()
+    if not root_path.is_dir():
+        raise ValueError(f"Not a directory: {root_path}")
+    loaded = _load_project_files(root_path)
+    return AnalyzerContext(
+        files=loaded.files,
+        file_list=loaded.file_list,
+        binary_files=loaded.binary_files,
+        languages=dict(loaded.languages),
+        agent_config_files=_collect_agent_config_files(root_path),
+        extracted_role=role,
+    )
+
+
 def scan_project(
     root: Path | str,
     project_name: str | None = None,
@@ -327,44 +399,7 @@ def scan_project(
 
     name = project_name or root_path.name or "Project"
 
-    languages: Counter = Counter()
-    total_files = 0
-    total_size = 0
-    files: dict[str, str] = {}
-    file_list: list[str] = []
-    binary_files: dict[str, int] = {}
-
-    for file_path in _walk_project_files(root_path):
-        # Compare components *below* the root: matching the absolute path would
-        # exclude every file in a project that lives under `.hidden/` or `build/`.
-        rel_path_obj = file_path.relative_to(root_path)
-        if is_excluded(rel_path_obj):
-            continue
-
-        total_files += 1
-        try:
-            total_size += file_path.stat().st_size
-        except OSError:
-            continue
-        rel_path = str(rel_path_obj).replace("\\", "/")
-        ext = file_path.suffix.lower()
-        file_list.append(rel_path)
-
-        if ext in _LANGUAGE_EXTENSIONS:
-            languages[_LANGUAGE_EXTENSIONS[ext]] += 1
-
-        if ext in _TEXT_EXTENSIONS or file_path.name.lower() in _SPECIAL_FILENAMES:
-            content = _safe_read(file_path)
-            if content is not None:
-                files[rel_path] = content
-            else:
-                binary_files[rel_path] = file_path.stat().st_size
-        else:
-            try:
-                binary_files[rel_path] = file_path.stat().st_size
-            except OSError:
-                pass
-
+    files, file_list, binary_files, languages, total_files, total_size = _load_project_files(root_path)
     agent_config_files = _collect_agent_config_files(root_path)
 
     ctx = AnalyzerContext(
