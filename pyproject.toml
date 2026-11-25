@@ -10,7 +10,7 @@ build-backend = "hatchling.build"
 # plugin + MCP server and is not published to PyPI. (The pre-rename
 # `eu-ai-act-scanner` name on PyPI belongs to an unrelated third-party project.)
 name = "antifragile-harness"
-version = "0.15.0"
+version = "0.16.0"
 description = "Scan any codebase for EU AI Act (Regulation 2024/1689 + Digital Omnibus Reg. 2026/1744) compliance evidence and gaps, grounded in real-world AI security incidents and authoritative article text. 24 analyzers (incl. MCP tool-chain security, Claude Code security posture, AST-gated Art. 50 transparency, and 7 agent-aware analyzers), deterministic operator-role + obligation inference, founder 3-bucket triage, SARIF 2.1.0 + Claude Security / Claude Compliance API ingestion, a vendored GenAI/agentic-AI incident corpus crosswalked across 12 frameworks (incl. EN 18286:2026), an autonomous scan->fix->rescan loop, and a 13-tool MCP server. Local-only static analysis with a Claude Code plugin."
 readme = "README.md"
 license = { text = "Apache-2.0" }
