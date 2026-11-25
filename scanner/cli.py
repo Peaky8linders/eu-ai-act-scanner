@@ -290,6 +290,47 @@ def _format_benchmark(report) -> str:
     return "\n".join(lines)
 
 
+def _run_cra_clock(args: argparse.Namespace) -> int:
+    """``--cra-clock``: print the CRA Art. 14 deadlines for one event."""
+    from datetime import datetime
+
+    from scanner.cra import article_14_clock, format_article_14_clock
+
+    if not args.cra_event:
+        print(
+            "error: --cra-clock needs --cra-event actively_exploited_vulnerability|severe_incident",
+            file=sys.stderr,
+        )
+        return 2
+
+    def parse(value: str | None, option: str) -> datetime | None:
+        if value is None:
+            return None
+        try:
+            return datetime.fromisoformat(value)
+        except ValueError:
+            raise ValueError(
+                f"{option} is not an ISO 8601 time: {value!r} (example: 2026-11-03T09:30:00+01:00)"
+            ) from None
+
+    try:
+        aware_at = parse(args.cra_clock, "--cra-clock")
+        assert aware_at is not None  # --cra-clock was given, so parse() returned a time or raised
+        clock = article_14_clock(
+            aware_at,
+            args.cra_event,
+            measure_available_at=parse(args.cra_measure_available_at, "--cra-measure-available-at"),
+            notification_submitted_at=parse(
+                args.cra_notification_submitted_at, "--cra-notification-submitted-at"
+            ),
+        )
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    print(format_article_14_clock(clock) if args.markdown else json.dumps(clock.to_dict(), indent=2))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="antifragile-scan",
@@ -471,12 +512,61 @@ def main(argv: list[str] | None = None) -> int:
         metavar="FILE",
         help="Generate an interactive context graph visual with node-by-node gaps and recommended fixes (default: context-graph.html).",
     )
+    cra_group = parser.add_argument_group(
+        "Cyber Resilience Act (Regulation (EU) 2024/2847)",
+        "Separate from the EU AI Act scan: no score, and no effect on its results.",
+    )
+    cra_group.add_argument(
+        "--cra",
+        action="store_true",
+        help=(
+            "Check for CRA evidence instead of running the EU AI Act scan: a scope step, a "
+            "vulnerability disclosure policy and an SBOM. JSON by default, --markdown for prose."
+        ),
+    )
+    cra_group.add_argument(
+        "--cra-clock",
+        metavar="AWARE_AT",
+        help=(
+            "Compute the CRA Art. 14 reporting deadlines from the time you became aware, as an "
+            "ISO 8601 time with a UTC offset (2026-11-03T09:30:00+01:00). Needs --cra-event. "
+            "Does not scan a codebase and does not file anything."
+        ),
+    )
+    cra_group.add_argument(
+        "--cra-event",
+        choices=("actively_exploited_vulnerability", "severe_incident"),
+        help="The Art. 14 event type for --cra-clock.",
+    )
+    cra_group.add_argument(
+        "--cra-measure-available-at",
+        metavar="TIME",
+        help=(
+            "With --cra-clock for an actively exploited vulnerability: when a corrective or "
+            "mitigating measure became available (anchors the final report, Art. 14(2)(c))."
+        ),
+    )
+    cra_group.add_argument(
+        "--cra-notification-submitted-at",
+        metavar="TIME",
+        help=(
+            "With --cra-clock for a severe incident: when the incident notification was "
+            "submitted (anchors the final report, Art. 14(4)(c))."
+        ),
+    )
     parser.add_argument(
         "--version",
         action="version",
         version=f"%(prog)s {__version__}",
     )
     args = parser.parse_args(argv)
+
+    # CRA Art. 14 reporting clock: a calculation, no codebase scan.
+    if args.cra_clock:
+        return _run_cra_clock(args)
+    if args.cra_event or args.cra_measure_available_at or args.cra_notification_submitted_at:
+        print("error: --cra-event and the --cra-*-at options need --cra-clock AWARE_AT", file=sys.stderr)
+        return 2
 
     # Offline deterministic accuracy benchmark — no codebase scan.
     if args.benchmark:
@@ -543,6 +633,18 @@ def main(argv: list[str] | None = None) -> int:
     if not path.exists():
         print(f"error: path does not exist: {path}", file=sys.stderr)
         return 2
+
+    # Cyber Resilience Act check: its own report, never the EU AI Act scan.
+    if args.cra:
+        from scanner.cra import cra_scan, format_cra_report
+
+        try:
+            cra_report = cra_scan(path, project_name=args.name)
+        except ValueError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
+        print(format_cra_report(cra_report) if args.markdown else cra_report.model_dump_json(indent=2))
+        return 0
 
     # Remediation pipeline execution
     if args.fix:

@@ -68,7 +68,7 @@ Here is the brief for a small demo support chatbot (an OpenAI-backed FastAPI end
 ## Under the hood
 
 **One repo, three ways to run it:**
-1. A **Claude Code plugin** — **12 slash commands** (`/ai-act-quickstart`, `/ai-act-scan`, `/ai-act-security-review`, `/ai-act-scan-fix`, `/ai-act-article`, `/ai-act-incidents`, `/ai-act-ask`, `/ai-act-graph`, `/ai-act-cross-framework`, `/ai-act-dossier`, `/ai-act-settings`, `/ai-act-feedback`) backed by **15 article-grounded skills**. Semantic depth comes from **your own Claude Code session** — your existing subscription, no API key, no wrapper.
+1. A **Claude Code plugin** — **13 slash commands** (`/ai-act-quickstart`, `/ai-act-scan`, `/ai-act-security-review`, `/ai-act-scan-fix`, `/ai-act-article`, `/ai-act-incidents`, `/ai-act-ask`, `/ai-act-graph`, `/ai-act-cross-framework`, `/ai-act-dossier`, `/ai-act-settings`, `/ai-act-feedback`, `/cra-scan`) backed by **15 article-grounded skills**. Semantic depth comes from **your own Claude Code session** — your existing subscription, no API key, no wrapper.
 2. A **Python library & CLI** (`from scanner import scan_project` / `antifragile-scan`) — **24 deterministic analyzers** (including `mcp_toolchain`, `claude_code_security`, and AST-gated Art. 50 transparency), operator-role inference, incident grounding, offline SARIF 2.1.0, local baselines, autonomous startup/regulatory fix loop, deterministic precision/recall/F1 meta-benchmark, and a **versioned 12-framework projection** (including OJ-cited **EN 18286:2026** CEN/CENELEC JTC 21 QMS).
 3. An **MCP server** (`antifragile-scan-mcp`) — **13 hardened MCP tools** over stdio (or behind your own authenticated Streamable HTTP proxy), with validated paths, symlink/traversal guards, `openWorldHint=False`, destructive-action annotations, and stdout hygiene.
 
@@ -170,7 +170,7 @@ The scanner never calls an LLM headlessly. When you want more than deterministic
 
 ## Install
 
-**Claude Code plugin (`antifragile-harness`)**: the 12 commands, 15 article-grounded skills and the
+**Claude Code plugin (`antifragile-harness`)**: the 13 commands, 15 article-grounded skills and the
 13-tool MCP server. It needs [uv](https://docs.astral.sh/uv/) on your `PATH`, which it uses to
 start the engine bundled in its own files, so there is no separate engine install. Install uv
 once, unless `uv --version` already works:
@@ -250,7 +250,7 @@ your environment.
 
 ## Usage
 
-**Claude Code:** `/ai-act-quickstart ./my-app` · `/ai-act-scan ./my-app` · `/ai-act-security-review` · `/ai-act-scan-fix --startup --top 3` · `/ai-act-article art50` · `/ai-act-incidents art15` · `/ai-act-ask "…"` · `/ai-act-graph` · `/ai-act-cross-framework` · `/ai-act-dossier` · `/ai-act-settings` · `/ai-act-feedback`
+**Claude Code:** `/ai-act-quickstart ./my-app` · `/ai-act-scan ./my-app` · `/ai-act-security-review` · `/ai-act-scan-fix --startup --top 3` · `/ai-act-article art50` · `/ai-act-incidents art15` · `/ai-act-ask "…"` · `/ai-act-graph` · `/ai-act-cross-framework` · `/ai-act-dossier` · `/ai-act-settings` · `/ai-act-feedback` · `/cra-scan`
 
 **Python:**
 
@@ -264,7 +264,7 @@ for inc in incidents_for_article("art15", limit=3):
 fix = run_fix_loop("./my-app", apply=False, profile="startup")  # dry-run plan; --apply to write
 ```
 
-**CLI:** `antifragile-scan ./my-app --founder` · `--markdown` · `--article art50` · `--cross-framework` · `--sarif [FILE]` · `--ingest-sarif FILE` · `--ingest-compliance-api FILE` · `--ingest-claude-security FILE` · `--save-baseline [FILE]` · `--diff-baseline [FILE]` · `--fix [--startup] [--apply]` · `--benchmark` · `--incidents art15` · `--ask "…"` · `--dossier` · `--graph` · `--settings` / `--set mode=assisted`
+**CLI:** `antifragile-scan ./my-app --founder` · `--markdown` · `--article art50` · `--cross-framework` · `--sarif [FILE]` · `--ingest-sarif FILE` · `--ingest-compliance-api FILE` · `--ingest-claude-security FILE` · `--save-baseline [FILE]` · `--diff-baseline [FILE]` · `--fix [--startup] [--apply]` · `--benchmark` · `--incidents art15` · `--ask "…"` · `--dossier` · `--graph` · `--settings` / `--set mode=assisted` · `--cra` · `--cra-clock TIME --cra-event EVENT`
 
 ---
 
@@ -279,6 +279,23 @@ fix = run_fix_loop("./my-app", apply=False, profile="startup")  # dry-run plan; 
 - **No LLM calls, no network, no telemetry.** Offline by default; only opt-in scripts (`scripts/fetch_claude_compliance.py` for Enterprise/Team users and `scripts/sync_incident_corpus.py` for maintainers) touch the network.
 - **No risk-tier classification for you.** High-risk vs limited-risk (Art. 6 + Annex III) needs human judgment.
 - **No legal advice.** Use alongside counsel, not instead of it.
+
+## Cyber Resilience Act (first slice)
+
+`/cra-scan` (CLI: `antifragile-scan ./my-app --cra --markdown`) looks at a repository against the Cyber Resilience Act, Regulation (EU) 2024/2847. It is separate from the EU AI Act scan: it has no score and changes none of the results above.
+
+**What applies when** (Art. 71(2)):
+
+- **Live since 11 September 2026: Art. 14 reporting.** A manufacturer reports an actively exploited vulnerability in its product, or a severe incident affecting the product's security: an early warning within 24 hours of becoming aware, a notification within 72 hours, then a final report (14 days after a corrective or mitigating measure is available for a vulnerability; one month after the incident notification for a severe incident). Reports go to the coordinator CSIRT and ENISA through the single reporting platform.
+- **From 11 December 2027: everything else**, including the vulnerability handling requirements of Annex I Part II and the Annex VII technical documentation.
+
+**What the slice does:**
+
+- **Scope first.** It decides from repository signals whether the project looks like a product with digital elements (a declared entry point, an extension manifest, a release or publish step, an update mechanism) and records the reasoning and the evidence paths. A package manifest or a network listener alone does not decide it. A repository that does not look like a product gets an empty report, never a score.
+- **Two checks**, each with a stable id, a citation and the file found or the artefact missing: `cra-cvd-policy` (a disclosure policy with a reporting contact in `SECURITY.md` or `security.txt`, Annex I Part II(5) and (6)) and `cra-sbom` (a CycloneDX or SPDX SBOM, Annex I Part II(1)).
+- **An Art. 14 clock.** `antifragile-scan --cra-clock 2026-11-03T09:30:00+01:00 --cra-event actively_exploited_vulnerability --markdown` prints the 24-hour and 72-hour deadlines and the final-report rule; add `--cra-measure-available-at TIME` or, for `--cra-event severe_incident`, `--cra-notification-submitted-at TIME` to date the final report. It only calculates. It does not file a notification or record that one was made.
+
+**What it does not do yet:** security-update and support-period checks, the Annex VII documentation pack, drafting a notification for the reporting platform, a CRA report or dossier, and a crosswalk to other frameworks. It never says a product is compliant or certified, and the scope step is a repository heuristic: whether the CRA applies to you also depends on facts a repository cannot show (Art. 2, Art. 3(22)). Use it with counsel.
 
 ## Feedback and exceptions
 
