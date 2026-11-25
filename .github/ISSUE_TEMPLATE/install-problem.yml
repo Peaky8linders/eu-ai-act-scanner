@@ -1,0 +1,31 @@
+name: Install or connection problem
+description: The plugin or its MCP server does not install, start or connect.
+title: "[install] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing, check the README's troubleshooting notes: the plugin needs [uv](https://docs.astral.sh/uv/) on the `PATH` Claude Code starts with, and `/mcp` should list `plugin:antifragile-harness:antifragile-harness` as connected.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you ran, and what `/mcp` or the error message shows. Remove tokens and personal paths.
+    validations:
+      required: true
+  - type: input
+    id: uv
+    attributes:
+      label: uv version
+      description: Output of `uv --version`.
+  - type: input
+    id: version
+    attributes:
+      label: Plugin version
+      placeholder: "0.15.0"
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options: [macOS, Linux, Windows]

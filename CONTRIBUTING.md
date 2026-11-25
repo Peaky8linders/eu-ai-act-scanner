@@ -29,18 +29,27 @@ The single most valuable kind of contribution. If the scanner missed a legitimat
 2. Add the pattern — regex for text patterns, AST for Python semantics.
 3. Emit a `Finding` with the appropriate `compliance_dimensions`.
 4. Add a fixture case under `tests/fixtures/sample_project/` that contains the pattern.
-5. Add a test asserting the finding is produced.
+5. Add a test asserting the finding is produced, and a benchmark case for it (see below).
 6. Open a PR with a 1-sentence description of what the pattern is and which regulation obligation it supports.
 
 **Please include an article reference** (e.g. "Art. 14(4)") so reviewers can verify the mapping.
 
-### Fixing a false positive
+### Turning a report into a regression test
 
-If the scanner flags something as a gap that isn't actually a gap, we want to know.
+Users report problems with `/ai-act-feedback` or the issue forms. Titles start with `[false positive]`, `[missed gap]`, `[confusing]` or `[install]`. A confirmed false positive or missed gap is fixed through the benchmark, so the fix is measured and cannot quietly come back:
 
-1. Provide the minimal reproducer (file content + scanner output).
-2. Explain why it's a false positive.
-3. Either submit a fix or open an issue with the context.
+1. **Reproduce it with a small, made-up sample.** Never use a reporter's code; the forms ask for a made-up example for this reason.
+2. **Add a `BenchmarkSample` to `_BENCHMARK_CORPUS`** in `scanner/benchmark.py`, with an id that says what it guards:
+   - a false positive becomes a decoy: `expect_finding=False`, the `analyzer_id` that misfired, and `expected_finding_id` set to the finding (or a prefix ending in `*`);
+   - a missed gap becomes a positive case: `expect_finding=True` with the finding the analyzer should emit.
+
+   Put the reporter's reasoning in `rationale`, in one sentence.
+3. **Fix the analyzer** under `scanner/analyzers/` until `antifragile-scan --benchmark` is back to full precision and recall. `tests/test_scanner_precision_upgrades.py` fails on any miss.
+4. **Reference the issue in the PR**, and note in the CHANGELOG which pattern no longer misfires or is now caught.
+
+Reasons that users give in `[[suppress]]` entries (see the README's "Feedback and exceptions") are the same kind of evidence. When several teams suppress one rule for the same reason, that rule needs a benchmark case.
+
+`[confusing]` reports usually mean a fix to the brief's wording in `scanner/founder_triage.py` or to a skill under `skills/`. `[install]` reports go to the README's troubleshooting notes, or to the CI job that starts the plugin's MCP server (`scripts/check_plugin_mcp.py`).
 
 ### Adding a new dimension or article mapping
 

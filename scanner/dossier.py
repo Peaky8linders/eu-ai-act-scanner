@@ -136,6 +136,9 @@ class ComplianceDossier(BaseModel):
     external_security_findings_count: int = 0
     file_manifest: list[FileDigest] = Field(default_factory=list)
     applied_remediations: list[str] = Field(default_factory=list)
+    # Gaps the team marked not applicable ([[suppress]] in .antifragile-harness.toml),
+    # as "title [path]: reason", sealed with the rest so a reviewer sees every exception.
+    marked_not_applicable: list[str] = Field(default_factory=list)
     dossier_integrity_hash: str = ""
 
     def sign_and_seal(self) -> ComplianceDossier:
@@ -281,6 +284,10 @@ def generate_dossier(
         external_security_findings_count=ext_count,
         file_manifest=manifest,
         applied_remediations=applied_remediations or [],
+        marked_not_applicable=[
+            f"{s.title}" + (f" [{s.file_path}]" if s.file_path else "") + f": {s.reason}"
+            for s in scan.suppressed_findings
+        ],
     )
 
     dossier.sign_and_seal()

@@ -1,0 +1,27 @@
+name: Confusing result
+description: The result was correct but hard to understand or act on.
+title: "[confusing] "
+labels: ["documentation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks. Plain-English results are the point of this tool, so unclear wording counts as a bug. **Please don't paste your code, secrets or customer details.**
+  - type: input
+    id: where
+    attributes:
+      label: Which command or item
+      placeholder: "/ai-act-quickstart, the 'Unblock Enterprise Deals' item about logging"
+    validations:
+      required: true
+  - type: textarea
+    id: confusing
+    attributes:
+      label: What was unclear, and what would have helped
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Plugin version
+      placeholder: "0.15.0"

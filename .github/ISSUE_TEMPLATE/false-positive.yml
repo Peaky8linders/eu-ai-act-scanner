@@ -1,0 +1,51 @@
+name: False positive
+description: The scanner reported something that is not a problem in your code.
+title: "[false positive] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting it. **Please don't paste your code, secrets or customer details.** Describe the code in your own words; a small made-up example that reproduces it is the most useful part, because it becomes a benchmark case.
+
+        To stop it showing up in your own project meanwhile, add a `[[suppress]]` entry with a reason to `.antifragile-harness.toml` (see the README), or run `/ai-act-feedback`.
+  - type: input
+    id: finding
+    attributes:
+      label: Finding title
+      description: As shown in the brief or scan.
+    validations:
+      required: true
+  - type: input
+    id: area
+    attributes:
+      label: Area or article
+      placeholder: "transparency, Art. 50"
+  - type: input
+    id: analyzer
+    attributes:
+      label: Analyzer (optional)
+      description: The `component_type` in a detailed result, if you have it.
+      placeholder: article_50_transparency
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it is not a problem
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: Made-up example that reproduces it (optional)
+      description: A few lines written for this report, not copied from your project.
+      render: text
+  - type: input
+    id: version
+    attributes:
+      label: Plugin version
+      placeholder: "0.15.0"
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options: [macOS, Linux, Windows]

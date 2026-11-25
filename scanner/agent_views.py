@@ -130,6 +130,13 @@ def concise_scan(
         out["role"] = result.active_role
     if result.external_security_sources:
         out["external_sources"] = list(result.external_security_sources)
+    if result.suppressed_findings:
+        out["suppressed_count"] = len(result.suppressed_findings)
+        out["suppressed_example"] = (
+            f"{result.suppressed_findings[0].title}: {result.suppressed_findings[0].reason}"
+        )
+    if result.suppression_problems:
+        out["suppression_problems"] = list(result.suppression_problems)
     if areas:
         out["filtered_to_areas"] = sorted(areas)
     end = offset + len(top)

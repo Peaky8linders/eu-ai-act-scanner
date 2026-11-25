@@ -17,4 +17,4 @@ Scan a codebase and explain the result in plain language.
    - one recommended next step.
 4. Offer follow-ups: `/ai-act-quickstart` (founder priorities), `/ai-act-scan-fix` (fix plan), `/ai-act-cross-framework` (SOC 2 / ISO / NIST mapping), `/ai-act-graph` (visual map).
 
-Report only what the scanner found. If the user doubts a finding, open the cited file and check it before agreeing; label anything you add as your own review. The scan runs locally and never uploads code.
+Report only what the scanner found. If the user doubts a finding, open the cited file and check it before agreeing; label anything you add as your own review. If it is wrong, offer `/ai-act-feedback`. The scan runs locally and never uploads code.

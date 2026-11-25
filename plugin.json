@@ -17,7 +17,8 @@
     "ai-act-article",
     "ai-act-incidents",
     "ai-act-ask",
-    "ai-act-settings"
+    "ai-act-settings",
+    "ai-act-feedback"
   ],
   "skills": [
     "founder-startup-triage",

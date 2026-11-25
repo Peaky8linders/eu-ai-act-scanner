@@ -34,6 +34,7 @@ still read when the new ones are absent, so existing settings keep working.
 from __future__ import annotations
 
 import os
+import re
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
@@ -96,6 +97,11 @@ def _user_config_path() -> Path:
 
 def _project_config_path(root: Path) -> Path:
     return _prefer_current(root / PROJECT_CONFIG_NAME, root / LEGACY_PROJECT_CONFIG_NAME)
+
+
+def project_config_path(root: str | Path) -> Path:
+    """The project's config file: ``.antifragile-harness.toml``, or the pre-rename name if only that exists."""
+    return _project_config_path(Path(root))
 
 
 def _env(name: str) -> str | None:
@@ -199,12 +205,55 @@ def save_settings(
         new_auto = coerced_auto
 
     path = root / PROJECT_CONFIG_NAME
+    # Keep everything else in the file, such as `[[suppress]]` entries: only the
+    # `[scanner]` table (and top-level mode / auto_apply keys) are ours to rewrite.
+    preamble, tables = _other_content(path.read_text(encoding="utf-8")) if path.exists() else ("", "")
     body = (
-        "# Antifragile Harness settings — manage via `/ai-act-settings` or\n"
-        "# `antifragile-scan --set mode=assisted`.\n"
-        "[scanner]\n"
-        f'mode = "{new_mode}"\n'
-        f"auto_apply = {'true' if new_auto else 'false'}\n"
+        _SETTINGS_HEADER
+        + (preamble + "\n" if preamble else "")
+        + "[scanner]\n"
+        + f'mode = "{new_mode}"\n'
+        + f"auto_apply = {'true' if new_auto else 'false'}\n"
+        + ("\n" + tables if tables else "")
     )
     path.write_text(body, encoding="utf-8")
     return path, Settings(mode=new_mode, auto_apply=new_auto, source="project-config")
+
+
+_SETTINGS_HEADER = (
+    "# Antifragile Harness settings — manage via `/ai-act-settings` or\n"
+    "# `antifragile-scan --set mode=assisted`.\n"
+)
+_HEADER_LINES = frozenset(_SETTINGS_HEADER.splitlines())
+_TABLE_HEADER = re.compile(r"""^\s*\[\[?\s*[A-Za-z0-9_.\-"' ]+\s*\]\]?\s*(#.*)?$""")
+_OWN_TOP_LEVEL_KEYS = frozenset({"mode", "auto_apply"})
+
+
+def _other_content(text: str) -> tuple[str, str]:
+    """Split a config file into what ``save_settings`` must keep.
+
+    Returns ``(preamble, tables)``: top-level lines other than ``mode`` /
+    ``auto_apply`` (they must stay above the first table header, or TOML would
+    put them inside ``[scanner]``), and every table except ``[scanner]``.
+    """
+    preamble: list[str] = []
+    tables: list[str] = []
+    in_scanner = False
+    seen_table = False
+    for line in text.replace("\r\n", "\n").split("\n"):
+        if _TABLE_HEADER.match(line):
+            seen_table = True
+            in_scanner = line.split("#", 1)[0].strip().replace(" ", "") == "[scanner]"
+        if in_scanner or line in _HEADER_LINES:
+            continue
+        if seen_table:
+            tables.append(line)
+            continue
+        key = line.split("=", 1)[0].strip() if "=" in line else ""
+        if key not in _OWN_TOP_LEVEL_KEYS:
+            preamble.append(line)
+
+    def tidy(lines: list[str]) -> str:
+        return "\n".join(lines).strip("\n") + "\n" if any(s.strip() for s in lines) else ""
+
+    return tidy(preamble), tidy(tables)

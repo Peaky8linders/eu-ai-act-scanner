@@ -5,6 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added — an opt-in feedback loop
+
+- `/ai-act-feedback` reports a false positive, a missed gap, a confusing result
+  or an install problem.
+  - It drafts a GitHub issue with the finding, area, plugin version and OS,
+    plus a made-up reproduction. It never includes the user's code.
+  - It shows the full text first and files the issue with `gh` only on the
+    user's yes; otherwise it hands over the draft and the issue-form link.
+  - The quickstart and scan commands point to it.
+- Teams can mark a finding not applicable, with a reason, using `[[suppress]]`
+  entries in `.antifragile-harness.toml`.
+  - An entry matches on `title`, `path`, `analyzer` or `area`; every key set
+    must match, and `reason` is required.
+  - Matching gaps leave scores and briefs but stay on record with their
+    reason: in `ScanResult.suppressed_findings`, the founder brief,
+    `--markdown`, the MCP scan summary and the release dossier
+    (`marked_not_applicable`).
+  - Invalid entries are reported, not silently dropped.
+  - Positive evidence and the AI-system scope gate are never affected.
+- GitHub issue forms for false positives, missed gaps, confusing results and
+  install problems. Each asks for a made-up example instead of code.
+- `CONTRIBUTING.md` describes how a confirmed report becomes a benchmark decoy
+  or positive case, so every fix is also a regression test.
+
+### Fixed
+
+- Saving settings (`/ai-act-settings`, `antifragile-scan --set`) rewrote the
+  whole `.antifragile-harness.toml`. It now keeps every other table and key, so
+  suppressions survive a settings change.
+
 ## [0.15.0] - 2026-11-23
 
 ### Changed — the plugin starts its own engine
