@@ -75,7 +75,12 @@ jobs:
           enable-cache: false
 
       - name: Start the plugin's MCP server as Claude Code does
-        run: uv run --no-project scripts/check_plugin_mcp.py
+        # only-managed makes uv download its own Python 3.14+ for the server, like a
+        # founder with no 3.14+ installed: the slowest first start. The checker
+        # itself runs on the runner's Python (the flag overrides the variable).
+        env:
+          UV_PYTHON_PREFERENCE: only-managed
+        run: uv run --no-project --python-preference system scripts/check_plugin_mcp.py
 
       - name: Show which Pythons uv found or downloaded
         if: always()
